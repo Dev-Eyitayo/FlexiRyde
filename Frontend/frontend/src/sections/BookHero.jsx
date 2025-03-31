@@ -12,41 +12,45 @@ export default function BookHero() {
   const [showFromDropdown, setShowFromDropdown] = useState(false);
   const [showToDropdown, setShowToDropdown] = useState(false);
   const [showPassengerModal, setShowPassengerModal] = useState(false);
+  
   const dateRef = useRef(null);
+  const fromDropdownRef = useRef(null);
+  const toDropdownRef = useRef(null);
   const modalRef = useRef(null);
 
-  // Close passenger modal when clicking outside
+  // Close modals when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         setShowPassengerModal(false);
       }
+      if (fromDropdownRef.current && !fromDropdownRef.current.contains(event.target)) {
+        setShowFromDropdown(false);
+      }
+      if (toDropdownRef.current && !toDropdownRef.current.contains(event.target)) {
+        setShowToDropdown(false);
+      }
     }
 
-    if (showPassengerModal) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
+    document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showPassengerModal]);
+  }, []);
 
   return (
     <div
-      className="relative bg-cover bg-center h-[600px] flex items-center justify-center text-gray-700"
+      className="relative bg-cover bg-center h-[600px] pb-0 flex items-center justify-center text-gray-700" id="bookhero"
       style={{ backgroundImage: `url(${heroBg})` }}
     >
-      <div className="absolute inset-0 bg-black/40"></div>
+      <div className="absolute inset-0 bg-black/70"></div>
       <div className="relative text-center px-4 md:px-0 w-full">
-        <h1 className="text-3xl text-white md:text-5xl font-bold">Book a comfortable ride at no cost...</h1>
-        <div className="bg-gray-100 rounded-xl p-6 px-4 mt-6 shadow-lg w-full max-w-7xl mx-auto">
+        <h1 className="md:text-4xl text-2xl text-white pb-4 font-bold">Travel smarter. Book your ride with ease and confidence!</h1>
+        <div className="bg-gray-200 rounded-md p-3 px-4 mt-6 shadow-lg w-full max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-center">
             
             {/* Leaving From */}
-            <div className="relative w-full">
+            <div className="relative w-full" ref={fromDropdownRef}>
               <div
-                className="flex items-center border p-3 rounded-md w-full bg-gray-100 cursor-pointer"
+                className="flex items-center p-3 rounded-md w-full border-0 bg-white cursor-pointer"
                 onClick={() => setShowFromDropdown(!showFromDropdown)}
               >
                 <FaMapMarkerAlt className="text-gray-500 mr-3" />
@@ -89,9 +93,9 @@ export default function BookHero() {
             </div>
 
             {/* Going To */}
-            <div className="relative w-full">
+            <div className="relative w-full" ref={toDropdownRef}>
               <div
-                className="flex items-center border p-3 rounded-md w-full bg-gray-100 cursor-pointer"
+                className="flex items-center p-3 rounded-md w-full bg-white border-0 cursor-pointer"
                 onClick={() => setShowToDropdown(!showToDropdown)}
               >
                 <FaMapMarkerAlt className="text-gray-500 mr-3" />
@@ -134,7 +138,7 @@ export default function BookHero() {
             </div>
 
             {/* Travel Date */}
-            <div className="flex items-center border p-3 rounded-md w-full bg-gray-100">
+            <div className="flex items-center border-0 p-3 rounded-md w-full bg-white">
               <FaCalendarAlt className="text-gray-500 mr-3" />
               <input
                 type="date"
@@ -149,11 +153,11 @@ export default function BookHero() {
             {/* Passenger Selection */}
             <div className="relative w-full">
               <div
-                className="flex items-center border p-3 rounded-md w-full bg-gray-100 cursor-pointer"
+                className="flex items-center border-0 p-3 rounded-md w-full bg-white cursor-pointer"
                 onClick={() => setShowPassengerModal(true)}
               >
                 <FaUser className="text-gray-500 mr-3" />
-                <span>{passengers} Passenger{passengers > 1 ? "s" : ""}</span>
+                <span>{passengers} Seats{passengers > 1 ? "s" : ""}</span>
               </div>
 
               {/* Passenger Modal */}

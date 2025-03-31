@@ -38,15 +38,15 @@ export default function NavBar() {
           <img src={logo} alt="Brand Logo" className="h-16" />
         </div>
         <div className="hidden md:flex gap-4 items-center space-x-6">
-          <a href="#" className="flex items-center text-gray-700 hover:text-blue-500">
+          <a href="#bookhero" className="flex items-center text-gray-700 hover:text-red-500">
             <FaBus className="mr-1" size={24} />
             <span className="font-semibold ml-1 text-lg">Book Ride</span>
           </a>
-          <a href="#" className="flex items-center text-gray-700 hover:text-blue-500">
+          <a href="#about" className="flex items-center text-gray-700 hover:text-red-500">
             <FaAddressCard className="mr-1" size={24} />
             <span className="font-semibold ml-1 text-lg">About Us</span>
           </a>
-          <a href="#" className="flex items-center text-gray-700 hover:text-blue-500">
+          <a href="#" className="flex items-center text-gray-700 hover:text-red-500">
             <FaHeadphones className="mr-1" size={24} />
             <span className="font-semibold ml-1 text-lg">Contact Support</span>
           </a>
@@ -77,21 +77,21 @@ export default function NavBar() {
       </div>
       <div
         ref={sidebarRef}
-        className={`fixed top-0 right-0 h-full w-64 backdrop-blur-lg bg-black/20 transform ${isMenuOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 ease-in-out p-4`}
+        className={`fixed top-0 right-0 h-full w-64 backdrop-blur-lg bg-black/40 transform ${isMenuOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 ease-in-out p-4`}
       >
         <button className="absolute top-4 right-4 text-gray-700 focus:outline-none" onClick={() => setIsMenuOpen(false)}>
           <FaTimes className="mt-4 text-white" size={24} />
         </button>
         <div className="mt-24 flex flex-col gap-4 space-y-6">
-          <a href="#" className="block text-white hover:text-blue-500 flex gap-2 items-center">
+          <a href="#bookhero" className="text-white hover:text-blue-500 flex gap-2 items-center">
             <FaBus className="mr-2" size={18} />
             <span className="font-semibold">Book Ride</span>
           </a>
-          <a href="#" className="block text-white hover:text-blue-500 flex gap-2 items-center">
+          <a href="#about" className="text-white hover:text-blue-500 flex gap-2 items-center">
             <FaAddressCard className="mr-2" size={18} />
             <span className="font-semibold">About Us</span>
           </a>
-          <a href="#" className="block text-white hover:text-blue-500 flex gap-2 items-center">
+          <a href="#" className="text-white hover:text-blue-500 flex gap-2 items-center">
             <FaHeadphones className="mr-2" size={18} />
             <span className="font-semibold">Contact Support</span>
           </a>
