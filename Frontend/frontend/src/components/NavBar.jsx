@@ -77,26 +77,26 @@ export default function NavBar() {
       </div>
       <div
         ref={sidebarRef}
-        className={`fixed top-0 right-0 h-full w-64 backdrop-blur-lg bg-black/2 transform ${isMenuOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 ease-in-out p-4`}
+        className={`fixed top-0 right-0 h-full w-64 backdrop-blur-lg bg-black/20 transform ${isMenuOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 ease-in-out p-4`}
       >
         <button className="absolute top-4 right-4 text-gray-700 focus:outline-none" onClick={() => setIsMenuOpen(false)}>
-          <FaTimes className="mt-4" size={24} />
+          <FaTimes className="mt-4 text-white" size={24} />
         </button>
         <div className="mt-24 flex flex-col gap-4 space-y-6">
-          <a href="#" className="block text-gray-700 hover:text-blue-500 flex items-center">
+          <a href="#" className="block text-white hover:text-blue-500 flex gap-2 items-center">
             <FaBus className="mr-2" size={18} />
             <span className="font-semibold">Book Ride</span>
           </a>
-          <a href="#" className="block text-gray-700 hover:text-blue-500 flex items-center">
+          <a href="#" className="block text-white hover:text-blue-500 flex gap-2 items-center">
             <FaAddressCard className="mr-2" size={18} />
             <span className="font-semibold">About Us</span>
           </a>
-          <a href="#" className="block text-gray-700 hover:text-blue-500 flex items-center">
+          <a href="#" className="block text-white hover:text-blue-500 flex gap-2 items-center">
             <FaHeadphones className="mr-2" size={18} />
             <span className="font-semibold">Contact Support</span>
           </a>
-          <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center text-gray-700 hover:text-blue-500 w-full">
-            <FaUser className="mr-2 border bg-gray-100 rounded-full p-1 h-6 w-6" size={16} />
+          <button onClick={() => setIsDropdownOpen((prev) => !prev)} className="flex gap-2 items-center text-white hover:text-blue-500 w-full">
+            <FaUser className="mr-2 border bg-gray-700 rounded-full p-1 h-6 w-6" size={16} />
             <span className="font-semibold">Account</span>
             <IoMdArrowDropdown className="ml-auto" />
           </button>
