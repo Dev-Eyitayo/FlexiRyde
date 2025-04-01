@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { motion, useAnimation } from "framer-motion";
 import NavBar from "./components/NavBar";
@@ -13,7 +13,7 @@ import AuthPage from "./components/AuthPage";
 
 export default function App() {
   const controls = useAnimation();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     controls.start({ opacity: 1, y: 0, transition: { duration: 0.5 } });
@@ -28,7 +28,7 @@ export default function App() {
 
   return (
     <>
-      <NavBar openModal={() => setIsModalOpen(true)} />
+      <NavBar />
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={controls}>
         <BookHero />

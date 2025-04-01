@@ -5,7 +5,7 @@ const testimonials = [
   {
     name: "Sarah Johnson",
     rating: 5,
-    review: "Travyule made my travel experience so seamless! Booking was easy, and I loved choosing my seat ahead of time. Highly recommended!",
+    review: "FlexiRyde made my travel experience so seamless! Booking was easy, and I loved choosing my seat ahead of time. Highly recommended!",
     location: "Lagos, Nigeria",
   },
   {
@@ -23,7 +23,7 @@ const testimonials = [
   {
     name: "Michael Brown",
     rating: 5,
-    review: "Travyule is the best thing that happened to intercity travel in Nigeria. The platform is smooth and reliable!",
+    review: "FlexiRyde is the best thing that happened to intercity travel in Nigeria. The platform is smooth and reliable!",
     location: "Port Harcourt, Nigeria",
   },
   {
