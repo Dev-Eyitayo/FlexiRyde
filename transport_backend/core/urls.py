@@ -6,7 +6,7 @@ router = DefaultRouter()
 router.register('cities', CityViewSet)
 router.register('parks', BusParkViewSet)
 router.register('routes', RouteViewSet)
-router.register('bookings', BookingViewSet)
+router.register('bookings', BookingViewSet, basename='bookings')
 
 urlpatterns = [
     path('', include(router.urls)),
