@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { FaHeadphones, FaUser, FaBars, FaTimes, FaAddressCard, FaBus } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 import { IoMdArrowDropdown } from "react-icons/io";
 import logo from "../assets/logo.png";
 
@@ -8,17 +9,18 @@ export default function NavBar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const sidebarRef = useRef(null);
+  const navigate = useNavigate();
 
   // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  // useEffect(() => {
+  //   function handleClickOutside(event) {
+  //     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+  //       setIsDropdownOpen(false);
+  //     }
+  //   }
+  //   document.addEventListener("mousedown", handleClickOutside);
+  //   return () => document.removeEventListener("mousedown", handleClickOutside);
+  // }, []);
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -66,14 +68,44 @@ export default function NavBar() {
                 <hr className="my-1 border-gray-200" />
                 <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Travel History</a>
                 <hr className="my-1 border-gray-200" />
-                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Sign Up/Log In</a>
+                <button onClick={() => navigate("/auth")} className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition">Sign Up/Log In</button>
+
+                {/* <a onClick={() => openModal} className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition">Sign Up/Log In</a> */}
               </div>
             )}
           </div>
         </div>
-        <button className="md:hidden text-gray-700 focus:outline-none" onClick={() => setIsMenuOpen(true)}>
-          <FaBars size={24} />
-        </button>
+
+
+        <div className="md:hidden flex flex-row gap-3">
+           <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus:outline-none"
+              >
+                <FaUser size={16} className="text-gray-700" />
+                {/* <IoMdArrowDropdown className="ml-1 text-gray-700" /> */}
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute right-0 py-4 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg">
+                  <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Change Travel Date</a>
+                  <hr className="my-1 border-gray-200" />
+                  <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Show My Ticket</a>
+                  <hr className="my-1 border-gray-200" />
+                  <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Travel History</a>
+                  <hr className="my-1 border-gray-200" />
+                  <button onClick={() => navigate("/auth")} className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition">Sign Up/Log In</button>
+
+                  {/* <button onClick={openModal} className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition">Sign Up/Log In</button> */}
+                </div>
+              )}
+            </div>
+            
+
+          <button className="md:hidden text-gray-700 focus:outline-none" onClick={() => setIsMenuOpen(true)}>
+            <FaBars size={24} />
+          </button>
+        </div>
       </div>
       <div
         ref={sidebarRef}
@@ -95,7 +127,7 @@ export default function NavBar() {
             <FaHeadphones className="mr-2" size={18} />
             <span className="font-semibold">Contact Support</span>
           </a>
-          <button onClick={() => setIsDropdownOpen((prev) => !prev)} className="flex gap-2 items-center text-white hover:text-blue-500 w-full">
+          {/* <button onClick={() => setIsDropdownOpen((prev) => !prev)} className="flex gap-2 items-center text-white hover:text-blue-500 w-full">
             <FaUser className="mr-2 border bg-gray-700 rounded-full p-1 h-6 w-6" size={16} />
             <span className="font-semibold">Account</span>
             <IoMdArrowDropdown className="ml-auto" />
@@ -108,9 +140,9 @@ export default function NavBar() {
               <hr className="my-1 border-gray-200" />
               <a href="#" className="block px-4 py-2 hover:bg-gray-100">Travel History</a>
               <hr className="my-1 border-gray-200" />
-              <a href="#" className="block px-4 py-2 hover:bg-gray-100">Sign Up/Log In</a>
+              <button onClick={openModal} className="w-full text-start px-4 py-2 hover:bg-gray-100">Sign Up/Log In</button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </nav>

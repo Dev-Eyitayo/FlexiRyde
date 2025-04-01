@@ -41,10 +41,10 @@ export default function BookHero() {
       className="relative bg-cover bg-center h-[600px] pb-0 flex items-center justify-center text-gray-700" id="bookhero"
       style={{ backgroundImage: `url(${heroBg})` }}
     >
-      <div className="absolute inset-0 bg-black/70"></div>
+      <div className="absolute inset-0 bg-black/60"></div>
       <div className="relative text-center px-4 md:px-0 w-full">
         <h1 className="md:text-4xl text-2xl text-white pb-4 font-bold">Travel smarter. Book your ride with ease and confidence!</h1>
-        <div className="bg-gray-200 rounded-md p-3 px-4 mt-6 shadow-lg w-full max-w-7xl mx-auto">
+        <div className="bg-gray-100 rounded-md p-3 px-4 mt-6 shadow-lg w-full max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-center">
             
             {/* Leaving From */}
@@ -157,7 +157,7 @@ export default function BookHero() {
                 onClick={() => setShowPassengerModal(true)}
               >
                 <FaUser className="text-gray-500 mr-3" />
-                <span>{passengers} Seats{passengers > 1 ? "s" : ""}</span>
+                <span>{passengers} Seat{passengers > 1 ? "s" : ""}</span>
               </div>
 
               {/* Passenger Modal */}
