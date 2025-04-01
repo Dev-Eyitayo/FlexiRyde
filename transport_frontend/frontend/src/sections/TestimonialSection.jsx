@@ -42,7 +42,7 @@ const testimonials = [
 
 const TestimonialSection = () => {
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
+    <div className="max-w-6xl mx-auto pt-24 px-6 py-12">
       <h2 className="md:text-3xl text-2xl font-bold text-center mb-8">What Our Users Say</h2>
       <motion.div
         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
