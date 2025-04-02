@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { FaHeadphones, FaUser, FaBars, FaTimes, FaAddressCard, FaBus } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { IoMdArrowDropdown } from "react-icons/io";
+import { AuthContext } from "../context/AuthContext";
 import logo from "../assets/logo.png";
 
 export default function NavBar() {
@@ -11,7 +12,12 @@ export default function NavBar() {
   const sidebarRef = useRef(null);
   const navigate = useNavigate();
 
+  const { isAuthenticated, logout } = useContext(AuthContext);
 
+  const handleLogout = () => {
+    const confirmLogout = window.confirm("Are you sure you want to log out?");
+    if (confirmLogout) logout();
+  };
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -59,7 +65,21 @@ export default function NavBar() {
                 <hr className="my-1 border-gray-200" />
                 <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Travel History</a>
                 <hr className="my-1 border-gray-200" />
-                <button onClick={() => navigate("/auth")} className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition">Sign Up/Log In</button>
+                {isAuthenticated ? (
+                    <button
+                      onClick={handleLogout}
+                      className="block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition"
+                    >
+                      Logout
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate("/auth")}
+                      className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition"
+                    >
+                      Sign Up/Log In
+                    </button>
+                )}
 
                 {/* <a onClick={() => openModal} className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition">Sign Up/Log In</a> */}
               </div>
