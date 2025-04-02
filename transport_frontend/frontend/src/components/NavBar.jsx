@@ -3,6 +3,8 @@ import { FaHeadphones, FaUser, FaBars, FaTimes, FaAddressCard, FaBus } from "rea
 import { Link, useNavigate } from "react-router-dom";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { useAuth } from "../context/AuthContext";
+import LogoutConfirmModal from "./LogoutConfirmModal"; // import it
+
 import logo from "../assets/logo.png";
 
 export default function NavBar() {
@@ -12,6 +14,8 @@ export default function NavBar() {
   const sidebarRef = useRef(null);
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
 
   const handleLogout = () => {
     const confirmLogout = window.confirm("Are you sure you want to log out?");
@@ -71,11 +75,11 @@ export default function NavBar() {
                 <hr className="my-1 border-gray-200" />
                 {isAuthenticated ? (
                     <button
-                      onClick={handleLogout}
-                      className="block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition"
-                    >
-                      Logout
-                    </button>
+                    onClick={() => setShowLogoutModal(true)}
+                    className="block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition"
+                  >
+                    Logout
+                  </button>
                   ) : (
                     <button
                       onClick={() => navigate("/auth")}
@@ -144,6 +148,14 @@ export default function NavBar() {
           </a>
         </div>
       </div>
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          logout();
+          setShowLogoutModal(false);
+        }}
+      />
     </nav>
   );
 }
