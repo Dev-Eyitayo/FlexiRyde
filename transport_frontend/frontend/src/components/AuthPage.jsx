@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { motion } from "framer-motion";
 import { FaTimes, FaGoogle } from "react-icons/fa";
-import { AuthContext } from "../context/AuthContext";
+import {useAuth} from "../context/AuthContext"; 
 import { login } from "../api";
 import API_BASE_URL from "../api"; 
 
@@ -10,7 +10,7 @@ export default function AuthPage({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState("login");
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
-  const { login: loginToContext } = useContext(AuthContext);
+  const { login: loginToContext } = useAuth();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -20,14 +20,15 @@ export default function AuthPage({ isOpen, onClose }) {
     e.preventDefault();
     setError("");
     try {
-      const { access } = await login(form);
-      loginToContext(access);
-      console.log("🔑 Access token received:", access);
+      const data = await login(form); // get full object: access, refresh, user
+      loginToContext(data, true); // true = remember user in localStorage
+      console.log("🔑 Auth Success:", data);
       onClose(); // Close modal on success
     } catch (err) {
       setError(err.message);
     }
   };
+  
 
   if (!isOpen) return null;
 

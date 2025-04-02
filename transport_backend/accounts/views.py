@@ -21,20 +21,17 @@ def signup(request):
         )
         refresh = RefreshToken.for_user(user)
         return Response({
-            'message': 'Signup successful',
+            # Instead of "tokens": ...
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
             'user': {
                 'email': user.email,
                 'username': user.username,
                 'role': user.role,
             },
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
         }, status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
