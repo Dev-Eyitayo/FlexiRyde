@@ -1,9 +1,33 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { motion } from "framer-motion";
 import { FaTimes, FaGoogle } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
+import { login } from "../api";
+import API_BASE_URL from "../api"; 
+
 
 export default function AuthPage({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState("login");
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const { login: loginToContext } = useContext(AuthContext);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const { access } = await login(form);
+      loginToContext(access);
+      console.log("🔑 Access token received:", access);
+      onClose(); // Close modal on success
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -51,20 +75,32 @@ export default function AuthPage({ isOpen, onClose }) {
           >
             {/* Login Form */}
             {activeTab === "login" && (
-              <form>
+              <form onSubmit={handleLogin}>
                 <label className="text-base font-semibold text-gray-700">Email</label>
                 <input
                   type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
                   placeholder="johndoe@gmail.com"
                   className="w-full border px-3 py-2 mt-1 mb-3 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500"
                 />
                 <label className="text-base font-semibold text-gray-700 mt-8">Password</label>
                 <input
                   type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
                   placeholder="Enter your Password"
                   className="w-full border px-3 py-2 mt-1 mb-3 text-sm rounded-md focus:outline-none border-gray-200 focus:ring-1 focus:ring-blue-500"
                 />
-                <button className="mt-4 w-full font-bold bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
+              
+                {error && <p className="text-sm text-red-500">{error}</p>}
+              
+                <button
+                  type="submit"
+                  className="mt-4 w-full font-bold bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+                >
                   Log In
                 </button>
 
