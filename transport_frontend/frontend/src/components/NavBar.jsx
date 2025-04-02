@@ -10,8 +10,23 @@ export default function NavBar() {
   const dropdownRef = useRef(null);
   const sidebarRef = useRef(null);
   const navigate = useNavigate();
+  // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
 
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
 
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -27,18 +42,18 @@ export default function NavBar() {
   return (
     <nav className="bg-white shadow-md p-4 sticky top-0 z-50">
       <div className="container mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-6">
+        <button className="flex items-center space-x-6 cursor-pointer" onClick={() => navigate('/')}>
           <img src={logo} alt="Brand Logo" className="md:h-12 h-10" />
-        </div>
+        </button>
         <div className="hidden md:flex gap-4 items-center space-x-6">
-          <a href="#bookhero" className="flex items-center text-gray-700 hover:text-red-500">
+          <button onClick={() => navigate("/#bookhero")} className="flex items-center text-gray-700 cursor-pointer hover:text-red-500">
             <FaBus className="mr-1" size={20} />
             <span className="font-semibold ml-1 text-base">Book Ride</span>
-          </a>
-          <a href="#about" className="flex items-center text-gray-700 hover:text-red-500">
+          </button>
+          <button onClick={() => navigate("/#about")} className="flex items-center text-gray-700 hover:text-red-500">
             <FaAddressCard className="mr-1" size={20} />
             <span className="font-semibold ml-1 text-base">About Us</span>
-          </a>
+          </button>
           <a href="#" className="flex items-center text-gray-700 hover:text-red-500">
             <FaHeadphones className="mr-1" size={20} />
             <span className="font-semibold ml-1 text-base">Contact Support</span>
@@ -52,16 +67,14 @@ export default function NavBar() {
               <IoMdArrowDropdown className="ml-1 text-gray-700" />
             </button>
             {isDropdownOpen && (
-              <div className="absolute right-0 py-4 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg">
-                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Change Travel Date</a>
+              <div className="absolute right-0 py-4 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg"ref={dropdownRef}>
+                <button onClick={() => navigate("/modify-booking")} className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition">Change Travel Date</button>
                 <hr className="my-1 border-gray-200" />
                 <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Show My Ticket</a>
                 <hr className="my-1 border-gray-200" />
                 <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition">Travel History</a>
                 <hr className="my-1 border-gray-200" />
                 <button onClick={() => navigate("/auth")} className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition">Sign Up/Log In</button>
-
-                {/* <a onClick={() => openModal} className="block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition">Sign Up/Log In</a> */}
               </div>
             )}
           </div>
