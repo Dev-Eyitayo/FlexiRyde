@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FaTimes, FaGoogle } from "react-icons/fa";
+import API_BASE_URL from "../api"; 
 
 export default function AuthPage({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState("login");
