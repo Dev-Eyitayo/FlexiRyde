@@ -154,8 +154,8 @@ export default function NavBar() {
                 <hr className='my-1 border-gray-200' /> {/* Divider */}
                 {isAuthenticated ? ( // Show logout button if authenticated
                   <button
-                    onClick={handleLogout} // Handle logout
-                    className='block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition'
+                    onClick={() => setShowLogoutModal(true)}
+                    className="block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition"
                   >
                     Logout
                   </button>
