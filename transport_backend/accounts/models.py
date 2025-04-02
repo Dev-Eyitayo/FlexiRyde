@@ -32,7 +32,7 @@ class User(AbstractUser):
     )
 
     email = models.EmailField(unique=True)
-    nin = models.CharField(max_length=11, unique=True)
+    nin = models.CharField(max_length=11, unique=True, null=True, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='passenger')
 
     USERNAME_FIELD = 'email'
