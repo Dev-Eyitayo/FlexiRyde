@@ -4,17 +4,18 @@ import { createContext, useState, useEffect } from "react";
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    console.log("🔐 TOKEN UPDATED:", token);
     if (token) {
       localStorage.setItem("token", token);
-      // You can decode JWT here later to get user info if needed
     } else {
       localStorage.removeItem("token");
     }
-  }, [token]);
+  }, [token]);  
 
   const login = (access) => setToken(access);
   const logout = () => {

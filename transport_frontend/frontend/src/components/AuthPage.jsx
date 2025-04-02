@@ -22,6 +22,7 @@ export default function AuthPage({ isOpen, onClose }) {
     try {
       const { access } = await login(form);
       loginToContext(access);
+      console.log("🔑 Access token received:", access);
       onClose(); // Close modal on success
     } catch (err) {
       setError(err.message);
@@ -102,6 +103,22 @@ export default function AuthPage({ isOpen, onClose }) {
                 >
                   Log In
                 </button>
+
+                <div className="flex items-center justify-between mt-4">
+                  <hr className="flex-grow border-gray-300" />
+                  <p className="w-auto text-center text-gray-500 text-sm"> or login with </p>
+                  <hr className="flex-grow border-gray-300" />
+                </div>
+
+                <button className="mt-4 w-full flex items-center justify-center border border-gray-300 py-2 rounded-md hover:bg-gray-100 transition">
+                  <FaGoogle className="mr-2 text-red-500" />
+                  Login with Google
+                </button>
+
+                <p className="text-xs text-gray-500 mt-4">
+                  By proceeding, I acknowledge that I have read and agree to the{" "}
+                  <span className="text-blue-500 cursor-pointer">Terms and Conditions</span>.
+                </p>
               </form>
             )}
 
