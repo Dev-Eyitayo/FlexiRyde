@@ -12,7 +12,12 @@ export default function NavBar() {
   const sidebarRef = useRef(null);
   const navigate = useNavigate();
 
+  const { isAuthenticated, logout } = useContext(AuthContext);
 
+  const handleLogout = () => {
+    const confirmLogout = window.confirm("Are you sure you want to log out?");
+    if (confirmLogout) logout();
+  };
 
   // Close sidebar when clicking outside
   useEffect(() => {
