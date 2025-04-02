@@ -18,4 +18,18 @@ export const login = async ({ email, password }) => {
   };
 };
 
+export const signup = async (form) => {
+  const res = await fetch(`${API_BASE_URL}/auth/signup/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(form),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Signup failed");
+
+  return data;
+};
+
+
 export default API_BASE_URL;

@@ -2,8 +2,8 @@ import { useContext, useState } from "react";
 import { motion } from "framer-motion";
 import { FaTimes, FaGoogle } from "react-icons/fa";
 import {useAuth} from "../context/AuthContext"; 
-import { login } from "../api";
-import API_BASE_URL from "../api"; 
+import { login, signup } from "../api";
+// import API_BASE_URL from "../api"; 
 
 
 export default function AuthPage({ isOpen, onClose }) {
@@ -28,6 +28,20 @@ export default function AuthPage({ isOpen, onClose }) {
       setError(err.message);
     }
   };
+  
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const data = await signup(form);
+      loginToContext(data, true); // Automatically login user
+      onClose(); // Close modal
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  
   
 
   if (!isOpen) return null;
@@ -125,32 +139,65 @@ export default function AuthPage({ isOpen, onClose }) {
 
             {/* Signup Form */}
             {activeTab === "signup" && (
-              <form>
-                <label className="text-base font-semibold text-gray-700">Full Name</label>
+              <form onSubmit={handleSignup}>
+                <label className="text-base font-semibold text-gray-700">First Name</label>
                 <input
                   type="text"
-                  placeholder="Enter your full name"
-                  className="w-full border px-3 py-2 mt-1 mb-3 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500"
+                  name="first_name"
+                  value={form.first_name}
+                  onChange={handleChange}
+                  placeholder="Enter your first name"
+                  className="w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500"
                 />
 
-                <label className="text-base font-semibold text-gray-700 mt-2 block">Email</label>
+                <label className="text-base font-semibold text-gray-700">Last Name</label>
+                <input
+                  type="text"
+                  name="last_name"
+                  value={form.last_name}
+                  onChange={handleChange}
+                  placeholder="Enter your last name"
+                  className="w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500"
+                />
+
+                <label className="text-base font-semibold text-gray-700">Username</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={form.username}
+                  onChange={handleChange}
+                  placeholder="Choose a username"
+                  className="w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500"
+                />
+
+                <label className="text-base font-semibold text-gray-700">Email</label>
                 <input
                   type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
                   placeholder="Enter your Email address"
                   className="w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500"
                 />
 
-                <label className="text-base font-semibold text-gray-700 mt-2 block">Password</label>
+                <label className="text-base font-semibold text-gray-700">Password</label>
                 <input
                   type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
                   placeholder="Enter your password"
                   className="w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500"
                 />
 
-                <button className="mt-4 w-full bg-blue-600 font-bold text-white py-2 rounded-md hover:bg-blue-700 transition">
+                {error && <p className="text-sm text-red-500">{error}</p>}
+
+                <button
+                  type="submit"
+                  className="mt-4 w-full bg-blue-600 font-bold text-white py-2 rounded-md hover:bg-blue-700 transition"
+                >
                   Create Account
                 </button>
-
                 <div className="flex items-center justify-between mt-4">
                   <hr className="flex-grow border-gray-300" />
                   <p className="w-auto text-center text-gray-500 text-sm">or signup with</p>
