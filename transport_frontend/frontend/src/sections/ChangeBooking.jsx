@@ -14,7 +14,7 @@ export default function ChangeBooking() {
       destination: "Abuja",
       date: "2025-04-10",
       time: "08:30 AM",
-      seat: "A12",
+      seat: "3",
       price: "₦15,000",
     });
   };
@@ -76,15 +76,15 @@ export default function ChangeBooking() {
               <strong>Time:</strong> {bookingDetails.time}
             </p>
             <p className='text-gray-600'>
-              <strong>Seat No:</strong> {bookingDetails.seat}
+              <strong>Number of seats booked:</strong> {bookingDetails.seat}
             </p>
             <p className='text-gray-600'>
               <strong>Price:</strong> {bookingDetails.price}
             </p>
 
-            <h3 className='mt-4 text-lg font-medium text-gray-700'>
+            {/* <h3 className='mt-4 text-lg font-medium text-gray-700'>
               Modify Booking
-            </h3>
+            </h3> */}
           </motion.div>
         )}
 
