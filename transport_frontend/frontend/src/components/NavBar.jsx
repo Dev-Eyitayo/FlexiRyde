@@ -129,7 +129,7 @@ export default function NavBar() {
               >
                 {isAuthenticated && ( // Show username if authenticated
                   <div className='px-4 py-2 text-lg font-semibold text-gray-600'>
-                    Hi, {user?.username || user?.email?.split("@")[0]}{" "}
+                    Hi, {user?.first_name || user?.email?.split("@")[0]}{" "}👋
                     {/* Display username or email */}
                   </div>
                 )}
