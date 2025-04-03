@@ -21,7 +21,7 @@ export default function ChangeBooking() {
 
   return (
     <>
-      <div className='bg-black/5 min-h-screen flex flex-col items-center justify-start p-6'>
+      <div className='bg-gray-100/20 min-h-screen flex flex-col items-center justify-start p-6'>
         <motion.h1
           className='text-2xl font-semibold text-gray-700 mb-4'
           initial={{ opacity: 0, y: -20 }}

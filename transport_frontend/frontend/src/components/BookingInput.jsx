@@ -166,14 +166,19 @@ export const BookingInput = ({ submitType, onClick }) => {
         </div>
 
         {/* Travel Time */}
-        <div className='flex items-center border-0 p-3 rounded-md w-full bg-white'>
+        <div
+          className='flex items-center border-0 p-3 rounded-md w-full bg-white cursor-pointer'
+          onClick={() => document.getElementById("travel-time").showPicker()}
+        >
           <FaClock className='text-gray-500 mr-3' />
           <input
             type='time'
+            id='travel-time'
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className='w-full bg-transparent focus:outline-none appearance-none'
+            className='w-full bg-transparent focus:outline-none appearance-none cursor-pointer'
             aria-label='Travel time'
+            onFocus={(e) => e.target.showPicker()} // Auto open time picker
           />
         </div>
 
