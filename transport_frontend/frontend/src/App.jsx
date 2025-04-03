@@ -6,10 +6,12 @@ import ChangeBooking from "./sections/ChangeBooking";
 import Home from "./Pages/Home";
 import NavBar from "./components/NavBar";
 import SeatAvailability from "./Pages/SeatAvailability";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 export default function App() {
   return (
     <>
+      <ToastContainer />
       <NavBar />
       <Routes>
         <Route path='/' element={<Home />} />

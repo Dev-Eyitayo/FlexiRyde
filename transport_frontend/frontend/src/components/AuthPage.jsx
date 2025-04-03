@@ -3,12 +3,16 @@ import { motion } from "framer-motion";
 import { FaTimes, FaGoogle } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { login, signup } from "../api";
+import { toast } from "react-toastify";
+import { FaSpinner } from "react-icons/fa";
+
 // import API_BASE_URL from "../api";
 
 export default function AuthPage({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState("login");
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Loading state
   const { login: loginToContext } = useAuth();
 
   const handleChange = (e) => {
@@ -22,26 +26,36 @@ export default function AuthPage({ isOpen, onClose }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
+    setError(""); // Clear previous errors
+    setLoading(true); // Start loading
+
     try {
-      const data = await login(form); // get full object: access, refresh, user
+      const data = await login(form); // Get full object: access, refresh, user
       loginToContext(data, true); // true = remember user in localStorage
+
       console.log("🔑 Auth Success:", data);
+      toast.success("Login successful! 🎉"); // Show success toast
       onClose(); // Close modal on success
     } catch (err) {
       setError(err.message);
+      toast.error("Login failed! ❌ " + err.message); // Show error toast
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true); // Start loading
     try {
       const data = await signup(form);
       loginToContext(data, true); // Automatically login user
       onClose(); // Close modal
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -137,9 +151,13 @@ export default function AuthPage({ isOpen, onClose }) {
 
                 <button
                   type='submit'
-                  className='mt-4 w-full font-bold bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition'
+                  className='mt-4 w-full font-bold bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition flex items-center justify-center'
                 >
-                  Log In
+                  {loading ? (
+                    <FaSpinner className='animate-spin mr-2' />
+                  ) : (
+                    "Log In"
+                  )}
                 </button>
 
                 <div className='flex items-center justify-between mt-4'>
@@ -239,9 +257,13 @@ export default function AuthPage({ isOpen, onClose }) {
 
                 <button
                   type='submit'
-                  className='mt-4 w-full bg-blue-600 font-bold text-white py-2 rounded-md hover:bg-blue-700 transition'
+                  className='mt-4 w-full font-bold bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition flex items-center justify-center'
                 >
-                  Create Account
+                  {loading ? (
+                    <FaSpinner className='animate-spin mr-2' />
+                  ) : (
+                    "Create Account"
+                  )}
                 </button>
                 <div className='flex items-center justify-between mt-4'>
                   <hr className='flex-grow border-gray-300' />

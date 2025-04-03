@@ -12,7 +12,7 @@ import { IoMdArrowDropdown } from "react-icons/io"; // Import dropdown icon
 import { useAuth } from "../context/AuthContext"; // Import authentication context
 import logo from "../assets/logo.png"; // Import logo image
 import LogoutConfirmModal from "./LogoutConfirmModal";
-
+import { toast } from "react-toastify";
 
 export default function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State to manage sidebar menu visibility
@@ -23,13 +23,15 @@ export default function NavBar() {
   const navigate = useNavigate(); // Hook to programmatically navigate
   const { isAuthenticated, user, logout } = useAuth(); // Destructure authentication context
   const [showLogoutModal, setShowLogoutModal] = useState(false); //Do NOT TOUCH, YOUNG MAN!!
-  
 
   // Function to handle user logout
-  const handleLogout = () => {
-    const confirmLogout = window.confirm("Are you sure you want to log out?"); // Confirm logout action
-    if (confirmLogout) logout(); // Call logout function if confirmed
-  };
+  // const handleLogout = () => {
+  //   const confirmLogout = window.confirm("Are you sure you want to log out?");
+  //   if (confirmLogout) {
+  //     toast.success("Logout successful!"); // Show toast first
+  //     setTimeout(() => logout(), 2000); // Delay logout to allow toast to render
+  //   }
+  // };
 
   // Effect to close dropdown when clicking outside of it
   useEffect(() => {
@@ -96,7 +98,9 @@ export default function NavBar() {
             className='flex items-center text-gray-700 hover:text-red-500'
           >
             <FaAddressCard className='mr-1' size={20} /> {/* About icon */}
-            <span className='font-semibold ml-1 text-base'>About Us</span>{" "}
+            <span className='font-semibold ml-1 hover:cursor-pointer text-base'>
+              About Us
+            </span>{" "}
             {/* About Us text */}
           </button>
           <a
@@ -126,14 +130,14 @@ export default function NavBar() {
                 className='absolute right-0 py-4 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg'
               >
                 {isAuthenticated && ( // Show username if authenticated
-                  <div className='px-4 py-2 text-sm text-gray-600'>
+                  <div className='px-4 py-2 text-lg font-semibold text-gray-600'>
                     Hi, {user?.username || user?.email?.split("@")[0]}{" "}
                     {/* Display username or email */}
                   </div>
                 )}
                 <button
                   onClick={() => navigate("/modify-bookings")} // Navigate to modify bookings
-                  className='block px-4 text-start w-full py-2 text-gray-700 hover:bg-gray-100 transition'
+                  className='block px-4 text-start w-full py-2 text-gray-700 hover:bg-gray-100 h transition hover:cursor-pointer'
                 >
                   Change Travel Date
                 </button>
@@ -155,7 +159,7 @@ export default function NavBar() {
                 {isAuthenticated ? ( // Show logout button if authenticated
                   <button
                     onClick={() => setShowLogoutModal(true)}
-                    className="block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition"
+                    className='block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition hover:cursor-pointer'
                   >
                     Logout
                   </button>
@@ -270,8 +274,9 @@ export default function NavBar() {
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={() => {
-          logout();
-          setShowLogoutModal(false);
+          logout(); // Logout the user
+          toast.success("Logout successful!"); // Show success toast message
+          setShowLogoutModal(false); // Close modal
         }}
       />
     </nav>
