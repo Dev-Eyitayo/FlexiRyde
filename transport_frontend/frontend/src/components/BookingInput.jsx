@@ -38,7 +38,7 @@ export const BookingInput = ({ submitType, onClick }) => {
     const fetchParks = async () => {
       try {
         const data = await getBusParks();
-        setParks(data.map(p => p.name)); // assuming response is list of objects with `name`
+        setParks(data);
       } catch (err) {
         console.error("❌ Could not load parks:", err.message);
       }
@@ -101,21 +101,19 @@ export const BookingInput = ({ submitType, onClick }) => {
                 className='absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50'
               >
                 {parks
-                  .filter((park) =>
-                    park.toLowerCase().includes(from.toLowerCase())
-                  )
-                  .map((park, index) => (
+                  .filter((park) => park?.name?.toLowerCase().includes(from.toLowerCase()))
+                  .map((park) => (
                     <div
-                      key={index}
+                      key={park.id}
                       className='p-2 hover:bg-gray-200 cursor-pointer'
                       onClick={() => {
-                        setFrom(park);
+                        setFrom(`${park.name} (${park.city.name})`);
                         setShowFromDropdown(false);
                       }}
                     >
-                      {park}
+                      {park.name} <span className='text-sm text-gray-500'>({park.city.name})</span>
                     </div>
-                  ))}
+                ))}
               </motion.div>
             )}
           </AnimatePresence>
@@ -148,21 +146,19 @@ export const BookingInput = ({ submitType, onClick }) => {
                 className='absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50'
               >
                 {parks
-                  .filter((park) =>
-                    park.toLowerCase().includes(to.toLowerCase())
-                  )
-                  .map((park, index) => (
+                  .filter((park) => park?.name?.toLowerCase().includes(to.toLowerCase()))
+                  .map((park) => (
                     <div
-                      key={index}
+                      key={park.id}
                       className='p-2 hover:bg-gray-200 cursor-pointer'
                       onClick={() => {
-                        setTo(park);
+                        setTo(`${park.name} (${park.city.name})`);
                         setShowToDropdown(false);
                       }}
                     >
-                      {park}
+                      {park.name} <span className='text-sm text-gray-500'>({park.city.name})</span>
                     </div>
-                  ))}
+                ))}
               </motion.div>
             )}
           </AnimatePresence>
