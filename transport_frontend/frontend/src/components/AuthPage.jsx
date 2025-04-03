@@ -52,8 +52,14 @@ export default function AuthPage({ isOpen, onClose }) {
       const data = await signup(form);
       loginToContext(data, true); // Automatically login user
       onClose(); // Close modal
+
+      // Display success message
+      toast.success("Signup successful! 🎉");
     } catch (err) {
       setError(err.message);
+
+      // Display error message
+      toast.error("Signup failed! ❌ " + err.message);
     } finally {
       setLoading(false);
     }

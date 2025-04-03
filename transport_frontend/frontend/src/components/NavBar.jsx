@@ -95,12 +95,10 @@ export default function NavBar() {
           </button>
           <button
             onClick={() => navigate("/#about")} // Navigate to about section
-            className='flex items-center text-gray-700 hover:text-red-500'
+            className='flex items-center text-gray-700 hover:text-red-500 hover:cursor-pointer'
           >
             <FaAddressCard className='mr-1' size={20} /> {/* About icon */}
-            <span className='font-semibold ml-1 hover:cursor-pointer text-base'>
-              About Us
-            </span>{" "}
+            <span className='font-semibold ml-1  text-base'>About Us</span>{" "}
             {/* About Us text */}
           </button>
           <a
@@ -127,7 +125,7 @@ export default function NavBar() {
             {isDropdownOpen && ( // Render dropdown if open
               <div
                 ref={dropdownRef} // Reference for dropdown
-                className='absolute right-0 py-4 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg'
+                className='absolute right-0 py-1 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg'
               >
                 {isAuthenticated && ( // Show username if authenticated
                   <div className='px-4 py-2 text-lg font-semibold text-gray-600'>

@@ -25,7 +25,7 @@ export default function SeatAvailability() {
   return (
     <div className='bg-gray-50 min-h-screen flex flex-col items-center p-6'>
       <motion.h1
-        className='text-4xl font-bold text-gray-800 mb-6'
+        className='md:text-3xl text-2xl font-bold text-gray-800 mb-6'
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -40,7 +40,7 @@ export default function SeatAvailability() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <h2 className='text-2xl font-semibold text-gray-700'>
+          <h2 className='md:text-xl text-lg font-semibold text-gray-700'>
             Travel Details
           </h2>
         </motion.div>
@@ -75,15 +75,15 @@ export default function SeatAvailability() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h3 className='text-xl font-semibold text-gray-700 mb-4'>
+        <h3 className='md:text-xl text-lg font-semibold text-gray-700 mb-4'>
           Seat Availability
         </h3>
-        <div className='flex justify-between text-gray-600 mb-4'>
+        <div className='flex justify-between text-gray-600 mb-4 md:text-base text-sm'>
           <p>
             <strong>Seats Remaining:</strong> {seatsRemaining}
           </p>
           <p>
-            <strong>Taken Seats(including your seats):</strong> {takenSeats}
+            <strong>Taken Seats (plus yours):</strong> {takenSeats}
           </p>
         </div>
 
