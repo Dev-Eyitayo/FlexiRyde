@@ -21,7 +21,7 @@ export default function ChangeBooking() {
 
   return (
     <>
-      <div className='bg-gray-100/20 min-h-screen flex flex-col items-center justify-start p-6'>
+      <div className='bg-gray-100/20 min-h-screen flex flex-col items-center p-6'>
         <motion.h1
           className='text-2xl font-semibold text-gray-700 mb-4'
           initial={{ opacity: 0, y: -20 }}
@@ -33,7 +33,7 @@ export default function ChangeBooking() {
 
         {/* Booking Reference Input */}
         <div className='bg-white shadow-md rounded-lg p-6 w-full max-w-3xl mb-6'>
-          <label className='text-gray-600 font-medium'>
+          <label className='text-gray-600 font-medium block mb-2'>
             Enter Booking Reference:
           </label>
           <input
@@ -41,7 +41,7 @@ export default function ChangeBooking() {
             value={bookingRef}
             onChange={(e) => setBookingRef(e.target.value)}
             placeholder='e.g. FXR-12345'
-            className='w-full mt-2 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none'
+            className='w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none'
           />
           <button
             onClick={handleFetchBooking}
@@ -59,36 +59,34 @@ export default function ChangeBooking() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
-            <h2 className='text-lg font-semibold text-gray-700'>
+            <h2 className='text-lg font-semibold text-gray-700 mb-2'>
               Current Booking Details
             </h2>
-            <p className='text-gray-600 mt-1'>
-              <strong>Bus Operator:</strong> {bookingDetails.busOperator}
-            </p>
-            <p className='text-gray-600'>
-              <strong>From:</strong> {bookingDetails.departure} →{" "}
-              <strong>To:</strong> {bookingDetails.destination}
-            </p>
-            <p className='text-gray-600'>
-              <strong>Date:</strong> {bookingDetails.date}
-            </p>
-            <p className='text-gray-600'>
-              <strong>Time:</strong> {bookingDetails.time}
-            </p>
-            <p className='text-gray-600'>
-              <strong>Number of seats booked:</strong> {bookingDetails.seat}
-            </p>
-            <p className='text-gray-600'>
-              <strong>Price:</strong> {bookingDetails.price}
-            </p>
-
-            {/* <h3 className='mt-4 text-lg font-medium text-gray-700'>
-              Modify Booking
-            </h3> */}
+            <div className='grid grid-cols-2 gap-4 text-gray-600'>
+              <p>
+                <strong>Bus Operator:</strong> {bookingDetails.busOperator}
+              </p>
+              <p>
+                <strong>From:</strong> {bookingDetails.departure} →{" "}
+                <strong>To:</strong> {bookingDetails.destination}
+              </p>
+              <p>
+                <strong>Date:</strong> {bookingDetails.date}
+              </p>
+              <p>
+                <strong>Time:</strong> {bookingDetails.time}
+              </p>
+              <p>
+                <strong>Number of seats booked:</strong> {bookingDetails.seat}
+              </p>
+              <p>
+                <strong>Price:</strong> {bookingDetails.price}
+              </p>
+            </div>
           </motion.div>
         )}
 
-        {/* Booking Input Component */}
+        {/* Booking Input Component (Unchanged) */}
         <div className='w-full flex flex-col items-center justify-center p-1 rounded-lg'>
           {bookingDetails && <BookingInput submitType='Modify Booking' />}
         </div>
