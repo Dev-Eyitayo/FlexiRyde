@@ -11,6 +11,8 @@ import { Link, useNavigate } from "react-router-dom"; // Import Link and useNavi
 import { IoMdArrowDropdown } from "react-icons/io"; // Import dropdown icon
 import { useAuth } from "../context/AuthContext"; // Import authentication context
 import logo from "../assets/logo.png"; // Import logo image
+import LogoutConfirmModal from "./LogoutConfirmModal";
+
 
 export default function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State to manage sidebar menu visibility
@@ -20,6 +22,8 @@ export default function NavBar() {
   const sidebarRef = useRef(null); // Reference for sidebar
   const navigate = useNavigate(); // Hook to programmatically navigate
   const { isAuthenticated, user, logout } = useAuth(); // Destructure authentication context
+  const [showLogoutModal, setShowLogoutModal] = useState(false); //Do NOT TOUCH, YOUNG MAN!!
+  
 
   // Function to handle user logout
   const handleLogout = () => {
@@ -150,8 +154,8 @@ export default function NavBar() {
                 <hr className='my-1 border-gray-200' /> {/* Divider */}
                 {isAuthenticated ? ( // Show logout button if authenticated
                   <button
-                    onClick={handleLogout} // Handle logout
-                    className='block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition'
+                    onClick={() => setShowLogoutModal(true)}
+                    className="block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition"
                   >
                     Logout
                   </button>
@@ -262,6 +266,14 @@ export default function NavBar() {
           </a>
         </div>
       </div>
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          logout();
+          setShowLogoutModal(false);
+        }}
+      />
     </nav>
   );
 }
