@@ -54,7 +54,7 @@ export default function AuthPage({ isOpen, onClose }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -50 }}
         transition={{ duration: 0.3 }}
-        className='bg-white w-[850px] m-4 flex rounded-lg shadow-lg overflow-hidden'
+        className='bg-white w-[900px] m-4 flex rounded-lg shadow-lg overflow-hidden'
       >
         {/* Left Section - Form */}
         <div className='w-full md:w-1/2 p-6'>
@@ -169,29 +169,35 @@ export default function AuthPage({ isOpen, onClose }) {
             {/* Signup Form */}
             {activeTab === "signup" && (
               <form onSubmit={handleSignup}>
-                <label className='text-base font-semibold text-gray-700'>
-                  First Name
-                </label>
-                <input
-                  type='text'
-                  name='first_name'
-                  value={form.first_name}
-                  onChange={handleChange}
-                  placeholder='Enter your first name'
-                  className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
-                />
+                <div className='flex flex-row gap-2 justify-between items-center'>
+                  <div>
+                    <label className='text-base font-semibold text-gray-700'>
+                      First Name
+                    </label>
+                    <input
+                      type='text'
+                      name='first_name'
+                      value={form.first_name}
+                      onChange={handleChange}
+                      placeholder='Enter your first name'
+                      className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
+                    />
+                  </div>
 
-                <label className='text-base font-semibold text-gray-700'>
-                  Last Name
-                </label>
-                <input
-                  type='text'
-                  name='last_name'
-                  value={form.last_name}
-                  onChange={handleChange}
-                  placeholder='Enter your last name'
-                  className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
-                />
+                  <div>
+                    <label className='text-base font-semibold text-gray-700'>
+                      Last Name
+                    </label>
+                    <input
+                      type='text'
+                      name='last_name'
+                      value={form.last_name}
+                      onChange={handleChange}
+                      placeholder='Enter your last name'
+                      className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
+                    />
+                  </div>
+                </div>
 
                 <label className='text-base font-semibold text-gray-700'>
                   Username
