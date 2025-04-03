@@ -1,3 +1,5 @@
+import authFetch from "./utils/authFetch";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export const login = async ({ email, password }) => {
@@ -29,6 +31,13 @@ export const signup = async (form) => {
   if (!res.ok) throw new Error(data.error || "Signup failed");
 
   return data;
+};
+
+
+export const getBusParks = async () => {
+  const res = await authFetch("/parks/");
+  if (!res.ok) throw new Error("Failed to load parks");
+  return res.json();
 };
 
 
