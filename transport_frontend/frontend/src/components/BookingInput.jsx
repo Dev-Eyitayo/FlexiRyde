@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getBusParks } from "../api"; // Adjust the import path as necessary
 import {
   FaMapMarkerAlt,
   FaCalendarAlt,
@@ -8,16 +9,20 @@ import {
   FaMinus,
   FaClock,
 } from "react-icons/fa";
-import { getBusParks } from "../api";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+
+// const parks = [
+//   "Jibowu Terminal",
+//   "Berger Park",
+//   "Oshodi Park",
+//   "Ibadan Terminal",
+//   "Abuja Central Park",
+// ];
 
 export const BookingInput = ({ submitType, onClick }) => {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [passengers, setPassengers] = useState(1);
-  const [time, setTime] = useState("");
-
+  const [time, setTime] = useState(""); // State for storing the travel time
   const [showFromDropdown, setShowFromDropdown] = useState(false);
   const [showToDropdown, setShowToDropdown] = useState(false);
   const [showPassengerModal, setShowPassengerModal] = useState(false);
@@ -28,28 +33,19 @@ export const BookingInput = ({ submitType, onClick }) => {
   const modalRef = useRef(null);
 
   const [parks, setParks] = useState([]);
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/auth");
-      return;
-    }
-
     const fetchParks = async () => {
       try {
         const data = await getBusParks();
-        // Transform to flat name list for display
-        const flatNames = data.map((park) => `${park.name} (${park.city.name})`);
-        setParks(flatNames);
+        setParks(data.map(p => p.name)); // assuming response is list of objects with `name`
       } catch (err) {
-        console.error("❌ Failed to load parks:", err.message);
+        console.error("❌ Could not load parks:", err.message);
       }
     };
-
+  
     fetchParks();
-  }, [isAuthenticated, navigate]);
+  }, []);
 
   // Close modals when clicking outside
   useEffect(() => {
@@ -76,7 +72,7 @@ export const BookingInput = ({ submitType, onClick }) => {
   }, []);
 
   return (
-    <div className='bg-gray-100 rounded-md p-3 px-4 mt-6 shadow-lg w-full max-w-7xl'>
+    <div className='bg-gray-100 rounded-md p-3 px-4 mt-6 shadow-lg w-full max-w-7xl '>
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-center'>
         {/* Leaving From */}
         <div className='relative w-full' ref={fromDropdownRef}>
@@ -95,6 +91,7 @@ export const BookingInput = ({ submitType, onClick }) => {
             />
           </div>
 
+          {/* Dropdown Suggestions */}
           <AnimatePresence>
             {showFromDropdown && (
               <motion.div
@@ -141,6 +138,7 @@ export const BookingInput = ({ submitType, onClick }) => {
             />
           </div>
 
+          {/* Dropdown Suggestions */}
           <AnimatePresence>
             {showToDropdown && (
               <motion.div
@@ -178,8 +176,8 @@ export const BookingInput = ({ submitType, onClick }) => {
             ref={dateRef}
             className='w-full bg-transparent focus:outline-none appearance-none'
             aria-label='Travel date'
-            min={new Date().toISOString().split("T")[0]}
-            onFocus={() => dateRef.current?.showPicker()}
+            min={new Date().toISOString().split("T")[0]} // Prevent past dates
+            onFocus={() => dateRef.current?.showPicker()} // Auto open calendar
           />
         </div>
 
@@ -196,7 +194,7 @@ export const BookingInput = ({ submitType, onClick }) => {
             onChange={(e) => setTime(e.target.value)}
             className='w-full bg-transparent focus:outline-none appearance-none cursor-pointer'
             aria-label='Travel time'
-            onFocus={(e) => e.target.showPicker()}
+            onFocus={(e) => e.target.showPicker()} // Auto open time picker
           />
         </div>
 
@@ -212,6 +210,7 @@ export const BookingInput = ({ submitType, onClick }) => {
             </span>
           </div>
 
+          {/* Passenger Modal */}
           <AnimatePresence>
             {showPassengerModal && (
               <motion.div

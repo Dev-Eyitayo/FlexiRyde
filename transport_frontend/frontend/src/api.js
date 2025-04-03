@@ -35,10 +35,11 @@ export const signup = async (form) => {
 
 
 export const getBusParks = async () => {
-  const res = await authFetch("/parks/");
-  if (!res.ok) throw new Error("Failed to load parks");
-  return res.json();
+  const res = await fetch(`${API_BASE_URL}/parks/`);
+  if (!res.ok) throw new Error("Failed to fetch parks");
+  return res.json(); // Should return list of park objects
 };
+
 
 
 export default API_BASE_URL;
