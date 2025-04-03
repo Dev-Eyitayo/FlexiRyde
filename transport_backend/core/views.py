@@ -10,7 +10,7 @@ class CityViewSet(viewsets.ModelViewSet):
 class BusParkViewSet(viewsets.ModelViewSet):
     queryset = BusPark.objects.all()
     serializer_class = BusParkSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
 
 class RouteViewSet(viewsets.ModelViewSet):
