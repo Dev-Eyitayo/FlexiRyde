@@ -24,15 +24,6 @@ export default function NavBar() {
   const { isAuthenticated, user, logout } = useAuth(); // Destructure authentication context
   const [showLogoutModal, setShowLogoutModal] = useState(false); //Do NOT TOUCH, YOUNG MAN!!
 
-  // Function to handle user logout
-  // const handleLogout = () => {
-  //   const confirmLogout = window.confirm("Are you sure you want to log out?");
-  //   if (confirmLogout) {
-  //     toast.success("Logout successful!"); // Show toast first
-  //     setTimeout(() => logout(), 2000); // Delay logout to allow toast to render
-  //   }
-  // };
-
   // Effect to close dropdown when clicking outside of it
   useEffect(() => {
     function handleClickOutside(event) {
@@ -129,7 +120,7 @@ export default function NavBar() {
               >
                 {isAuthenticated && ( // Show username if authenticated
                   <div className='px-4 py-2 text-lg font-semibold text-gray-600'>
-                    Hi, {user?.first_name || user?.email?.split("@")[0]}{" "}👋
+                    Hi, {user?.first_name || user?.email?.split("@")[0]} 👋
                     {/* Display username or email */}
                   </div>
                 )}
@@ -212,12 +203,22 @@ export default function NavBar() {
                   Travel History
                 </a>
                 <hr className='my-1 border-gray-200' /> {/* Divider */}
-                <button
-                  onClick={() => navigate("/auth")} // Navigate to auth page
-                  className='block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition'
-                >
-                  Sign Up/Log In
-                </button>
+                {isAuthenticated ? ( // Show logout button if authenticated
+                  <button
+                    onClick={() => setShowLogoutModal(true)}
+                    className='block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition hover:cursor-pointer'
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  // Show sign up/login button if not authenticated
+                  <button
+                    onClick={() => navigate("/auth")} // Navigate to auth page
+                    className='block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition'
+                  >
+                    Sign Up/Log In
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -273,7 +274,9 @@ export default function NavBar() {
         onClose={() => setShowLogoutModal(false)}
         onConfirm={() => {
           logout(); // Logout the user
-          toast.success("Logout successful!"); // Show success toast message
+          toast.success("Logout successful!", {
+            autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
+          });
           setShowLogoutModal(false); // Close modal
         }}
       />

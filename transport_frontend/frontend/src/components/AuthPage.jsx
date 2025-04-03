@@ -34,11 +34,15 @@ export default function AuthPage({ isOpen, onClose }) {
       loginToContext(data, true); // true = remember user in localStorage
 
       console.log("🔑 Auth Success:", data);
-      toast.success("Login successful! 🎉"); // Show success toast
+      toast.success("Login successful! 🎉", {
+        autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
+      });
       onClose(); // Close modal on success
     } catch (err) {
       setError(err.message);
-      toast.error("Login failed! ❌ " + err.message); // Show error toast
+      toast.error("Login failed! ❌ " + err.message, {
+        autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
+      });
     } finally {
       setLoading(false); // Stop loading
     }
@@ -54,12 +58,16 @@ export default function AuthPage({ isOpen, onClose }) {
       onClose(); // Close modal
 
       // Display success message
-      toast.success("Signup successful! 🎉");
+      toast.success("Signup successful! 🎉", {
+        autoClose: 1500, // Speed up toast by reducing display time to 1.5 seconds
+      });
     } catch (err) {
       setError(err.message);
 
       // Display error message
-      toast.error("Signup failed! ❌ " + err.message);
+      toast.error("Signup failed! ❌ " + err.message, {
+        autoClose: 1500, // Speed up toast by reducing display time to 1.5 seconds
+      });
     } finally {
       setLoading(false);
     }

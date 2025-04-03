@@ -37,14 +37,16 @@ export default function SeatAvailability() {
     } else if (selectedSeats.length < bookedSeats) {
       setSelectedSeats([...selectedSeats, seatNumber]);
     } else {
-      toast.error(`You booked just ${bookedSeats} seats.`);
+      toast.error(`You booked just ${bookedSeats} seats.`, { duration: 1500 });
     }
   };
 
   // Handle proceed button click
   const handleProceed = () => {
     if (selectedSeats.length < bookedSeats) {
-      toast.error(`Please select exactly ${bookedSeats} seats to proceed.`);
+      toast.error(`Please select exactly ${bookedSeats} seats to proceed.`, {
+        duration: 1500,
+      });
       return;
     }
     alert(`Proceeding to payment for seats: ${selectedSeats.join(", ")}`);
