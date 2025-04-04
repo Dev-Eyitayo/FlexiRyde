@@ -42,12 +42,22 @@ class IndirectRoute(models.Model):
         return f"{self.start_park.city.name} ➜ {self.transit_city.name} ➜ {self.destination_city.name}"
 
 class Bus(models.Model):
+    STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('maintenance', 'Under Maintenance'),
+        ('on_trip', 'Currently on Trip'),
+    ]
+
     number_plate = models.CharField(max_length=20, unique=True)
     total_seats = models.PositiveIntegerField(default=24)
-    seat_layout = models.CharField(max_length=10, default='4x6')  # Optional: layout for UI
+    seat_layout = models.CharField(max_length=10, default='4x6')  # e.g., 4 columns × 6 rows
+    park = models.ForeignKey('BusPark', on_delete=models.CASCADE, related_name='buses')
+    driver_name = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
 
     def __str__(self):
-        return f"{self.number_plate} ({self.total_seats} seats)"
+        return f"{self.number_plate} ({self.total_seats} seats at {self.park.name})"
+
 
 
 class Seat(models.Model):
