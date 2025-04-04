@@ -6,8 +6,10 @@ import ChangeBooking from "./sections/ChangeBooking";
 import Home from "./Pages/Home";
 import NavBar from "./components/NavBar";
 import SeatAvailability from "./Pages/SeatAvailability";
+import ContactSupport from "./Pages/ContactSupport";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Ticket from "./Pages/Ticket";
 export default function App() {
   return (
     <>
@@ -23,6 +25,8 @@ export default function App() {
         />
         <Route path='/modify-bookings' element={<ChangeBooking />} />
         <Route path='/check-availability' element={<SeatAvailability />} />
+        <Route path='/check-ticket' element={<Ticket />} />
+        <Route path='/contact-support' element={<ContactSupport />} />
       </Routes>
       <Footer />
     </>

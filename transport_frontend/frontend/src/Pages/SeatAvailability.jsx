@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { FaChair, FaBus } from "react-icons/fa";
 
 export default function SeatAvailability() {
   const location = useLocation();
@@ -19,7 +19,7 @@ export default function SeatAvailability() {
   const { from, to, date, time, bookedSeats } =
     location.state || dummyTravelData;
 
-  const totalSeats = 24;
+  const totalSeats = 16;
   const takenSeats = 6;
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [price, setPrice] = useState(0);
@@ -34,17 +34,15 @@ export default function SeatAvailability() {
   const toggleSeatSelection = (seatNumber) => {
     if (selectedSeats.includes(seatNumber)) {
       setSelectedSeats(selectedSeats.filter((seat) => seat !== seatNumber));
-    } else if (selectedSeats.length < bookedSeats) {
-      setSelectedSeats([...selectedSeats, seatNumber]);
     } else {
-      toast.error(`You booked just ${bookedSeats} seats.`, { duration: 1500 });
+      setSelectedSeats([...selectedSeats, seatNumber]);
     }
   };
 
   // Handle proceed button click
   const handleProceed = () => {
-    if (selectedSeats.length < bookedSeats) {
-      toast.error(`Please select exactly ${bookedSeats} seats to proceed.`, {
+    if (selectedSeats.length === 0) {
+      toast.error("Please select at least one seat to proceed.", {
         duration: 1500,
       });
       return;
@@ -58,14 +56,9 @@ export default function SeatAvailability() {
       <ToastContainer position='top-right' autoClose={3000} />
 
       {/* Header */}
-      <motion.h1
-        className='text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center'
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <h1 className='text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center'>
         Select Your Seats
-      </motion.h1>
+      </h1>
 
       {/* Travel Details */}
       <div className='bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl mb-6'>
@@ -107,48 +100,70 @@ export default function SeatAvailability() {
         </div>
       </div>
 
-      {/* Seat Selection */}
+      {/* Bus Layout */}
       <div className='bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl mb-6'>
         <h3 className='text-lg font-semibold text-gray-700 mb-3'>
-          Seat Availability
+          Bus Seat Map
         </h3>
-        <div className='grid grid-cols-4 sm:grid-cols-6 gap-3'>
-          {Array.from({ length: totalSeats }).map((_, index) => {
-            const seatNumber = index + 1;
-            const isTaken = seatNumber <= takenSeats;
-            const isSelected = selectedSeats.includes(seatNumber);
 
-            return (
-              <motion.div
-                key={seatNumber}
-                onClick={() => !isTaken && toggleSeatSelection(seatNumber)}
-                className={`h-12 w-12 flex justify-center items-center rounded-lg text-white font-semibold cursor-pointer transition
-                  ${
-                    isTaken
-                      ? "bg-red-500 cursor-not-allowed"
-                      : isSelected
-                        ? "bg-yellow-500"
-                        : "bg-green-500 hover:bg-green-600"
-                  }`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.02, duration: 0.3 }}
-              >
-                {seatNumber}
-              </motion.div>
-            );
-          })}
+        {/* Bus Front */}
+        <div className='flex justify-center mb-4'>
+          <FaBus className='text-4xl text-gray-700' />
+        </div>
+
+        {/* Seat Grid */}
+        <div className='grid grid-cols-4 gap-4'>
+          <div className='col-span-4 grid grid-cols-4 gap-3'>
+            {Array.from({ length: totalSeats }).map((_, index) => {
+              const seatNumber = index + 1;
+              const isTaken = seatNumber <= takenSeats;
+              const isSelected = selectedSeats.includes(seatNumber);
+
+              return (
+                <div
+                  key={seatNumber}
+                  onClick={() => !isTaken && toggleSeatSelection(seatNumber)}
+                  className={`flex flex-col items-center p-2 rounded-lg cursor-pointer transition
+                    ${
+                      isTaken
+                        ? "text-red-500 cursor-not-allowed"
+                        : isSelected
+                          ? "text-yellow-500 bg-yellow-50"
+                          : "text-green-500 hover:bg-green-50"
+                    }`}
+                >
+                  <FaChair className='text-2xl' />
+                  <span className='text-sm font-medium mt-1'>{seatNumber}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Pricing Information */}
       <div className='bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl mb-6'>
         <h3 className='text-lg font-semibold text-gray-700 mb-3'>
-          Total Price
+          Payment Summary
         </h3>
-        <p className='text-2xl font-bold text-gray-800'>
-          ₦{(price * selectedSeats.length).toLocaleString()}
-        </p>
+        <div className='space-y-3'>
+          <div className='flex justify-between'>
+            <span className='text-gray-600'>Seats Selected:</span>
+            <span className='font-medium'>
+              {selectedSeats.length > 0 ? selectedSeats.join(", ") : "None"}
+            </span>
+          </div>
+          <div className='flex justify-between'>
+            <span className='text-gray-600'>Price per Seat:</span>
+            <span className='font-medium'>₦{price.toLocaleString()}</span>
+          </div>
+          <div className='flex justify-between border-t pt-2'>
+            <span className='text-gray-600 font-semibold'>Total Amount:</span>
+            <span className='text-xl font-bold text-blue-600'>
+              ₦{(price * selectedSeats.length).toLocaleString()}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Proceed to Payment */}
@@ -157,15 +172,15 @@ export default function SeatAvailability() {
           onClick={handleProceed}
           className={`py-3 px-6 rounded-lg w-full text-lg font-semibold transition duration-300
             ${
-              selectedSeats.length === bookedSeats
+              selectedSeats.length > 0
                 ? "bg-blue-600 text-white hover:bg-blue-700"
                 : "bg-gray-400 text-gray-700 cursor-not-allowed"
             }`}
-          disabled={selectedSeats.length !== bookedSeats}
+          disabled={selectedSeats.length === 0}
         >
-          {selectedSeats.length === bookedSeats
-            ? `Proceed with Seats: ${selectedSeats.join(", ")}`
-            : "Select Exact Seats to Continue"}
+          {selectedSeats.length > 0
+            ? `Proceed with ${selectedSeats.length} Seats: ${selectedSeats.join(", ")}`
+            : "Select Seats to Continue"}
         </button>
       </div>
     </div>
