@@ -5,31 +5,43 @@ from django.conf import settings
 class City(models.Model):
     name = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
 
+    class Meta:
+        unique_together = ('name', 'state')
+        ordering = ['state', 'name']
+
     def __str__(self):
         return f"{self.name}, {self.state}"
+
     
 
 class BusPark(models.Model):
     name = models.CharField(max_length=100)
+    code = models.CharField(max_length=10, unique=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='parks')
     latitude = models.FloatField()
     longitude = models.FloatField()
+    status = models.CharField(max_length=20, choices=[('active', 'Active'), ('inactive', 'Inactive')], default='active')
     admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                               limit_choices_to={'role': 'park_admin'}, related_name='managed_parks')
 
     def __str__(self):
         return f"{self.name} ({self.city.name})"
+
     
 class Route(models.Model):
     origin_park = models.ForeignKey(BusPark, on_delete=models.CASCADE, related_name='routes_from')
     destination_city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='direct_routes')
     distance_km = models.FloatField()
+    estimated_duration_min = models.PositiveIntegerField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=[('active', 'Active'), ('disabled', 'Disabled')], default='active')
 
     def __str__(self):
         return f"{self.origin_park.name} ➜ {self.destination_city.name}"
+
     
 class IndirectRoute(models.Model):
     start_park = models.ForeignKey(BusPark, on_delete=models.CASCADE, related_name='indirect_starts')
@@ -74,17 +86,31 @@ class Seat(models.Model):
         return f"{self.seat_number} - {self.bus.number_plate}"
 
 
+# class Trip(models.Model):
+#     route = models.ForeignKey('Route', on_delete=models.CASCADE, related_name='trips')
+#     bus = models.ForeignKey(Bus, on_delete=models.CASCADE, related_name='trips')
+#     travel_date = models.DateField()
+
+#     class Meta:
+#         unique_together = ('route', 'bus', 'travel_date')
+#         ordering = ['travel_date']
+
+#     def __str__(self):
+#         return f"{self.route.origin_park} ➜ {self.route.destination_city} on {self.travel_date}"
+
 class Trip(models.Model):
-    route = models.ForeignKey('Route', on_delete=models.CASCADE, related_name='trips')
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name='trips')
     bus = models.ForeignKey(Bus, on_delete=models.CASCADE, related_name='trips')
     travel_date = models.DateField()
+    departure_time = models.TimeField()
+    seat_price = models.FloatField(null=True, blank=True)
 
     class Meta:
         unique_together = ('route', 'bus', 'travel_date')
         ordering = ['travel_date']
 
     def __str__(self):
-        return f"{self.route.origin_park} ➜ {self.route.destination_city} on {self.travel_date}"
+        return f"{self.route} on {self.travel_date}"
 
 
 class SeatReservation(models.Model):
@@ -99,7 +125,6 @@ class SeatReservation(models.Model):
         return f"{self.seat.seat_number} reserved on {self.trip}"
 
 
-# Update this existing model
 class Booking(models.Model):
     STATUS_CHOICES = (
         ('confirmed', 'Confirmed'),
@@ -107,10 +132,9 @@ class Booking(models.Model):
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookings')
-    origin_park = models.ForeignKey('BusPark', on_delete=models.CASCADE)
-    destination_city = models.ForeignKey('City', on_delete=models.CASCADE)
-    travel_date = models.DateField()
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='bookings', null=True)
     price = models.FloatField()
+    payment_reference = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
     created_at = models.DateTimeField(auto_now_add=True)
 
