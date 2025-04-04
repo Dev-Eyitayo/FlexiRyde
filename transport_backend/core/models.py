@@ -139,4 +139,4 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.email} | {self.origin_park.name} → {self.destination_city.name}"
+         return f"{self.user.email} | {self.trip.route.origin_park.name} → {self.trip.route.destination_city.name}"

@@ -1,10 +1,10 @@
+
 import random
 from datetime import timedelta, time, date
 
 from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 
 from core.models import (
     City, BusPark, Route, Bus, Seat, Trip,
@@ -13,12 +13,71 @@ from core.models import (
 
 User = get_user_model()
 
+FIRST_NAMES = [
+    "Tolu", "Aminu", "Chinwe", "Ugochi", "Femi", "Ngozi", "Suleiman", "Ade", "Kelechi",
+    "Hadiza", "Bola", "Ifeanyi", "Chuka", "Fatima", "Samuel", "Olumide", "Blessing"
+]
+
+LAST_NAMES = [
+    "Adedayo", "Okonkwo", "Nwosu", "Olawale", "Yakubu", "Ibrahim", "Bello", "Adeyemi",
+    "Eze", "Abubakar", "Ogunleye", "Anyanwu", "Adewale", "Balogun", "Okwuosa"
+]
+
+REAL_PARKS_BY_CITY = {
+    "Lagos": [
+        ("Jibowu Terminal", 6.5175, 3.3721),
+        ("Ojota New Garage", 6.5892, 3.3703),
+        ("Mile 2 Park", 6.4654, 3.3133),
+        ("CMS Bus Park", 6.4500, 3.4000)
+    ],
+    "Abuja": [
+        ("Utako Motor Park", 9.0723, 7.4496),
+        ("Garki Model Park", 9.0292, 7.5004),
+        ("Area 1 Bus Terminal", 9.0350, 7.4891),
+        ("Berger Junction", 9.0667, 7.4833)
+    ],
+    "Ibadan": [
+        ("Iwo Road Park", 7.3916, 3.9377),
+        ("Challenge Park", 7.3601, 3.8753),
+        ("Dugbe Park", 7.3878, 3.8964),
+        ("Ojoo Motor Park", 7.4519, 3.9004)
+    ],
+    "Kano": [
+        ("Sabon Gari Park", 12.0123, 8.5167),
+        ("New Road Park", 12.0076, 8.5304),
+        ("Naibawa Park", 11.9722, 8.5321),
+        ("Yankaba Park", 12.0158, 8.5532)
+    ],
+    "Enugu": [
+        ("Holy Ghost Park", 6.4474, 7.5139),
+        ("Abakpa Nike Park", 6.5244, 7.5086),
+        ("Gariki Park", 6.4561, 7.5175),
+        ("Old Park", 6.4444, 7.5021)
+    ],
+    "Ilorin": [
+        ("Emir Road Motor Park", 8.4964, 4.5389),
+        ("Old Garage", 8.5003, 4.5481),
+        ("Challenge Bus Stop", 8.4756, 4.5402),
+        ("Sawmill Park", 8.5101, 4.5505)
+    ],
+    "Port Harcourt": [
+        ("Waterlines Park", 4.8212, 7.0154),
+        ("Eleme Junction Park", 4.8453, 7.0833),
+        ("Mile 3 Motor Park", 4.8402, 6.9983),
+        ("Oil Mill Park", 4.8093, 7.0657)
+    ],
+    "Jos": [
+        ("Terminus Park", 9.9286, 8.8920),
+        ("Farin Gada Park", 9.9561, 8.8722),
+        ("Bauchi Road Park", 9.9501, 8.9002),
+        ("West of Mines Park", 9.9203, 8.8804)
+    ]
+}
 
 class Command(BaseCommand):
-    help = 'Seed the database with sample cities, parks, buses, routes, trips, users, bookings, and seats.'
+    help = 'Seeds the database with real Nigerian park data and rich test content.'
 
-    def handle(self, *args, **options):
-        self.stdout.write(self.style.WARNING('⚠️ Deleting old data...'))
+    def handle(self, *args, **kwargs):
         Booking.objects.all().delete()
         SeatReservation.objects.all().delete()
         Trip.objects.all().delete()
@@ -29,66 +88,73 @@ class Command(BaseCommand):
         City.objects.all().delete()
         User.objects.exclude(is_superuser=True).delete()
 
-        self.stdout.write(self.style.SUCCESS('✅ Cleared old data.\n'))
-
         self.create_users()
         self.create_cities_and_parks()
         self.create_buses_and_seats()
         self.create_routes_and_trips()
         self.create_bookings()
 
-        self.stdout.write(self.style.SUCCESS('🎉 Database seeded successfully.'))
+        self.stdout.write(self.style.SUCCESS('🎯 DB seeded with real parks and rich data.'))
 
     def create_users(self):
         self.passengers = []
         self.park_admins = []
+        used_usernames = set()
 
-        for i in range(15):
+        for _ in range(50):
+            while True:
+                fname = random.choice(FIRST_NAMES)
+                lname = random.choice(LAST_NAMES)
+                username = f"{fname.lower()}{lname.lower()}{random.randint(100,999)}"
+                if username not in used_usernames and not User.objects.filter(username=username).exists():
+                    used_usernames.add(username)
+                    break
             user = User.objects.create_user(
-                username=f"user{i}",
-                email=f"user{i}@example.com",
-                password="pass1234",
+                username=username,
+                email=f"{username}@example.com",
+                password="pass12345",
+                first_name=fname,
+                last_name=lname,
                 nin=f"9{random.randint(10**9, 10**10 - 1)}",
                 role='passenger'
             )
             self.passengers.append(user)
 
-        for i in range(3):
+        for i in range(8):
+            fname = random.choice(FIRST_NAMES)
+            lname = random.choice(LAST_NAMES)
             admin = User.objects.create_user(
                 username=f"admin{i}",
-                email=f"admin{i}@example.com",
-                password="admin1234",
+                email=f"admin{i}@parks.com",
+                password="pass12345",
+                first_name=fname,
+                last_name=lname,
                 nin=f"9{random.randint(10**9, 10**10 - 1)}",
                 role='park_admin'
             )
             self.park_admins.append(admin)
 
     def create_cities_and_parks(self):
-        city_data = [
-            ("Lagos", "Lagos", (6.5244, 3.3792)),
-            ("Abuja", "FCT", (9.0579, 7.4951)),
-            ("Ibadan", "Oyo", (7.3775, 3.9470)),
-            ("Enugu", "Enugu", (6.5244, 7.5086)),
-            ("Kano", "Kano", (12.0022, 8.5919)),
-        ]
-
         self.parks = []
-        for i, (name, state, (lat, lon)) in enumerate(city_data):
-            city = City.objects.create(
-                name=name,
-                state=state,
-                slug=slugify(name),
-                latitude=lat,
-                longitude=lon,
-            )
+        self.city_map = {}
 
-            for j in range(2):  # 2 parks per city
+        for city_name, parks in REAL_PARKS_BY_CITY.items():
+            city = City.objects.create(
+                name=city_name,
+                state=city_name,  # simplify for demo
+                slug=slugify(city_name),
+                latitude=parks[0][1],
+                longitude=parks[0][2]
+            )
+            self.city_map[city_name] = city
+
+            for park_name, lat, lon in parks:
                 park = BusPark.objects.create(
-                    name=f"{name} Central Park {j+1}",
-                    code=f"{name[:2].upper()}{j+1}",
+                    name=park_name,
+                    code=slugify(park_name)[:5].upper() + str(random.randint(10, 99)),
                     city=city,
-                    latitude=lat + random.uniform(-0.01, 0.01),
-                    longitude=lon + random.uniform(-0.01, 0.01),
+                    latitude=lat,
+                    longitude=lon,
                     admin=random.choice(self.park_admins)
                 )
                 self.parks.append(park)
@@ -96,68 +162,68 @@ class Command(BaseCommand):
     def create_buses_and_seats(self):
         self.buses = []
         for park in self.parks:
-            for b in range(2):  # 2 buses per park
+            for _ in range(random.randint(2, 3)):
                 bus = Bus.objects.create(
-                    number_plate=f"{park.code}-{random.randint(100, 999)}",
+                    number_plate=f"{park.code}-{random.randint(100,999)}",
                     total_seats=24,
                     seat_layout='4x6',
                     park=park,
-                    driver_name=f"Driver {random.randint(1, 50)}",
-                    status='available',
+                    driver_name=random.choice(FIRST_NAMES) + " " + random.choice(LAST_NAMES),
+                    status='available'
                 )
                 self.buses.append(bus)
-
-                # Generate 24 seats in 4x6
-                for r in range(6):
-                    for c in range(4):
-                        seat_no = f"{r+1}{chr(65 + c)}"
+                for row in range(6):
+                    for col in range(4):
                         Seat.objects.create(
                             bus=bus,
-                            seat_number=seat_no,
-                            row=r + 1,
-                            column=c + 1,
+                            seat_number=f"{row+1}{chr(65 + col)}",
+                            row=row + 1,
+                            column=col + 1
                         )
 
     def create_routes_and_trips(self):
         self.routes = []
+        self.trips = []
+        used_trip_keys = set()
+
         for i in range(len(self.parks)):
             for j in range(len(self.parks)):
                 if i != j and random.random() > 0.5:
-                    origin = self.parks[i]
-                    destination_city = self.parks[j].city
-                    distance = round(random.uniform(100, 500), 1)
                     route = Route.objects.create(
-                        origin_park=origin,
-                        destination_city=destination_city,
-                        distance_km=distance,
-                        estimated_duration_min=int(distance * 0.9)
+                        origin_park=self.parks[i],
+                        destination_city=self.parks[j].city,
+                        distance_km=round(random.uniform(100, 700), 1),
+                        estimated_duration_min=random.randint(120, 600)
                     )
                     self.routes.append(route)
 
-        self.trips = []
         for route in self.routes:
-            for i in range(3):  # Next 3 days
+            for i in range(7):
                 travel_date = date.today() + timedelta(days=i)
-                departure_time = time(hour=random.randint(6, 16), minute=0)
-                trip = Trip.objects.create(
-                    route=route,
-                    bus=random.choice(self.buses),
-                    travel_date=travel_date,
-                    departure_time=departure_time,
-                    seat_price=random.randint(3000, 7000),
-                )
-                self.trips.append(trip)
+                for _ in range(random.randint(1, 3)):
+                    bus = random.choice(self.buses)
+                    key = (route.id, bus.id, travel_date)
+                    if key in used_trip_keys:
+                        continue
+                    used_trip_keys.add(key)
+                    trip = Trip.objects.create(
+                        route=route,
+                        bus=bus,
+                        travel_date=travel_date,
+                        departure_time=time(hour=random.randint(6, 18), minute=random.choice([0, 30])),
+                        seat_price=random.randint(3000, 10000)
+                    )
+                    self.trips.append(trip)
 
     def create_bookings(self):
-        for _ in range(30):
+        for _ in range(300):
             user = random.choice(self.passengers)
             trip = random.choice(self.trips)
-            available_seats = Seat.objects.filter(bus=trip.bus).exclude(
+            available = Seat.objects.filter(bus=trip.bus).exclude(
                 id__in=SeatReservation.objects.filter(trip=trip).values_list('seat_id', flat=True)
             )
-            seat_count = random.randint(1, 3)
-            selected_seats = random.sample(list(available_seats), min(seat_count, len(available_seats)))
-            price = trip.seat_price * len(selected_seats)
+            seats = random.sample(list(available), min(random.randint(1, 4), len(available)))
+            price = trip.seat_price * len(seats)
 
             booking = Booking.objects.create(
                 user=user,
@@ -167,9 +233,5 @@ class Command(BaseCommand):
                 status='confirmed',
             )
 
-            for seat in selected_seats:
-                SeatReservation.objects.create(
-                    trip=trip,
-                    seat=seat,
-                    booking=booking
-                )
+            for seat in seats:
+                SeatReservation.objects.create(trip=trip, seat=seat, booking=booking)
