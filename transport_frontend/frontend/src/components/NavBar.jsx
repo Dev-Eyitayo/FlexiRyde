@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useContext } from "react"; // Import necessary hooks from React
+import { useState, useRef, useEffect } from "react";
 import {
   FaHeadphones,
   FaUser,
@@ -6,146 +6,158 @@ import {
   FaTimes,
   FaAddressCard,
   FaBus,
-} from "react-icons/fa"; // Import icons from react-icons
-import { Link, useNavigate } from "react-router-dom"; // Import Link and useNavigate for routing
-import { IoMdArrowDropdown } from "react-icons/io"; // Import dropdown icon
-import { useAuth } from "../context/AuthContext"; // Import authentication context
-import logo from "../assets/logo.png"; // Import logo image
+} from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { IoMdArrowDropdown } from "react-icons/io";
+import { useAuth } from "../context/AuthContext";
+import logo from "../assets/logo.png";
 import LogoutConfirmModal from "./LogoutConfirmModal";
 import { toast } from "react-toastify";
 
 export default function NavBar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // State to manage sidebar menu visibility
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to manage dropdown visibility
-  const dropdownRef = useRef(null); // Reference for dropdown to handle outside clicks
-  const mobileDropdownRef = useRef(null); // Reference for mobile dropdown
-  const sidebarRef = useRef(null); // Reference for sidebar
-  const navigate = useNavigate(); // Hook to programmatically navigate
-  const { isAuthenticated, user, logout } = useAuth(); // Destructure authentication context
-  const [showLogoutModal, setShowLogoutModal] = useState(false); //Do NOT TOUCH, YOUNG MAN!!
-
-  // Effect to close dropdown when clicking outside of it
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target) &&
-        mobileDropdownRef.current &&
-        !mobileDropdownRef.current.contains(event.target)
-      ) {
-        setIsDropdownOpen(false); // Close dropdown if clicked outside
-      }
-    }
-
-    if (isDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside); // Add event listener if dropdown is open
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside); // Cleanup event listener
-    };
-  }, [isDropdownOpen]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false);
+  const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
+  const desktopDropdownRef = useRef(null);
+  const mobileDropdownRef = useRef(null);
+  const desktopToggleRef = useRef(null);
+  const mobileToggleRef = useRef(null);
+  const sidebarRef = useRef(null);
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Effect to close sidebar when clicking outside of it
   useEffect(() => {
     function handleClickOutside(event) {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        setIsMenuOpen(false); // Close sidebar if clicked outside
+        setIsMenuOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside); // Add event listener for sidebar
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside); // Cleanup event listener
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const toggleDesktopDropdown = () => {
+    setIsDesktopDropdownOpen((prev) => !prev);
+    setIsMobileDropdownOpen(false);
+  };
+
+  const toggleMobileDropdown = () => {
+    setIsMobileDropdownOpen((prev) => !prev);
+    setIsDesktopDropdownOpen(false);
+  };
+
+  // Effect to handle clicks outside dropdowns
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        desktopToggleRef.current &&
+        desktopDropdownRef.current &&
+        !desktopToggleRef.current.contains(event.target) &&
+        !desktopDropdownRef.current.contains(event.target)
+      ) {
+        setIsDesktopDropdownOpen(false);
+      }
+      if (
+        mobileToggleRef.current &&
+        mobileDropdownRef.current &&
+        !mobileToggleRef.current.contains(event.target) &&
+        !mobileDropdownRef.current.contains(event.target)
+      ) {
+        setIsMobileDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
     <nav className='bg-white shadow-md p-4 sticky top-0 z-50'>
-      {" "}
-      {/* Navigation bar styling */}
       <div className='container mx-auto flex items-center justify-between'>
-        {" "}
-        {/* Flex container for layout */}
         <button
           className='flex items-center space-x-6 cursor-pointer'
-          onClick={() => navigate("/")} // Navigate to home on logo click
+          onClick={() => navigate("/")}
         >
-          <img src={logo} alt='Brand Logo' className='md:h-12 h-10' />{" "}
-          {/* Brand logo */}
+          <img src={logo} alt='Brand Logo' className='md:h-12 h-10' />
         </button>
         <div className='hidden md:flex gap-4 items-center space-x-6'>
-          {" "}
-          {/* Desktop navigation items */}
           <button
-            onClick={() => navigate("/#bookhero")} // Navigate to book ride section
+            onClick={() => navigate("/#bookhero")}
             className='flex items-center text-gray-700 cursor-pointer hover:text-red-500'
           >
-            <FaBus className='mr-1' size={20} /> {/* Bus icon */}
-            <span className='font-semibold ml-1 text-base'>Book Ride</span>{" "}
-            {/* Book Ride text */}
+            <FaBus className='mr-1' size={20} />
+            <span className='font-semibold ml-1 text-base'>Book Ride</span>
           </button>
           <button
-            onClick={() => navigate("/#about")} // Navigate to about section
+            onClick={() => navigate("/#about")}
             className='flex items-center text-gray-700 hover:text-red-500 hover:cursor-pointer'
           >
-            <FaAddressCard className='mr-1' size={20} /> {/* About icon */}
-            <span className='font-semibold ml-1  text-base'>About Us</span>{" "}
-            {/* About Us text */}
+            <FaAddressCard className='mr-1' size={20} />
+            <span className='font-semibold ml-1  text-base'>About Us</span>
           </button>
           <a
-            href='#' // Placeholder for contact support link
+            href='#'
             className='flex items-center text-gray-700 hover:text-red-500'
           >
-            <FaHeadphones className='mr-1' size={20} /> {/* Headphones icon */}
+            <FaHeadphones className='mr-1' size={20} />
             <span className='font-semibold ml-1 text-base'>
               Contact Support
-            </span>{" "}
-            {/* Contact Support text */}
+            </span>
           </a>
           <div className='relative'>
-            {" "}
-            {/* Dropdown for user options */}
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)} // Toggle dropdown visibility
+              ref={desktopToggleRef}
+              onClick={toggleDesktopDropdown}
               className='flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus:outline-none'
+              aria-expanded={isDesktopDropdownOpen}
+              aria-haspopup='true'
             >
-              <FaUser size={22} className='text-gray-700' /> {/* User icon */}
-              <IoMdArrowDropdown className='ml-1 text-gray-700' />{" "}
-              {/* Dropdown arrow */}
+              <FaUser size={22} className='text-gray-700' />
+              <IoMdArrowDropdown
+                className={`ml-1 text-gray-700 transition-transform ${isDesktopDropdownOpen ? "rotate-180" : ""}`}
+              />
             </button>
-            {isDropdownOpen && ( // Render dropdown if open
+            {isDesktopDropdownOpen && (
               <div
-                ref={dropdownRef} // Reference for dropdown
+                ref={desktopDropdownRef}
                 className='absolute right-0 py-1 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg'
               >
-                {isAuthenticated && ( // Show username if authenticated
+                {isAuthenticated && (
                   <div className='px-4 py-2 text-lg font-semibold text-gray-600'>
                     Hi, {user?.first_name || user?.email?.split("@")[0]} 👋
-                    {/* Display username or email */}
                   </div>
                 )}
                 <button
-                  onClick={() => navigate("/modify-bookings")} // Navigate to modify bookings
+                  onClick={() => {
+                    navigate("/modify-bookings");
+                    setIsDesktopDropdownOpen(false);
+                  }}
                   className='block px-4 text-start w-full py-2 text-gray-700 hover:bg-gray-100 h transition hover:cursor-pointer'
                 >
                   Change Travel Date
                 </button>
-                <hr className='my-1 border-gray-200' /> {/* Divider */}
+                <hr className='my-1 border-gray-200' />
                 <a
-                  href='#' // Placeholder for show my ticket link
+                  href='#'
                   className='block px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
                 >
                   Show My Ticket
                 </a>
-                <hr className='my-1 border-gray-200' /> {/* Divider */}
+                <hr className='my-1 border-gray-200' />
                 <a
-                  href='#' // Placeholder for travel history link
+                  href='#'
                   className='block px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
                 >
                   Travel History
                 </a>
-                <hr className='my-1 border-gray-200' /> {/* Divider */}
-                {isAuthenticated ? ( // Show logout button if authenticated
+                <hr className='my-1 border-gray-200' />
+                {isAuthenticated ? (
                   <button
                     onClick={() => setShowLogoutModal(true)}
                     className='block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition hover:cursor-pointer'
@@ -153,9 +165,8 @@ export default function NavBar() {
                     Logout
                   </button>
                 ) : (
-                  // Show sign up/login button if not authenticated
                   <button
-                    onClick={() => navigate("/auth")} // Navigate to auth page
+                    onClick={() => navigate("/auth")}
                     className='block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition'
                   >
                     Sign Up/Log In
@@ -166,44 +177,46 @@ export default function NavBar() {
           </div>
         </div>
         <div className='md:hidden flex flex-row gap-3'>
-          {" "}
-          {/* Mobile navigation items */}
-          <div className='relative' ref={mobileDropdownRef}>
-            {" "}
-            {/* Mobile dropdown for user options */}
+          <div className='relative'>
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)} // Toggle mobile dropdown visibility
+              ref={mobileToggleRef}
+              onClick={toggleMobileDropdown}
               className='flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus:outline-none'
+              aria-expanded={isMobileDropdownOpen}
+              aria-haspopup='true'
             >
-              <FaUser size={16} className='text-gray-700' /> {/* User icon */}
+              <FaUser size={16} className='text-gray-700' />
             </button>
-            {isDropdownOpen && ( // Render mobile dropdown if open
+            {isMobileDropdownOpen && (
               <div
-                ref={mobileDropdownRef} // Reference for mobile dropdown
+                ref={mobileDropdownRef}
                 className='absolute right-0 py-4 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg'
               >
                 <button
-                  onClick={() => navigate("/modify-bookings")} // Navigate to modify bookings
+                  onClick={() => {
+                    navigate("/modify-bookings");
+                    setIsMobileDropdownOpen(false);
+                  }}
                   className='block w-full text-start px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
                 >
                   Change Travel Date
                 </button>
-                <hr className='my-1 border-gray-200' /> {/* Divider */}
+                <hr className='my-1 border-gray-200' />
                 <a
-                  href='#' // Placeholder for show my ticket link
+                  href='#'
                   className='block px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
                 >
                   Show My Ticket
                 </a>
-                <hr className='my-1 border-gray-200' /> {/* Divider */}
+                <hr className='my-1 border-gray-200' />
                 <a
-                  href='#' // Placeholder for travel history link
+                  href='#'
                   className='block px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
                 >
                   Travel History
                 </a>
-                <hr className='my-1 border-gray-200' /> {/* Divider */}
-                {isAuthenticated ? ( // Show logout button if authenticated
+                <hr className='my-1 border-gray-200' />
+                {isAuthenticated ? (
                   <button
                     onClick={() => setShowLogoutModal(true)}
                     className='block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition hover:cursor-pointer'
@@ -211,9 +224,8 @@ export default function NavBar() {
                     Logout
                   </button>
                 ) : (
-                  // Show sign up/login button if not authenticated
                   <button
-                    onClick={() => navigate("/auth")} // Navigate to auth page
+                    onClick={() => navigate("/auth")}
                     className='block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition'
                   >
                     Sign Up/Log In
@@ -224,48 +236,43 @@ export default function NavBar() {
           </div>
           <button
             className='md:hidden text-gray-700 focus:outline-none'
-            onClick={() => setIsMenuOpen(true)} // Open sidebar menu
+            onClick={() => setIsMenuOpen(true)}
           >
-            <FaBars size={24} /> {/* Hamburger icon for mobile menu */}
+            <FaBars size={24} />
           </button>
         </div>
       </div>
       <div
-        ref={sidebarRef} // Reference for sidebar
+        ref={sidebarRef}
         className={`fixed top-0 right-0 h-full w-64 backdrop-blur-lg bg-black/40 transform ${isMenuOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 ease-in-out p-4`}
       >
         <button
           className='absolute top-4 right-4 text-gray-700 focus:outline-none'
-          onClick={() => setIsMenuOpen(false)} // Close sidebar menu
+          onClick={() => setIsMenuOpen(false)}
         >
-          <FaTimes className='mt-4 text-white' size={24} /> {/* Close icon */}
+          <FaTimes className='mt-4 text-white' size={24} />
         </button>
         <div className='mt-24 flex flex-col gap-4 space-y-6'>
-          {" "}
-          {/* Sidebar navigation items */}
           <button
-            onClick={() => navigate("/#bookhero")} // Navigate to book ride section
+            onClick={() => navigate("/#bookhero")}
             className='text-white hover:text-blue-500 flex gap-2 items-center'
           >
-            <FaBus className='mr-2' size={18} /> {/* Bus icon */}
-            <span className='font-semibold'>Book Ride</span>{" "}
-            {/* Book Ride text */}
+            <FaBus className='mr-2' size={18} />
+            <span className='font-semibold'>Book Ride</span>
           </button>
           <a
-            href='#about' // Navigate to about section
+            href='#about'
             className='text-white hover:text-blue-500 flex gap-2 items-center'
           >
-            <FaAddressCard className='mr-2' size={18} /> {/* About icon */}
-            <span className='font-semibold'>About Us</span>{" "}
-            {/* About Us text */}
+            <FaAddressCard className='mr-2' size={18} />
+            <span className='font-semibold'>About Us</span>
           </a>
           <a
-            href='#' // Placeholder for contact support link
+            href='#'
             className='text-white hover:text-blue-500 flex gap-2 items-center'
           >
-            <FaHeadphones className='mr-2' size={18} /> {/* Headphones icon */}
-            <span className='font-semibold'>Contact Support</span>{" "}
-            {/* Contact Support text */}
+            <FaHeadphones className='mr-2' size={18} />
+            <span className='font-semibold'>Contact Support</span>
           </a>
         </div>
       </div>
@@ -273,11 +280,11 @@ export default function NavBar() {
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={() => {
-          logout(); // Logout the user
+          logout();
           toast.success("Logout successful!", {
-            autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
+            autoClose: 1000,
           });
-          setShowLogoutModal(false); // Close modal
+          setShowLogoutModal(false);
         }}
       />
     </nav>

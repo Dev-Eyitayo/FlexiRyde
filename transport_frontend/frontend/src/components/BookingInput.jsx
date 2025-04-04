@@ -30,7 +30,8 @@ export const BookingInput = ({ submitType, onClick }) => {
   const dateRef = useRef(null);
   const fromDropdownRef = useRef(null);
   const toDropdownRef = useRef(null);
-  const modalRef = useRef(null);
+  const passengerInputRef = useRef(null);
+  const passengerModalRef = useRef(null);
 
   // Parks + loading
   const [parks, setParks] = useState([]);
@@ -41,7 +42,7 @@ export const BookingInput = ({ submitType, onClick }) => {
     const fetchParks = async () => {
       try {
         const data = await getBusParks();
-        setParks(data);  // data is e.g. [{id, name, city: {name}, ...}, ...]
+        setParks(data); // data is e.g. [{id, name, city: {name}, ...}, ...]
       } catch (err) {
         console.error("❌ Could not load parks:", err.message);
       } finally {
@@ -55,7 +56,12 @@ export const BookingInput = ({ submitType, onClick }) => {
   // Close passenger / dropdown modals if user clicks outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
+      if (
+        passengerInputRef.current &&
+        !passengerInputRef.current.contains(event.target) &&
+        passengerModalRef.current &&
+        !passengerModalRef.current.contains(event.target)
+      ) {
         setShowPassengerModal(false);
       }
       if (
@@ -98,9 +104,7 @@ export const BookingInput = ({ submitType, onClick }) => {
   const renderGroupedDropdown = (query, setValue, setDropdown) => {
     if (loading) {
       return (
-        <div className="p-3 text-center text-gray-500">
-          Loading parks...
-        </div>
+        <div className='p-3 text-center text-gray-500'>Loading parks...</div>
       );
     }
 
@@ -108,13 +112,13 @@ export const BookingInput = ({ submitType, onClick }) => {
 
     return Object.entries(grouped).map(([cityName, cityParks]) => (
       <div key={cityName}>
-        <p className="px-3 py-1 font-semibold text-sm bg-gray-100 text-gray-700">
+        <p className='px-3 py-1 font-semibold text-sm bg-gray-100 text-gray-700'>
           {cityName}
         </p>
         {cityParks.map((park) => (
           <div
             key={park.id}
-            className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+            className='px-4 py-2 hover:bg-gray-200 cursor-pointer'
             onClick={() => {
               // e.g. "Challenge Park (Ibadan)"
               setValue(`${park.name} (${park.city.name})`);
@@ -129,23 +133,22 @@ export const BookingInput = ({ submitType, onClick }) => {
   };
 
   return (
-    <div className="bg-gray-100 rounded-md p-3 px-4 mt-6 shadow-lg w-full max-w-7xl">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-center">
-        
+    <div className='bg-gray-100 rounded-md p-3 px-4 mt-6 shadow-lg w-full max-w-7xl'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-center'>
         {/* FROM DROPDOWN */}
-        <div className="relative w-full" ref={fromDropdownRef}>
-          <div
-            className="flex items-center p-3 rounded-md w-full border-0 bg-white cursor-pointer"
-            onClick={() => setShowFromDropdown(!showFromDropdown)}
-          >
-            <FaMapMarkerAlt className="text-gray-500 mr-3" />
+        <div className='relative w-full' ref={fromDropdownRef}>
+          <div className='flex items-center p-3 rounded-md w-full border-0 bg-white'>
+            <FaMapMarkerAlt className='text-gray-500 mr-3' />
             <input
-              type="text"
-              placeholder="Leaving from"
+              type='text'
+              placeholder='Leaving from'
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              onFocus={() => setShowFromDropdown(true)}
-              className="w-full bg-transparent focus:outline-none"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowFromDropdown(!showFromDropdown);
+              }}
+              className='w-full bg-transparent focus:outline-none cursor-pointer'
             />
           </div>
 
@@ -155,7 +158,7 @@ export const BookingInput = ({ submitType, onClick }) => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50 max-h-60 overflow-y-auto"
+                className='absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50 max-h-60 overflow-y-auto'
               >
                 {renderGroupedDropdown(from, setFrom, setShowFromDropdown)}
               </motion.div>
@@ -164,19 +167,19 @@ export const BookingInput = ({ submitType, onClick }) => {
         </div>
 
         {/* TO DROPDOWN */}
-        <div className="relative w-full" ref={toDropdownRef}>
-          <div
-            className="flex items-center p-3 rounded-md w-full bg-white border-0 cursor-pointer"
-            onClick={() => setShowToDropdown(!showToDropdown)}
-          >
-            <FaMapMarkerAlt className="text-gray-500 mr-3" />
+        <div className='relative w-full' ref={toDropdownRef}>
+          <div className='flex items-center p-3 rounded-md w-full bg-white border-0'>
+            <FaMapMarkerAlt className='text-gray-500 mr-3' />
             <input
-              type="text"
-              placeholder="Going to"
+              type='text'
+              placeholder='Going to'
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              onFocus={() => setShowToDropdown(true)}
-              className="w-full bg-transparent focus:outline-none"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowToDropdown(!showToDropdown);
+              }}
+              className='w-full bg-transparent focus:outline-none cursor-pointer'
             />
           </div>
 
@@ -186,7 +189,7 @@ export const BookingInput = ({ submitType, onClick }) => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50 max-h-60 overflow-y-auto"
+                className='absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50 max-h-60 overflow-y-auto'
               >
                 {renderGroupedDropdown(to, setTo, setShowToDropdown)}
               </motion.div>
@@ -195,12 +198,12 @@ export const BookingInput = ({ submitType, onClick }) => {
         </div>
 
         {/* Travel Date */}
-        <div className="flex items-center border-0 p-3 rounded-md w-full bg-white">
-          <FaCalendarAlt className="text-gray-500 mr-3" />
+        <div className='flex items-center border-0 p-3 rounded-md w-full bg-white'>
+          <FaCalendarAlt className='text-gray-500 mr-3' />
           <input
-            type="date"
-            className="w-full bg-transparent focus:outline-none appearance-none"
-            aria-label="Travel date"
+            type='date'
+            className='w-full bg-transparent focus:outline-none appearance-none'
+            aria-label='Travel date'
             min={new Date().toISOString().split("T")[0]}
             ref={dateRef}
             onFocus={() => dateRef.current?.showPicker()}
@@ -209,28 +212,32 @@ export const BookingInput = ({ submitType, onClick }) => {
 
         {/* Travel Time */}
         <div
-          className="flex items-center border-0 p-3 rounded-md w-full bg-white cursor-pointer"
+          className='flex items-center border-0 p-3 rounded-md w-full bg-white cursor-pointer'
           onClick={() => document.getElementById("travel-time")?.showPicker()}
         >
-          <FaClock className="text-gray-500 mr-3" />
+          <FaClock className='text-gray-500 mr-3' />
           <input
-            type="time"
-            id="travel-time"
+            type='time'
+            id='travel-time'
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="w-full bg-transparent focus:outline-none appearance-none cursor-pointer"
-            aria-label="Travel time"
+            className='w-full bg-transparent focus:outline-none appearance-none cursor-pointer'
+            aria-label='Travel time'
             onFocus={(e) => e.target.showPicker()}
           />
         </div>
 
         {/* Passenger Selection */}
-        <div className="relative w-full">
+        <div className='relative w-full'>
           <div
-            className="flex items-center border-0 p-3 rounded-md w-full bg-white cursor-pointer"
-            onClick={() => setShowPassengerModal(true)}
+            ref={passengerInputRef}
+            className='flex items-center border-0 p-3 rounded-md w-full bg-white cursor-pointer'
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPassengerModal((prev) => !prev);
+            }}
           >
-            <FaUser className="text-gray-500 mr-3" />
+            <FaUser className='text-gray-500 mr-3' />
             <span>
               {passengers} Seat{passengers > 1 ? "s" : ""}
             </span>
@@ -239,22 +246,29 @@ export const BookingInput = ({ submitType, onClick }) => {
           <AnimatePresence>
             {showPassengerModal && (
               <motion.div
-                ref={modalRef}
+                ref={passengerModalRef}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50 p-4 flex items-center justify-between"
+                className='absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50 p-4 flex items-center justify-between'
+                onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  className="p-2 bg-gray-200 rounded-full"
-                  onClick={() => setPassengers(Math.max(1, passengers - 1))}
+                  className='p-2 bg-gray-200 rounded-full'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPassengers(Math.max(1, passengers - 1));
+                  }}
                 >
                   <FaMinus />
                 </button>
-                <span className="text-lg font-semibold">{passengers}</span>
+                <span className='text-lg font-semibold'>{passengers}</span>
                 <button
-                  className="p-2 bg-gray-200 rounded-full"
-                  onClick={() => setPassengers(Math.min(24, passengers + 1))}
+                  className='p-2 bg-gray-200 rounded-full'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPassengers(Math.min(24, passengers + 1));
+                  }}
                 >
                   <FaPlus />
                 </button>
@@ -265,7 +279,7 @@ export const BookingInput = ({ submitType, onClick }) => {
 
         {/* Search Button (Check Availability) */}
         <button
-          className="bg-blue-600 text-white px-6 py-3 rounded-md w-full md:w-auto font-semibold hover:bg-blue-700 transition"
+          className='bg-blue-600 text-white px-6 py-3 rounded-md w-full md:w-auto font-semibold hover:bg-blue-700 transition'
           onClick={onClick}
         >
           {submitType}
