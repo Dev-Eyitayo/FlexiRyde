@@ -101,15 +101,15 @@ export default function NavBar() {
             <FaAddressCard className='mr-1' size={20} />
             <span className='font-semibold ml-1  text-base'>About Us</span>
           </button>
-          <a
-            href='#'
-            className='flex items-center text-gray-700 hover:text-red-500'
+          <button
+            onClick={() => navigate("/contact-support")}
+            className='flex items-center text-gray-700 hover:text-red-500 cursor-pointer'
           >
             <FaHeadphones className='mr-1' size={20} />
             <span className='font-semibold ml-1 text-base'>
               Contact Support
             </span>
-          </a>
+          </button>
           <div className='relative'>
             <button
               ref={desktopToggleRef}
@@ -273,13 +273,13 @@ export default function NavBar() {
             <FaAddressCard className='mr-2' size={18} />
             <span className='font-semibold'>About Us</span>
           </a>
-          <a
-            href='#'
+          <button
+            onClick={() => navigate("/contact-support")}
             className='text-white hover:text-blue-500 flex gap-2 items-center'
           >
             <FaHeadphones className='mr-2' size={18} />
             <span className='font-semibold'>Contact Support</span>
-          </a>
+          </button>
         </div>
       </div>
       <LogoutConfirmModal

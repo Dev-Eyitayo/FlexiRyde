@@ -5,7 +5,7 @@ const Ticket = () => {
     from: "Lagos",
     to: "Abuja",
     departureTime: "Dec 15, 2023 · 08:00 AM",
-    seatNumber: "A12",
+    seatNumber: "A12, A11, A10, A12, A13, A14, A26",
     busCompany: "ABC Transport",
     fare: "₦15,000",
     paymentStatus: "Paid",
