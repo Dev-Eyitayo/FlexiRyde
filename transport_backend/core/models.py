@@ -5,7 +5,7 @@ from django.conf import settings
 class City(models.Model):
     name = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True, null=True)  #Take note of this 
     latitude = models.FloatField()
     longitude = models.FloatField()
 
@@ -20,7 +20,7 @@ class City(models.Model):
 
 class BusPark(models.Model):
     name = models.CharField(max_length=100)
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(max_length=10, unique=True, blank=True, null=True)  #Take note of this 
     city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='parks')
     latitude = models.FloatField()
     longitude = models.FloatField()
@@ -102,7 +102,7 @@ class Trip(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name='trips')
     bus = models.ForeignKey(Bus, on_delete=models.CASCADE, related_name='trips')
     travel_date = models.DateField()
-    departure_time = models.TimeField()
+    departure_time = models.TimeField(null=True) #Take note of this 
     seat_price = models.FloatField(null=True, blank=True)
 
     class Meta:
@@ -134,7 +134,7 @@ class Booking(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookings')
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='bookings', null=True)
     price = models.FloatField()
-    payment_reference = models.CharField(max_length=100, null=True, blank=True)
+    payment_reference = models.CharField(max_length=100, null=True, blank=True)  #Take note of this 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
     created_at = models.DateTimeField(auto_now_add=True)
 
