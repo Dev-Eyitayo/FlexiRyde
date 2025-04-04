@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import City, BusPark, Route, IndirectRoute, Booking
+from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Seat, SeatReservation
 
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,22 +38,61 @@ class IndirectRouteSerializer(serializers.ModelSerializer):
         model = IndirectRoute
         fields = '__all__'
 
+class SeatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Seat
+        fields = ['id', 'seat_number', 'row', 'column']
+
+
+class SeatReservationSerializer(serializers.ModelSerializer):
+    seat = SeatSerializer()
+
+    class Meta:
+        model = SeatReservation
+        fields = ['id', 'seat', 'trip']
+
+class TripSerializer(serializers.ModelSerializer):
+    route = RouteSerializer()
+    bus = BusParkSerializer()
+
+    class Meta:
+        model = Trip
+        fields = ['id', 'route', 'bus', 'travel_date']
+
 
 class BookingSerializer(serializers.ModelSerializer):
     origin_park = BusParkSerializer(read_only=True)
-    origin_park_id = serializers.PrimaryKeyRelatedField(
-        queryset=BusPark.objects.all(), source='origin_park', write_only=True
-    )
     destination_city = CitySerializer(read_only=True)
-    destination_city_id = serializers.PrimaryKeyRelatedField(
-        queryset=City.objects.all(), source='destination_city', write_only=True
-    )
+    reserved_seat_ids = serializers.ListField(write_only=True, child=serializers.IntegerField(), required=False)
+    trip_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Booking
         fields = [
             'id', 'origin_park', 'origin_park_id',
             'destination_city', 'destination_city_id',
-            'travel_date', 'price', 'status', 'created_at'
+            'travel_date', 'price', 'status', 'created_at',
+            'trip_id', 'reserved_seat_ids'
         ]
-        read_only_fields = ['price', 'status', 'created_at']
+        read_only_fields = ['status', 'created_at']
+
+    def create(self, validated_data):
+        seat_ids = validated_data.pop('reserved_seat_ids', [])
+        trip_id = validated_data.pop('trip_id')
+        user = self.context['request'].user
+
+        trip = Trip.objects.get(id=trip_id)
+        booking = Booking.objects.create(
+            user=user,
+            origin_park=trip.route.origin_park,
+            destination_city=trip.route.destination_city,
+            travel_date=trip.travel_date,
+            price=validated_data['price'],
+            status='confirmed',
+        )
+
+        for seat_id in seat_ids:
+            seat = Seat.objects.get(id=seat_id)
+            SeatReservation.objects.create(trip=trip, seat=seat, booking=booking)
+
+        return booking
