@@ -41,6 +41,55 @@ class IndirectRoute(models.Model):
     def __str__(self):
         return f"{self.start_park.city.name} ➜ {self.transit_city.name} ➜ {self.destination_city.name}"
 
+class Bus(models.Model):
+    number_plate = models.CharField(max_length=20, unique=True)
+    total_seats = models.PositiveIntegerField(default=24)
+    seat_layout = models.CharField(max_length=10, default='4x6')  # Optional: layout for UI
+
+    def __str__(self):
+        return f"{self.number_plate} ({self.total_seats} seats)"
+
+
+class Seat(models.Model):
+    bus = models.ForeignKey(Bus, on_delete=models.CASCADE, related_name='seats')
+    seat_number = models.CharField(max_length=5)  # e.g., "1A", "3C"
+    row = models.PositiveIntegerField()
+    column = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('bus', 'seat_number')
+        ordering = ['row', 'column']
+
+    def __str__(self):
+        return f"{self.seat_number} - {self.bus.number_plate}"
+
+
+class Trip(models.Model):
+    route = models.ForeignKey('Route', on_delete=models.CASCADE, related_name='trips')
+    bus = models.ForeignKey(Bus, on_delete=models.CASCADE, related_name='trips')
+    travel_date = models.DateField()
+
+    class Meta:
+        unique_together = ('route', 'bus', 'travel_date')
+        ordering = ['travel_date']
+
+    def __str__(self):
+        return f"{self.route.origin_park} ➜ {self.route.destination_city} on {self.travel_date}"
+
+
+class SeatReservation(models.Model):
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='reservations')
+    seat = models.ForeignKey(Seat, on_delete=models.CASCADE, related_name='reservations')
+    booking = models.ForeignKey('Booking', on_delete=models.CASCADE, related_name='reserved_seats')
+
+    class Meta:
+        unique_together = ('trip', 'seat')
+
+    def __str__(self):
+        return f"{self.seat.seat_number} reserved on {self.trip}"
+
+
+# Update this existing model
 class Booking(models.Model):
     STATUS_CHOICES = (
         ('confirmed', 'Confirmed'),
@@ -48,8 +97,8 @@ class Booking(models.Model):
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookings')
-    origin_park = models.ForeignKey(BusPark, on_delete=models.CASCADE)
-    destination_city = models.ForeignKey(City, on_delete=models.CASCADE)
+    origin_park = models.ForeignKey('BusPark', on_delete=models.CASCADE)
+    destination_city = models.ForeignKey('City', on_delete=models.CASCADE)
     travel_date = models.DateField()
     price = models.FloatField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
@@ -57,4 +106,3 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.user.email} | {self.origin_park.name} → {self.destination_city.name}"
-
