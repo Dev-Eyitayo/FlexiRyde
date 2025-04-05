@@ -212,20 +212,42 @@ export const BookingInput = ({ submitType, onClick }) => {
         </div>
 
         {/* Travel Time */}
-        <div
-          className='flex items-center border-0 p-3 rounded-md w-full bg-white cursor-pointer'
-          onClick={() => document.getElementById("travel-time")?.showPicker()}
-        >
-          <FaClock className='text-gray-500 mr-3' />
-          <input
-            type='time'
-            id='travel-time'
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className='w-full bg-transparent focus:outline-none appearance-none cursor-pointer'
-            aria-label='Travel time'
-            onFocus={(e) => e.target.showPicker()}
-          />
+        <div className='relative w-full'>
+          <div className='flex items-center border-0 p-3 rounded-md w-full bg-white'>
+            <FaClock className='text-gray-500 mr-3' />
+            <select
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className='w-full pl-2 bg-transparent focus:outline-none appearance-none cursor-pointer'
+              aria-label='Travel time'
+            >
+              {Array.from({ length: 24 }, (_, i) => {
+                const hour = i % 12 || 12;
+                const period = i < 12 ? "AM" : "PM";
+                const time = `${hour.toString().padStart(2, "0")}:00 ${period}`;
+                return (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                );
+              })}
+            </select>
+            <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500'>
+              <svg
+                className='w-5 h-5'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M19 9l-7 7-7-7'
+                />
+              </svg>
+            </div>
+          </div>
         </div>
 
         {/* Passenger Selection */}
