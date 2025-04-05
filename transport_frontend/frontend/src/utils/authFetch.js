@@ -18,7 +18,8 @@ export default async function authFetch(url, options = {}) {
     headers,
   };
 
-  let res = await fetch(url, config);
+  const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+  let res = await fetch(fullUrl, config);
 
   // If access token expired, try to refresh it once
   if (res.status === 401 && refresh) {
@@ -40,7 +41,7 @@ export default async function authFetch(url, options = {}) {
         Authorization: `Bearer ${data.access}`,
       };
 
-      res = await fetch(url, {
+      res = await fetch(fullUrl, {
         ...options,
         headers: retryHeaders,
       });

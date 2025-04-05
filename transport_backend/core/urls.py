@@ -10,5 +10,6 @@ router.register('bookings', BookingViewSet, basename='bookings')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('trips/search/', TripSearchAPIView.as_view(), name='trip-search'),
     path('trips/<int:trip_id>/seats/', TripSeatAvailabilityView.as_view(), name='trip-seat-availability'),
 ]

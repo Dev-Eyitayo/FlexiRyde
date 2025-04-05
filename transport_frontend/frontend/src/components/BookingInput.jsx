@@ -2,6 +2,10 @@ import { useState, useRef, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { getBusParks } from "../api"; // Adjust import path if needed
+// import { AuthContext } from "../context/AuthContext";
+import authFetch from "../utils/authFetch"; 
+import { useNavigate } from "react-router-dom";
+
 import {
   FaMapMarkerAlt,
   FaCalendarAlt,
@@ -12,6 +16,7 @@ import {
 } from "react-icons/fa";
 
 export const BookingInput = ({ submitType, onClick }) => {
+  const navigate = useNavigate();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [passengers, setPassengers] = useState(1);
@@ -100,6 +105,57 @@ export const BookingInput = ({ submitType, onClick }) => {
       return acc;
     }, {});
   };
+
+  const handleCheckAvailability = async () => {
+    const originPark = parks.find(p => `${p.name} (${p.city.name})` === from);
+    const destinationPark = parks.find(p => `${p.name} (${p.city.name})` === to);
+  
+    if (!originPark || !destinationPark || !dateRef.current?.value) {
+      alert("Please complete all fields.");
+      return;
+    }
+    console.log("🔍 origin_id", originPark.id);
+    console.log("🔍 destination_id", destinationPark.city.id);
+    console.log("🔍 date", dateRef.current.value);
+
+    try {
+      const response = await authFetch(
+        `/trips/search/?origin_id=${originPark.id}&destination_id=${destinationPark.city.id}&date=${dateRef.current.value}`,
+        {
+          method: "GET",
+        }
+      );
+      
+      const tripResults = await response.json();
+  
+  
+      if (tripResults.length === 0) {
+        alert("No trips found for that route and date.");
+        return;
+      }
+  
+      const selectedTrip = tripResults[0]; // For now, use first
+  
+      navigate("/check-availability", {
+        state: {
+          trip: selectedTrip,
+          searchInfo: {
+            from: originPark.name,
+            to: destinationPark.city.name,
+            date: dateRef.current.value,
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Trip search failed", error);
+      if (error.response) {
+        console.log("🔥 Server response:", error.response.data);
+      }
+      alert("Failed to search trips.");
+
+    }
+  };
+  
 
   // Render grouped results for either from or to
   const renderGroupedDropdown = (query, setValue, setDropdown) => {
@@ -303,7 +359,7 @@ export const BookingInput = ({ submitType, onClick }) => {
         {/* Search Button (Check Availability) */}
         <button
           className='bg-blue-600 text-white px-6 py-3 rounded-md w-full md:w-auto font-semibold hover:bg-blue-700 transition'
-          onClick={onClick}
+          onClick={handleCheckAvailability}
         >
           {submitType}
         </button>
