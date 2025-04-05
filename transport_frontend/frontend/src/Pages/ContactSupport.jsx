@@ -59,7 +59,7 @@ export default function ContactSupport() {
                 </div>
                 <div>
                   <h3 className='font-medium text-gray-700'>Email</h3>
-                  <p className='text-gray-600'>support@transportapp.com</p>
+                  <p className='text-gray-600'>support@flexiryde.com</p>
                 </div>
               </div>
 
@@ -69,7 +69,7 @@ export default function ContactSupport() {
                 </div>
                 <div>
                   <h3 className='font-medium text-gray-700'>Phone</h3>
-                  <p className='text-gray-600'>+1 (555) 123-4567</p>
+                  <p className='text-gray-600'>+234 8102 123 467</p>
                 </div>
               </div>
 
@@ -80,7 +80,7 @@ export default function ContactSupport() {
                 <div>
                   <h3 className='font-medium text-gray-700'>Office</h3>
                   <p className='text-gray-600'>
-                    123 Transport St, Lagos, Nigeria
+                    123 FlexiRyde Avenue, Lagos, Nigeria
                   </p>
                 </div>
               </div>
@@ -111,7 +111,7 @@ export default function ContactSupport() {
                   value={formData.fullName}
                   onChange={handleChange}
                   required
-                  className='mt-1 block w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500'
+                  className='mt-1 block w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:border-2 focus:outline-0 focus:border-blue-500'
                 />
               </div>
 
@@ -129,7 +129,7 @@ export default function ContactSupport() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className='mt-1 block w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500'
+                  className='mt-1 block w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:border-2 focus:outline-0 focus:border-blue-500'
                 />
               </div>
 
@@ -147,7 +147,7 @@ export default function ContactSupport() {
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className='mt-1 block w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500'
+                  className='mt-1 block w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:border-2 focus:outline-0 focus:border-blue-500'
                 />
               </div>
 
@@ -165,7 +165,7 @@ export default function ContactSupport() {
                   value={formData.message}
                   onChange={handleChange}
                   required
-                  className='mt-1 block w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500'
+                  className='mt-1 block w-full rounded-xl border border-gray-300 shadow-sm p-3 focus:border-2 focus:outline-0 focus:border-blue-500'
                 ></textarea>
               </div>
 

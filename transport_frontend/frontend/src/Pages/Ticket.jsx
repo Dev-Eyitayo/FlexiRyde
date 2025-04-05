@@ -18,7 +18,7 @@ const Ticket = () => {
       <div className='border-2 border-gray-800 rounded-lg overflow-hidden shadow-lg'>
         {/* Header */}
         <div className='bg-blue-600 text-white p-4 text-center'>
-          <h1 className='text-xl font-bold'>BOARDING PASS</h1>
+          <h1 className='text-xl font-bold'>Travel Ticket Pass</h1>
           <p className='text-xs'>FlexiRyde Ticket</p>
         </div>
 

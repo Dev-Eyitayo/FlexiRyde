@@ -40,7 +40,7 @@ export default function AuthPage({ isOpen, onClose }) {
       onClose(); // Close modal on success
     } catch (err) {
       setError(err.message);
-      toast.error("Login failed! ❌ " + err.message, {
+      toast.error("Login failed! " + err.message, {
         autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
       });
     } finally {
