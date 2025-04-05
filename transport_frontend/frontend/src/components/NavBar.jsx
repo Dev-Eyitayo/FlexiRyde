@@ -153,12 +153,12 @@ export default function NavBar() {
                   Show My Ticket
                 </button>
                 <hr className='my-1 border-gray-200' />
-                <a
-                  href='#'
-                  className='block px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
+                <button
+                  onClick={() => navigate("/travel-history")}
+                  className='block px-4 py-2 w-full text-start text-gray-700 hover:bg-gray-100 transition'
                 >
                   Travel History
-                </a>
+                </button>
                 <hr className='my-1 border-gray-200' />
                 {isAuthenticated ? (
                   <button
@@ -215,12 +215,12 @@ export default function NavBar() {
                   Show My Ticket
                 </button>
                 <hr className='my-1 border-gray-200' />
-                <a
-                  href='#'
-                  className='block px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
+                <button
+                  onClick={() => navigate("/travel-history")}
+                  className='block px-4 py-2 w-full text-start text-gray-700 hover:bg-gray-100 transition'
                 >
                   Travel History
-                </a>
+                </button>
                 <hr className='my-1 border-gray-200' />
                 {isAuthenticated ? (
                   <button
