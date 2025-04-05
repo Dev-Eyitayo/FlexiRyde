@@ -69,9 +69,11 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'id', 'origin_park', 'origin_park_id',
+            'id',
+            'origin_park', 'origin_park_id',
             'destination_city', 'destination_city_id',
-            'travel_date', 'price', 'status', 'created_at',
+            'travel_date',
+            'price', 'status', 'created_at',
             'trip_id', 'reserved_seat_ids'
         ]
         read_only_fields = ['status', 'created_at']
@@ -84,9 +86,7 @@ class BookingSerializer(serializers.ModelSerializer):
         trip = Trip.objects.get(id=trip_id)
         booking = Booking.objects.create(
             user=user,
-            origin_park=trip.route.origin_park,
-            destination_city=trip.route.destination_city,
-            travel_date=trip.travel_date,
+            trip=trip,
             price=validated_data['price'],
             status='confirmed',
         )
@@ -96,3 +96,13 @@ class BookingSerializer(serializers.ModelSerializer):
             SeatReservation.objects.create(trip=trip, seat=seat, booking=booking)
 
         return booking
+
+
+class TripListSerializer(serializers.ModelSerializer):
+    origin_park = serializers.CharField(source='route.origin_park.name')
+    destination_city = serializers.CharField(source='route.destination_city.name')
+    bus_plate = serializers.CharField(source='bus.number_plate')
+
+    class Meta:
+        model = Trip
+        fields = ['id', 'origin_park', 'destination_city', 'travel_date', 'departure_time', 'seat_price', 'bus_plate']
