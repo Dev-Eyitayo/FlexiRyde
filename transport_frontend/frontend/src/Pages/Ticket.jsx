@@ -9,9 +9,14 @@ const Ticket = () => {
     busCompany: "ABC Transport",
     fare: "₦15,000",
     paymentStatus: "Paid",
+    intermediateStops: ["Ibadan", "Ilorin"],
     qrCodeUrl:
       "https://api.qrserver.com/v1/create-qr-code/?data=TicketID-TRN-2023-4567",
   };
+
+  const routePath = ticket.intermediateStops?.length
+    ? [ticket.from, ...ticket.intermediateStops, ticket.to]
+    : [ticket.from, ticket.to];
 
   return (
     <div className='max-w-md mx-auto my-8 p-4' id='ticket-content'>
@@ -36,15 +41,11 @@ const Ticket = () => {
           </div>
 
           <div className='border-t-2 border-b-2 border-dashed border-gray-300 py-3 my-3'>
-            <div className='flex justify-between'>
-              <div>
-                <p className='text-xs text-gray-500'>FROM</p>
-                <p className='font-bold text-lg'>{ticket.from}</p>
-              </div>
-              <div>
-                <p className='text-xs text-gray-500'>TO</p>
-                <p className='font-bold text-lg'>{ticket.to}</p>
-              </div>
+            <div className='flex flex-col items-start gap-1'>
+              <p className='text-xs text-gray-500'>ROUTE</p>
+              <p className='font-semibold text-gray-800'>
+                {routePath.join(" → ")}
+              </p>
             </div>
           </div>
 
