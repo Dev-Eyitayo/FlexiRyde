@@ -1,27 +1,80 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookingInput } from "../components/BookingInput";
 import { motion as Motion } from "framer-motion";
-import modify from "./../assets/modify.png";
-import { FiSearch, FiArrowLeft } from "react-icons/fi";
+import { FiSearch, FiArrowLeft, FiCalendar, FiInfo } from "react-icons/fi";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ChangeBooking() {
   const [bookingDetails, setBookingDetails] = useState(null);
   const [bookingRef, setBookingRef] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(true);
-  const navigate = useNavigate(); // Hook for navigation
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  // Dummy seat availability data
+  const timeSlots = {
+    "2025-04-10": {
+      "08:00 AM": { availableSeats: 12 },
+      "10:00 AM": { availableSeats: 8 },
+      "12:00 PM": { availableSeats: 16 },
+    },
+    "2025-04-11": {
+      "09:00 AM": { availableSeats: 15 },
+      "11:00 AM": { availableSeats: 10 },
+      "01:00 PM": { availableSeats: 20 },
+    },
+  };
 
   const handleFetchBooking = () => {
     setBookingDetails({
-      busOperator: "FlexiRyde Express",
+      busPark: "Owode Park",
       departure: "Lagos",
       destination: "Abuja",
       date: "2025-04-10",
-      time: "08:30 AM",
-      seat: "3",
+      time: "08:00 AM",
+      seat: 3,
       price: "₦15,000",
     });
     setIsModalOpen(false);
+  };
+
+  const handleDateChange = (e) => {
+    setNewDate(e.target.value);
+    setNewTime("");
+    setError("");
+  };
+
+  const handleTimeChange = (e) => {
+    const selectedTime = e.target.value;
+    const availableSeats =
+      timeSlots[newDate]?.[selectedTime]?.availableSeats || 0;
+
+    if (availableSeats < bookingDetails.seat) {
+      setError(
+        `Only ${availableSeats} seats available at ${selectedTime}. Please choose another time.`
+      );
+      setNewTime("");
+    } else {
+      setError("");
+      setNewTime(selectedTime);
+    }
+  };
+
+  const dateInputRef = useRef(null);
+  const handleDateClick = () => {
+    dateInputRef.current.showPicker();
+  };
+
+  const handleSubmit = () => {
+    if (!newDate || !newTime) {
+      setError("Please select both date and time");
+      toast.error("Please select both date and time");
+      return;
+    }
+    toast.success(`Booking updated to ${newDate} at ${newTime}`);
   };
 
   return (
@@ -52,13 +105,13 @@ export default function ChangeBooking() {
                   value={bookingRef}
                   onChange={(e) => setBookingRef(e.target.value)}
                   placeholder='e.g. FXR-12345'
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:outline-0 focus:border-blue-500'
                 />
                 <button
                   onClick={handleFetchBooking}
                   className='absolute right-2 top-2 text-blue-600 hover:text-blue-800'
                 >
-                  <FiSearch size={20} />
+                  <FiSearch size={20} className='self-center mt-1.5' />
                 </button>
               </div>
               <p className='text-xs text-gray-500 mt-1'>
@@ -89,9 +142,9 @@ export default function ChangeBooking() {
 
       {/* Main Content */}
       <div className='bg-gray-50/20 min-h-screen'>
-        <div className='container mx-auto px-4 py-12'>
+        <div className='container mx-auto px-4 py-12 flex flex-col items-center'>
           <Motion.h1
-            className='md:text-3xl text-2xl self-center text-gray-700 font-bold md:mb-10 mb-8'
+            className='md:text-3xl text-2xl self-center text-gray-700 font-bold mb-6'
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -99,60 +152,159 @@ export default function ChangeBooking() {
             Modify Your Booking
           </Motion.h1>
 
-          {/* Illustration + Booking Details */}
-          <div className='w-full max-w-5xl flex flex-col md:flex-row items-center md:items-start mb-6 gap-6'>
-            {/* Illustration Image */}
-            <div className='flex-shrink-1 h-78 md:w-80 lg:w-120 self-center'>
-              <img
-                src={modify}
-                alt='Booking Illustration'
-                className='object-contain h-full'
-              />
+          {/* Info Note */}
+          {bookingDetails && (
+            <div className='w-full max-w-4xl mx-auto mb-8 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-lg text-sm text-blue-800 flex items-start'>
+              <FiInfo className='mr-2 mt-0.5 flex-shrink-0' />
+              <div>
+                <p className='font-medium'>Important Note:</p>
+                <p>
+                  To change the number of seats or travel destination, please
+                  cancel this booking and request a refund on the Travel History
+                  page, then create a new booking.
+                </p>
+              </div>
             </div>
+          )}
 
-            {/* Booking Details (only if booking is retrieved) */}
-            {bookingDetails && (
+          {/* Booking Details */}
+          {bookingDetails && (
+            <div className='w-full max-w-4xl mx-auto'>
               <Motion.div
-                className='flex-1 bg-white shadow-md rounded-lg p-6 flex flex-col gap-3 justify-between h-full'
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                className='bg-white shadow-md rounded-lg p-6 mb-8'
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <h2 className='text-lg font-bold text-gray-700 mb-4'>
+                <h2 className='text-xl font-semibold text-gray-800 mb-6 border-b pb-4'>
                   Current Booking Details
                 </h2>
-                <div className='grid grid-cols-2 sm:grid-cols-2 gap-6 text-gray-600'>
-                  <p>
-                    <strong>Bus Operator:</strong> {bookingDetails.busOperator}
-                  </p>
-                  <p>
-                    <strong>From:</strong> {bookingDetails.departure} →{" "}
-                    <strong>To:</strong> {bookingDetails.destination}
-                  </p>
-                  <p>
-                    <strong>Date:</strong> {bookingDetails.date}
-                  </p>
-                  <p>
-                    <strong>Time:</strong> {bookingDetails.time}
-                  </p>
-                  <p>
-                    <strong>Number of seats booked:</strong>{" "}
-                    {bookingDetails.seat}
-                  </p>
-                  <p>
-                    <strong>Price:</strong> {bookingDetails.price}
-                  </p>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='space-y-3'>
+                    <p className='flex justify-between'>
+                      <span className='text-gray-600'>Bus Park:</span>
+                      <span className='font-medium'>
+                        {bookingDetails.busPark}
+                      </span>
+                    </p>
+                    <p className='flex justify-between'>
+                      <span className='text-gray-600'>Route:</span>
+                      <span className='font-medium'>
+                        {bookingDetails.departure} →{" "}
+                        {bookingDetails.destination}
+                      </span>
+                    </p>
+                    <p className='flex justify-between'>
+                      <span className='text-gray-600'>Date:</span>
+                      <span className='font-medium'>{bookingDetails.date}</span>
+                    </p>
+                  </div>
+                  <div className='space-y-3'>
+                    <p className='flex justify-between'>
+                      <span className='text-gray-600'>Time:</span>
+                      <span className='font-medium'>{bookingDetails.time}</span>
+                    </p>
+                    <p className='flex justify-between'>
+                      <span className='text-gray-600'>Seats Booked:</span>
+                      <span className='font-medium'>{bookingDetails.seat}</span>
+                    </p>
+                    <p className='flex justify-between'>
+                      <span className='text-gray-600'>Total Price:</span>
+                      <span className='font-medium'>
+                        {bookingDetails.price}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </Motion.div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Booking Input Component (Unchanged) */}
-          <div className='w-full flex flex-col items-center justify-center p-1 rounded-lg'>
-            {bookingDetails && <BookingInput submitType='Modify Booking' />}
-          </div>
+          {/* Date and Time Selection */}
+          {bookingDetails && (
+            <div className='w-full max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md mt-8'>
+              <h2 className='text-xl font-semibold text-gray-800 mb-6'>
+                Change Travel Date & Time
+              </h2>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                {/* Date Selection */}
+                <div className='flex flex-col'>
+                  <label className='text-gray-600 mb-2'>New Travel Date</label>
+                  <div className='relative' onClick={handleDateClick}>
+                    <input
+                      type='date'
+                      ref={dateInputRef}
+                      min={new Date().toISOString().split("T")[0]}
+                      value={newDate}
+                      onChange={handleDateChange}
+                      className='w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 opacity-0 absolute'
+                    />
+                    <div className='p-3 border border-gray-300 rounded-lg flex items-center justify-between'>
+                      <span>{newDate || "Select a date"}</span>
+                      <FiCalendar className='text-gray-500' />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Time Selection */}
+                <div className='flex flex-col'>
+                  <label className='text-gray-600 mb-2'>New Travel Time</label>
+                  <select
+                    value={newTime}
+                    onChange={handleTimeChange}
+                    className='p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                  >
+                    <option value=''>Select a time</option>
+                    {newDate && timeSlots[newDate] ? (
+                      Object.entries(timeSlots[newDate]).map(
+                        ([time, { availableSeats }]) => (
+                          <option
+                            key={time}
+                            value={time}
+                            disabled={availableSeats < bookingDetails.seat}
+                          >
+                            {time} ({availableSeats} seats available)
+                          </option>
+                        )
+                      )
+                    ) : (
+                      <option disabled>Select a date first</option>
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              {error && (
+                <div className='mt-4 text-red-600 text-sm'>{error}</div>
+              )}
+
+              <div className='mt-8'>
+                <button
+                  onClick={handleSubmit}
+                  className='w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition'
+                >
+                  Confirm Changes
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <ToastContainer
+        position='top-right'
+        autoClose={1500}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        // toastClassName='!bg-white !text-gray-800 !shadow-md'
+        // progressClassName='!bg-red-500'
+      />
     </>
   );
 }

@@ -122,21 +122,21 @@ export default function SeatAvailability() {
                     const hour = i % 12 || 12;
                     const period = i < 12 ? "AM" : "PM";
                     const time = `${hour.toString().padStart(2, "0")}:00 ${period}`;
-                    return (
+                    return timeSlots[time] ? (
                       <option
                         key={time}
                         value={time}
                         className='p-2 hover:bg-blue-50'
                       >
                         {time} (
-                        {timeSlots[time]
-                          ? `${timeSlots[time].totalSeats - timeSlots[time].takenSeats} seats left`
-                          : "Not available"}
-                        )
+                        {timeSlots[time].totalSeats -
+                          timeSlots[time].takenSeats}{" "}
+                        seats left)
                       </option>
-                    );
+                    ) : null;
                   })}
                 </select>
+
                 <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500'>
                   <svg
                     className='w-5 h-5'
