@@ -6,31 +6,64 @@ import RouteVisualization from "../components/RouteVisualization";
 import { FaClock, FaExclamationTriangle } from "react-icons/fa";
 
 export default function SeatAvailability() {
-  const intermediateStops = []; // or whatever makes sense for your data
+  const intermediateStops = []; // whatever makes sense
+  const [takenSeats, setTakenSeats] = useState([]);
+  const [availableSeats, setAvailableSeats] = useState([]);
   const location = useLocation();
-  const travelData = location.state?.searchInfo || {
-    from: "Lagos",
-    to: "Abuja",
-    date: "2025-04-10",
-    passengers: 1,
-  };
+  // const travelData = location.state?.searchInfo || {
+  //   from: "Lagos",
+  //   to: "Abuja",
+  //   date: "2025-04-10",
+  //   passengers: 1,
+  // };
 
-  const {
-    from,
-    to,
-    date,
-    passengers: bookedSeats,
-  } = travelData;
-
+  // const {
+  //   from,
+  //   to,
+  //   date,
+  //   passengers: bookedSeats,
+  // } = travelData;
   const trip = location.state?.trip; 
 
-  const timeSlots = {
-    "08:00 AM": { totalSeats: 16, takenSeats: 16 },
-    "09:00 AM": { totalSeats: 16, takenSeats: 12 },
-    "10:00 AM": { totalSeats: 16, takenSeats: 8 },
-    "11:00 AM": { totalSeats: 16, takenSeats: 2 },
-    "12:00 PM": { totalSeats: 16, takenSeats: 0 },
-  };
+
+  useEffect(() => {
+    const fetchSeatData = async () => {
+      if (!trip?.id) return;
+
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/trips/${trip.id}/seats/`, // Update base URL if needed
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        const data = await response.json();
+        setTakenSeats(data.taken_seat_ids || []);
+        setAvailableSeats(data.available_seats || []);
+        setCurrentSeats({
+          totalSeats: (data.taken_seat_ids?.length || 0) + (data.available_seats?.length || 0),
+          takenSeats: data.taken_seat_ids?.length || 0,
+        });
+      } catch (err) {
+        console.error("❌ Failed to fetch seat data:", err);
+        alert("❌ Failed to fetch seat data:", err);
+      }
+    };
+
+    fetchSeatData();
+  }, [trip]);
+
+  // const timeSlots = {
+  //   "08:00 AM": { totalSeats: 16, takenSeats: 16 },
+  //   "09:00 AM": { totalSeats: 16, takenSeats: 12 },
+  //   "10:00 AM": { totalSeats: 16, takenSeats: 8 },
+  //   "11:00 AM": { totalSeats: 16, takenSeats: 2 },
+  //   "12:00 PM": { totalSeats: 16, takenSeats: 0 },
+  // };
+
+
 
   const [price, setPrice] = useState(0);
   const defaultTime = "08:00 AM";
@@ -63,6 +96,11 @@ export default function SeatAvailability() {
     );
   };
 
+  setCurrentSeats({
+    totalSeats: taken + available,
+    takenSeats: taken,
+  });
+  
   const handleTimeChange = (e) => {
     const newTime = e.target.value;
     setSelectedTime(newTime);
