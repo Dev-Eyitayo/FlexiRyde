@@ -126,32 +126,32 @@ const TravelHistory = () => {
   return (
     <div className='min-h-screen bg-gray-100/45 p-4 md:p-6'>
       <div className='max-w-5xl mx-auto'>
-        <h1 className='text-2xl md:text-3xl font-bold mb-6'>
+        <h1 className='text-xl md:text-2xl font-bold mb-6'>
           Your Travel History
         </h1>
 
         <div className='flex gap-2 mb-6 overflow-x-auto pb-2'>
           <button
             onClick={() => setFilter("all")}
-            className={`px-2 py-1 font-semibold text-sm rounded-full ${filter === "all" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-2 py-1 font-semibold md:text-sm text-[10px] rounded-full ${filter === "all" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             All Trips
           </button>
           <button
             onClick={() => setFilter("upcoming")}
-            className={`px-2 py-1 font-semibold text-sm rounded-full ${filter === "upcoming" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-2 py-1 font-semibold md:text-sm text-[10px] rounded-full ${filter === "upcoming" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             Upcoming
           </button>
           <button
             onClick={() => setFilter("completed")}
-            className={`px-2 py-1 font-semibold text-sm rounded-full ${filter === "completed" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-2 py-1 font-semibold md:text-sm text-[10px] rounded-full ${filter === "completed" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             Completed
           </button>
           <button
             onClick={() => setFilter("canceled")}
-            className={`px-2 py-1 font-semibold text-sm rounded-full ${filter === "canceled" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-2 py-1 font-semibold md:text-sm text-[10px] rounded-full ${filter === "canceled" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             Canceled
           </button>
@@ -159,7 +159,7 @@ const TravelHistory = () => {
 
         <div className='grid gap-4'>
           {filteredTrips.length === 0 ? (
-            <div className='bg-white p-4 md:p-6 rounded-2xl shadow-md w-full text-center py-8'>
+            <div className='bg-white p-4 md:p-6 rounded-2xl shadow-md w-full text-center text-sm py-8'>
               <p className='text-gray-500'>No trips found for this filter</p>
             </div>
           ) : (
@@ -174,30 +174,32 @@ const TravelHistory = () => {
                 <div className='bg-white p-5 md:p-7 rounded-2xl shadow-md w-full max-w-3xl'>
                   <div className='flex justify-between items-start'>
                     <div>
-                      <h2 className='text-xl font-semibold flex items-center gap-2'>
+                      <h2 className='text-base font-semibold flex items-center gap-2'>
                         <FaBus className='text-blue-500' />
                         {trip.from} → {trip.to}
                       </h2>
                       <div className='flex items-center gap-4 mt-2'>
-                        <StatusBadge status={trip.status} />
-                        <span className='text-gray-600'>
+                        <StatusBadge status={trip.status} size={8} />
+                        <span className='text-gray-600 text-sm'>
                           Ref: {trip.bookingRef}
                         </span>
                       </div>
                     </div>
-                    <span className='text-xl font-semibold'>{trip.price}</span>
+                    <span className='text-base font-semibold'>
+                      {trip.price}
+                    </span>
                   </div>
 
                   <div className='grid grid-cols-2 md:grid-cols-3 gap-4 mt-4'>
-                    <div className='flex items-center gap-2'>
-                      <FaCalendarAlt className='text-gray-400' />
+                    <div className='flex items-center text-sm gap-2'>
+                      <FaCalendarAlt className='text-gray-400 ' />
                       <span>{trip.date}</span>
                     </div>
-                    <div className='flex items-center gap-2'>
+                    <div className='flex items-center gap-2 text-sm'>
                       <FaClock className='text-gray-400' />
                       <span>{trip.time}</span>
                     </div>
-                    <div className='flex items-center gap-2'>
+                    <div className='flex items-center gap-2 text-sm'>
                       <FaUser className='text-gray-400' />
                       <span>
                         {trip.seats} seat{trip.seats > 1 ? "s" : ""}
@@ -208,7 +210,7 @@ const TravelHistory = () => {
                   {trip.status === "upcoming" && (
                     <div className='flex justify-end mt-4'>
                       <button
-                        className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-medium transition'
+                        className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md font-semibold text-sm transition'
                         onClick={() => handleCancel(trip)}
                       >
                         Cancel Trip
@@ -238,10 +240,10 @@ const TravelHistory = () => {
                 exit={{ scale: 0.8, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <h2 className='text-xl font-bold text-red-600 mb-3'>
+                <h2 className='text-base font-bold text-red-600 mb-3'>
                   Confirm Cancellation
                 </h2>
-                <div className='space-y-2 mb-6'>
+                <div className='space-y-2 mb-6 text-sm'>
                   <p className='text-gray-700'>
                     You are about to cancel your trip to{" "}
                     <span className='font-semibold'>{cancelTrip.to}</span>.
@@ -260,13 +262,13 @@ const TravelHistory = () => {
                 </div>
                 <div className='flex justify-end gap-3'>
                   <button
-                    className='bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-xl font-medium transition'
+                    className='bg-gray-200 hover:bg-gray-300  text-sm text-gray-800 px-4 py-2 rounded-lg font-medium transition'
                     onClick={() => setShowModal(false)}
                   >
                     Go Back
                   </button>
                   <button
-                    className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-medium transition'
+                    className='bg-red-500 text-sm hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition'
                     onClick={confirmCancel}
                   >
                     Confirm
