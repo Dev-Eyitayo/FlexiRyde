@@ -15,13 +15,13 @@ export default function BookHero() {
 
   return (
     <div
-      className='relative bg-cover bg-center h-[700px] pb-0 flex items-center justify-center text-gray-700'
+      className='relative bg-cover bg-center h-[600px] pb-0 flex items-center justify-center text-gray-700'
       id='bookhero'
       style={{ backgroundImage: `url(${heroBg})` }}
     >
       <div className='absolute inset-0 bg-black/60'></div>
       <div className='relative container text-center px-4 w-full flex flex-col items-center justify-center'>
-        <h1 className='md:text-4xl text-2xl text-white pb-4 font-bold'>
+        <h1 className='md:text-4xl text-2xl text-white pb-2 font-bold'>
           Travel smarter. Book your ride with ease and confidence!
         </h1>
         <BookingInput

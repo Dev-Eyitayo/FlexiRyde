@@ -28,7 +28,7 @@ const faqData = {
         "Not at all! The bus ticket price is the same as you would get from the park by going there physically. FlexiRyde reduces the travel budget by comparing the bus ticket prices among various operators, making it a more cost-effective choice. Therefore, online bus booking is increasingly recognized as a more convenient, efficient, and economical mode of securing travel arrangements.",
     },
   ],
-  "Ticket-related": [
+  Ticket: [
     {
       question: "How can I book bus tickets on FlexiRyde?",
       answer:
@@ -116,13 +116,13 @@ export default function FAQSection() {
   };
 
   return (
-    <div className='max-w-5xl mx-auto px-4 py-12 pb-20 pt-18'>
+    <div className='max-w-5xl md:mx-auto mx-1 px-4 py-12 pb-20 pt-18'>
       <h2 className='md:text-2xl text-xl font-bold text-center mb-6 mt-6'>
-        FAQs related to Bus Tickets Booking
+        Frequently Asked Questions
       </h2>
 
       {/* Tabs */}
-      <div className='flex justify-center space-x-6 border-b border-gray-400 pb-3 relative'>
+      <div className='flex justify-center space-x-6 border-b border-gray-400 pb-3 px-2 relative'>
         {Object.keys(faqData).map((category) => (
           <button
             key={category}
@@ -160,11 +160,13 @@ export default function FAQSection() {
               transition={{ delay: index * 0.05 }}
             >
               <button
-                className='w-full flex justify-between items-center text-left text-base font-medium'
+                className='w-full flex justify-between items-center text-left font-semibold text-base'
                 onClick={() => toggleFAQ(index)}
               >
                 {item.question}
-                {openIndex === index ? <FaMinus /> : <FaPlus />}
+                <span className='font-semibold text-base ml-0.5'>
+                  {openIndex === index ? <FaMinus /> : <FaPlus />}
+                </span>
               </button>
               <AnimatePresence>
                 {openIndex === index && (
