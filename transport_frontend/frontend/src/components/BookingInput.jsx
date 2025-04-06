@@ -105,7 +105,7 @@ export const BookingInput = ({ submitType }) => {
 
     try {
       const response = await authFetch(
-        `/trips/search/?origin_id=${origin_id}&destination_id=${destination_id}&date=${travel_date}`,
+        /trips/search/?origin_id=${origin_id}&destination_id=${destination_id}&date=${travel_date},
         { method: "GET" }
       );
 
@@ -154,7 +154,7 @@ export const BookingInput = ({ submitType }) => {
             key={park.id}
             className='px-4 py-3 hover:bg-blue-100 cursor-pointer transition-colors border-b border-gray-100 last:border-0'
             onClick={() => {
-              setValue(`${park.name} (${park.city.name})`);
+              setValue(${park.name} (${park.city.name}));
               setSelected(park);
               setDropdown(false);
             }}
