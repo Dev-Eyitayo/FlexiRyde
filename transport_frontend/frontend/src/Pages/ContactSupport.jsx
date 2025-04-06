@@ -38,10 +38,10 @@ export default function ContactSupport() {
       <Toaster position='top-right' />
       <div className='max-w-6xl mx-auto'>
         <div className='text-center mb-12'>
-          <h1 className='md:text-4xl text-3xl font-bold text-gray-800 mb-3'>
+          <h1 className='md:text-2xl text-xl font-bold text-gray-800 mb-3'>
             Contact Us
           </h1>
-          <p className='text-lg text-gray-600 max-w-2xl mx-auto'>
+          <p className='text-base text-gray-600 max-w-2xl mx-auto'>
             Have questions or need assistance? Our dedicated support team is
             ready to help you.
           </p>
@@ -60,8 +60,8 @@ export default function ContactSupport() {
                   <FiMail className='text-blue-600 text-xl' />
                 </div>
                 <div>
-                  <h3 className='font-medium text-gray-700'>Email</h3>
-                  <p className='text-gray-600'>support@flexiryde.com</p>
+                  <h3 className='font-medium text-base text-gray-700'>Email</h3>
+                  <p className='text-gray-600 text-sm'>support@flexiryde.com</p>
                 </div>
               </div>
 
@@ -70,8 +70,8 @@ export default function ContactSupport() {
                   <FiPhone className='text-blue-600 text-xl' />
                 </div>
                 <div>
-                  <h3 className='font-medium text-gray-700'>Phone</h3>
-                  <p className='text-gray-600'>+234 8102 123 467</p>
+                  <h3 className='font-medium text-base text-gray-700'>Phone</h3>
+                  <p className='text-gray-600 text-sm'>+234 8102 123 467</p>
                 </div>
               </div>
 
@@ -80,16 +80,20 @@ export default function ContactSupport() {
                   <FiMapPin className='text-blue-600 text-xl' />
                 </div>
                 <div>
-                  <h3 className='font-medium text-gray-700'>Office</h3>
-                  <p className='text-gray-600'>
+                  <h3 className='font-medium text-base text-gray-700'>
+                    Office
+                  </h3>
+                  <p className='text-gray-600 text-sm'>
                     123 FlexiRyde Avenue, Lagos, Nigeria
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className='mt-8 pt-6 border-t border-gray-200'>
-              <h3 className='font-medium text-gray-700 mb-3'>Business Hours</h3>
+            <div className='mt-8 text-sm pt-6 border-t border-gray-200'>
+              <h3 className='font-medium text-gray-700 text-base mb-3'>
+                Business Hours
+              </h3>
               <p className='text-gray-600'>Monday - Friday: 8am - 6pm</p>
               <p className='text-gray-600'>Saturday: 9am - 2pm</p>
               <p className='text-gray-600'>Sunday: Closed</p>
