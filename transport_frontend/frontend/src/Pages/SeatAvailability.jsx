@@ -21,6 +21,8 @@ export default function SeatAvailability() {
     passengers: bookedSeats,
   } = travelData;
 
+  const trip = location.state?.trip; 
+
   const timeSlots = {
     "08:00 AM": { totalSeats: 16, takenSeats: 16 },
     "09:00 AM": { totalSeats: 16, takenSeats: 12 },
@@ -95,15 +97,15 @@ export default function SeatAvailability() {
           <div className='space-y-4'>
             <div className='flex justify-between'>
               <span className='text-gray-600'>From:</span>
-              <span className='font-medium'>{from}</span>
+              <span className='font-medium'>{trip?.route.origin_park}</span>
             </div>
             <div className='flex justify-between'>
               <span className='text-gray-600'>To:</span>
-              <span className='font-medium'>{to}</span>
+              <span className='font-medium'>{trip?.route.destination_city}</span>
             </div>
             <div className='flex justify-between'>
               <span className='text-gray-600'>Date:</span>
-              <span className='font-medium'>{date}</span>
+              <span className='font-medium'>{trip?.travel_date}</span>
             </div>
           </div>
 
