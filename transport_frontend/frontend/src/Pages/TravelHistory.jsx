@@ -1,6 +1,7 @@
 import { useState } from "react";
-// eslint-disable-next-line
 import { motion, AnimatePresence } from "framer-motion";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   FaBus,
   FaCalendarAlt,
@@ -98,15 +99,24 @@ const dummyTrips = [
 const TravelHistory = () => {
   const [trips, setTrips] = useState(dummyTrips);
   const [showModal, setShowModal] = useState(false);
+  const [cancelTrip, setCancelTrip] = useState(null);
   const [filter, setFilter] = useState("all");
 
-  const handleCancel = (tripId) => {
+  const handleCancel = (trip) => {
+    setCancelTrip(trip);
+    setShowModal(true);
+  };
+
+  const confirmCancel = () => {
     setTrips((prev) =>
       prev.map((trip) =>
-        trip.id === tripId ? { ...trip, status: "canceled" } : trip
+        trip.id === cancelTrip.id ? { ...trip, status: "canceled" } : trip
       )
     );
-    setShowModal(true);
+    setShowModal(false);
+    toast.success(`Trip to ${cancelTrip.to} cancelled successfully!`, {
+      autoClose: 1500,
+    });
   };
 
   const filteredTrips = trips.filter(
@@ -123,25 +133,25 @@ const TravelHistory = () => {
         <div className='flex gap-2 mb-6 overflow-x-auto pb-2'>
           <button
             onClick={() => setFilter("all")}
-            className={`px-4 py-2 rounded-full ${filter === "all" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-4 py-2 font-semibold text-sm rounded-full ${filter === "all" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             All Trips
           </button>
           <button
             onClick={() => setFilter("upcoming")}
-            className={`px-4 py-2 rounded-full ${filter === "upcoming" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-4 py-2 font-semibold text-sm rounded-full ${filter === "upcoming" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             Upcoming
           </button>
           <button
             onClick={() => setFilter("completed")}
-            className={`px-4 py-2 rounded-full ${filter === "completed" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-4 py-2 font-semibold text-sm rounded-full ${filter === "completed" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             Completed
           </button>
           <button
             onClick={() => setFilter("canceled")}
-            className={`px-4 py-2 rounded-full ${filter === "canceled" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-4 py-2 font-semibold text-sm rounded-full ${filter === "canceled" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             Canceled
           </button>
@@ -164,7 +174,7 @@ const TravelHistory = () => {
                 <div className='bg-white p-5 md:p-7 rounded-2xl shadow-md w-full max-w-3xl'>
                   <div className='flex justify-between items-start'>
                     <div>
-                      <h2 className='text-2xl font-semibold flex items-center gap-2'>
+                      <h2 className='text-xl font-semibold flex items-center gap-2'>
                         <FaBus className='text-blue-500' />
                         {trip.from} → {trip.to}
                       </h2>
@@ -199,7 +209,7 @@ const TravelHistory = () => {
                     <div className='flex justify-end mt-4'>
                       <button
                         className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-medium transition'
-                        onClick={() => handleCancel(trip.id)}
+                        onClick={() => handleCancel(trip)}
                       >
                         Cancel Trip
                       </button>
@@ -211,35 +221,57 @@ const TravelHistory = () => {
           )}
         </div>
 
+        <ToastContainer position='top-center' />
         <AnimatePresence>
-          {showModal && (
+          {showModal && cancelTrip && (
             <motion.div
-              className='fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center z-50'
+              className='fixed inset-0 bg-black/50 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50'
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowModal(false)}
             >
               <motion.div
-                className='bg-white rounded-2xl p-6 shadow-xl max-w-md w-full'
+                className='bg-white rounded-xl p-6 shadow-xl max-w-md w-full'
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <h2 className='text-2xl font-bold text-red-600 mb-4'>
-                  Trip Canceled
+                <h2 className='text-xl font-bold text-red-600 mb-3'>
+                  Confirm Cancellation
                 </h2>
-                <p className='text-gray-700 mb-4'>
-                  Your trip has been canceled. The refund will be processed
-                  within 5 working days.
-                </p>
-                <button
-                  className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-medium transition'
-                  onClick={() => setShowModal(false)}
-                >
-                  Close
-                </button>
+                <div className='space-y-3 mb-6'>
+                  <p className='text-gray-700'>
+                    You are about to cancel your trip to{" "}
+                    <span className='font-semibold'>{cancelTrip.to}</span>.
+                  </p>
+                  <p className='text-gray-700'>
+                    <span className='font-semibold'>Booking Ref:</span>{" "}
+                    {cancelTrip.bookingRef}
+                  </p>
+                  {/* <p className='text-gray-700'>
+                    <span className='font-semibold'>Refund Amount:</span>{" "}
+                    {cancelTrip.price}
+                  </p> */}
+                  <p className='text-gray-700'>
+                    The refund will be processed within 5 working days.
+                  </p>
+                </div>
+                <div className='flex justify-end gap-3'>
+                  <button
+                    className='bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-xl font-medium transition'
+                    onClick={() => setShowModal(false)}
+                  >
+                    Go Back
+                  </button>
+                  <button
+                    className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-medium transition'
+                    onClick={confirmCancel}
+                  >
+                    Confirm
+                  </button>
+                </div>
               </motion.div>
             </motion.div>
           )}

@@ -172,7 +172,7 @@ export const BookingInput = ({ submitType }) => {
         {/* FROM DROPDOWN */}
         <div className='relative md:col-span-3' ref={fromDropdownRef}>
           <div className='relative'>
-            <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-200 hover:border-blue-400 transition-colors'>
+            <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-300 hover:border-blue-500 transition-colors'>
               <FaMapMarkerAlt className='text-blue-500 mr-3' />
               <input
                 type='text'
@@ -210,7 +210,7 @@ export const BookingInput = ({ submitType }) => {
 
         {/* TO DROPDOWN */}
         <div className='relative md:col-span-3' ref={toDropdownRef}>
-          <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-200 hover:border-blue-400 transition-colors'>
+          <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-300 hover:border-blue-500 transition-colors'>
             <FaMapMarkerAlt className='text-blue-500 mr-3' />
             <input
               type='text'
@@ -246,7 +246,7 @@ export const BookingInput = ({ submitType }) => {
         </div>
 
         {/* Travel Date */}
-        <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-200 hover:border-blue-400 transition-colors md:col-span-2 h-full'>
+        <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-300 hover:border-blue-500 transition-colors md:col-span-2'>
           <FaCalendarAlt className='text-blue-500 mr-3' />
           <input
             type='date'
@@ -257,11 +257,11 @@ export const BookingInput = ({ submitType }) => {
           />
         </div>
 
-        {/* Passengers */}
+        {/* Number of Passengers */}
         <div className='relative md:col-span-2'>
           <div
             ref={passengerInputRef}
-            className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-200 hover:border-blue-400 transition-colors cursor-pointer'
+            className='flex flex-nowrap items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-300 hover:border-blue-500 transition-colors cursor-pointer'
             onClick={(e) => {
               e.stopPropagation();
               setShowPassengerModal((prev) => !prev);
@@ -310,7 +310,7 @@ export const BookingInput = ({ submitType }) => {
 
         {/* Submit Button */}
         <button
-          className='bg-blue-600 text-white px-6 py-3 rounded-md w-full md:col-span-2 font-semibold hover:bg-blue-700 transition h-full'
+          className='bg-blue-600 text-white py-3 rounded-md w-full font-semibold hover:bg-blue-700 transition h-full md:col-span-2'
           onClick={handleCheckAvailability}
         >
           {submitType}

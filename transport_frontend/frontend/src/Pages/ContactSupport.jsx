@@ -38,7 +38,9 @@ export default function ContactSupport() {
       <Toaster position='top-right' />
       <div className='max-w-6xl mx-auto'>
         <div className='text-center mb-12'>
-          <h1 className='text-4xl font-bold text-gray-800 mb-3'>Contact Us</h1>
+          <h1 className='md:text-4xl text-3xl font-bold text-gray-800 mb-3'>
+            Contact Us
+          </h1>
           <p className='text-lg text-gray-600 max-w-2xl mx-auto'>
             Have questions or need assistance? Our dedicated support team is
             ready to help you.
