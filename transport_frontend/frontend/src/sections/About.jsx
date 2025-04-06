@@ -12,9 +12,11 @@ export const About = () => {
         <h2 className='md:text-4xl text-2xl font-bold mt-16 text-gray-800 mb-4'>
           Seamless Travel, Simplified
         </h2>
-        <p className='text-lg text-gray-600'>
+        <p className='text-base text-gray-600'>
           At{" "}
-          <span className='font-semibold md:text-base text-sm '>FlexiRyde</span>
+          <span className='font-semibold md:text-base text-base'>
+            FlexiRyde
+          </span>
           , we are redefining public transport booking in Nigeria. Whether
           you're traveling within the city or across states, our platform
           ensures a smooth, hassle-free booking experience for passengers and

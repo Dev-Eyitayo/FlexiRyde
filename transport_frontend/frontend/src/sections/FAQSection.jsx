@@ -116,7 +116,7 @@ export default function FAQSection() {
   };
 
   return (
-    <div className='max-w-5xl mx-auto px-4 py-12 pb-20 pt-18'>
+    <div className='max-w-5xl mx-2 px-4 py-12 pb-20 pt-18'>
       <h2 className='md:text-2xl text-xl font-bold text-center mb-6 mt-6'>
         FAQs related to Bus Tickets Booking
       </h2>

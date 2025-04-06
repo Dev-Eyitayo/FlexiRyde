@@ -21,7 +21,7 @@ export default function BookHero() {
     >
       <div className='absolute inset-0 bg-black/60'></div>
       <div className='relative container text-center px-4 w-full flex flex-col items-center justify-center'>
-        <h1 className='md:text-4xl text-2xl text-white pb-4 font-bold'>
+        <h1 className='md:text-4xl text-2xl text-white pb-2 font-bold'>
           Travel smarter. Book your ride with ease and confidence!
         </h1>
         <BookingInput
