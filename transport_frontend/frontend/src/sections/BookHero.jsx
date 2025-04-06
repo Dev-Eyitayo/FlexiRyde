@@ -15,7 +15,7 @@ export default function BookHero() {
 
   return (
     <div
-      className='relative bg-cover bg-center h-[600px] pb-0 flex items-center justify-center text-gray-700'
+      className='relative bg-cover bg-center h-[700px] pb-0 flex items-center justify-center text-gray-700'
       id='bookhero'
       style={{ backgroundImage: `url(${heroBg})` }}
     >

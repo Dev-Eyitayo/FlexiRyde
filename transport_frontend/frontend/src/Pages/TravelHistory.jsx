@@ -133,25 +133,25 @@ const TravelHistory = () => {
         <div className='flex gap-2 mb-6 overflow-x-auto pb-2'>
           <button
             onClick={() => setFilter("all")}
-            className={`px-4 py-2 font-semibold text-sm rounded-full ${filter === "all" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-2 py-1 font-semibold text-sm rounded-full ${filter === "all" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             All Trips
           </button>
           <button
             onClick={() => setFilter("upcoming")}
-            className={`px-4 py-2 font-semibold text-sm rounded-full ${filter === "upcoming" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-2 py-1 font-semibold text-sm rounded-full ${filter === "upcoming" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             Upcoming
           </button>
           <button
             onClick={() => setFilter("completed")}
-            className={`px-4 py-2 font-semibold text-sm rounded-full ${filter === "completed" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-2 py-1 font-semibold text-sm rounded-full ${filter === "completed" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             Completed
           </button>
           <button
             onClick={() => setFilter("canceled")}
-            className={`px-4 py-2 font-semibold text-sm rounded-full ${filter === "canceled" ? "bg-blue-600 text-white" : "bg-white"}`}
+            className={`px-2 py-1 font-semibold text-sm rounded-full ${filter === "canceled" ? "bg-blue-600 text-white" : "bg-white"}`}
           >
             Canceled
           </button>
@@ -221,7 +221,7 @@ const TravelHistory = () => {
           )}
         </div>
 
-        <ToastContainer position='top-center' />
+        <ToastContainer position='top-right' />
         <AnimatePresence>
           {showModal && cancelTrip && (
             <motion.div
@@ -232,7 +232,7 @@ const TravelHistory = () => {
               onClick={() => setShowModal(false)}
             >
               <motion.div
-                className='bg-white rounded-xl p-6 shadow-xl max-w-md w-full'
+                className='bg-white rounded-xl p-6 shadow-xl max-w-md mx-3 w-full'
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
@@ -241,7 +241,7 @@ const TravelHistory = () => {
                 <h2 className='text-xl font-bold text-red-600 mb-3'>
                   Confirm Cancellation
                 </h2>
-                <div className='space-y-3 mb-6'>
+                <div className='space-y-2 mb-6'>
                   <p className='text-gray-700'>
                     You are about to cancel your trip to{" "}
                     <span className='font-semibold'>{cancelTrip.to}</span>.

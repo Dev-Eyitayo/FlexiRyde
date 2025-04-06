@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   FaHeadphones,
   FaUser,
@@ -7,7 +7,7 @@ import {
   FaAddressCard,
   FaBus,
 } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.png";
@@ -26,6 +26,37 @@ export default function NavBar() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
+
+  // Track scroll position to update active section
+  const handleScroll = useCallback(() => {
+    const bookHero = document.getElementById("bookhero");
+    const about = document.getElementById("about");
+
+    if (!bookHero || !about) return;
+
+    const scrollPosition = window.scrollY + 100; // Add offset
+
+    const bookHeroTop = bookHero.offsetTop;
+    const bookHeroBottom = bookHeroTop + bookHero.offsetHeight;
+    const aboutTop = about.offsetTop;
+    const aboutBottom = aboutTop + about.offsetHeight;
+
+    if (scrollPosition >= bookHeroTop && scrollPosition < bookHeroBottom) {
+      setActiveSection("bookhero");
+    } else if (scrollPosition >= aboutTop && scrollPosition < aboutBottom) {
+      setActiveSection("about");
+    } else {
+      setActiveSection("");
+    }
+  }, []);
+
+  // Effect to set up scroll listener
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Initial check
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   // Effect to close sidebar when clicking outside of it
   useEffect(() => {
@@ -78,47 +109,59 @@ export default function NavBar() {
   }, []);
 
   return (
-    <nav className='bg-white shadow-md p-4 sticky top-0 z-50'>
+    <nav className='bg-white shadow-md p-3 sticky top-0 z-50'>
       <div className='container mx-auto flex items-center justify-between'>
         <button
           className='flex items-center space-x-6 cursor-pointer'
           onClick={() => navigate("/")}
         >
-          <img src={logo} alt='Brand Logo' className='md:h-12 h-10' />
+          <img src={logo} alt='Brand Logo' className='md:h-10 h-8' />
         </button>
         <div className='hidden md:flex gap-4 items-center space-x-6'>
-          <button
-            onClick={() => navigate("/#bookhero")}
-            className='flex items-center text-gray-700 cursor-pointer hover:text-red-500'
+          <NavLink
+            to='/#bookhero'
+            className={() =>
+              `flex items-center text-gray-700 cursor-pointer hover:text-red-500 ${
+                activeSection === "bookhero" ? "text-red-600" : ""
+              }`
+            }
           >
             <FaBus className='mr-1' size={20} />
             <span className='font-semibold ml-1 text-base'>Book Ride</span>
-          </button>
-          <button
-            onClick={() => navigate("/#about")}
-            className='flex items-center text-gray-700 hover:text-red-500 hover:cursor-pointer'
+          </NavLink>
+          <NavLink
+            to='/#about'
+            className={() =>
+              `flex items-center text-gray-700 hover:text-red-500 hover:cursor-pointer ${
+                activeSection === "about" ? "text-red-600" : ""
+              }`
+            }
           >
             <FaAddressCard className='mr-1' size={20} />
-            <span className='font-semibold ml-1  text-base'>About Us</span>
-          </button>
-          <button
-            onClick={() => navigate("/contact-support")}
-            className='flex items-center text-gray-700 hover:text-red-500 cursor-pointer'
+            <span className='font-semibold ml-1 text-base'>About Us</span>
+          </NavLink>
+          <NavLink
+            to='/contact-support'
+            className={({ isActive }) =>
+              `flex items-center text-gray-700 hover:text-red-500 cursor-pointer ${
+                isActive ? "text-red-600" : ""
+              }`
+            }
           >
             <FaHeadphones className='mr-1' size={20} />
             <span className='font-semibold ml-1 text-base'>
               Contact Support
             </span>
-          </button>
+          </NavLink>
           <div className='relative'>
             <button
               ref={desktopToggleRef}
               onClick={toggleDesktopDropdown}
-              className='flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus:outline-none'
+              className='flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus:outline-none'
               aria-expanded={isDesktopDropdownOpen}
               aria-haspopup='true'
             >
-              <FaUser size={22} className='text-gray-700' />
+              <FaUser size={18} className='text-gray-700' />
               <IoMdArrowDropdown
                 className={`ml-1 text-gray-700 transition-transform ${isDesktopDropdownOpen ? "rotate-180" : ""}`}
               />

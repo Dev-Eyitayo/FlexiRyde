@@ -146,13 +146,13 @@ export const BookingInput = ({ submitType }) => {
 
     return Object.entries(grouped).map(([cityName, cityParks]) => (
       <div key={cityName}>
-        <p className='px-4 py-2 font-medium text-sm bg-gray-50 text-gray-600 sticky top-0'>
+        <p className='px-4 py-2 text-lg bg-gray-50 font-bold text-gray-600 sticky top-0'>
           {cityName}
         </p>
         {cityParks.map((park) => (
           <div
             key={park.id}
-            className='px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0'
+            className='px-4 py-3 hover:bg-blue-100 cursor-pointer transition-colors border-b border-gray-100 last:border-0'
             onClick={() => {
               setValue(`${park.name} (${park.city.name})`);
               setSelected(park);
