@@ -50,7 +50,7 @@ export default function ContactSupport() {
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
           {/* Contact Information */}
           <div className='bg-white rounded-2xl shadow-lg p-8 h-fit'>
-            <h2 className='text-2xl font-semibold text-gray-800 mb-6'>
+            <h2 className='text-base font-semibold text-gray-800 mb-6'>
               Contact Information
             </h2>
 
