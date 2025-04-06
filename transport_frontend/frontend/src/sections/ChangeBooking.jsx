@@ -115,7 +115,7 @@ export default function ChangeBooking() {
                 </button>
               </div>
               <p className='text-xs text-gray-500 mt-1'>
-                Find your booking reference in your confirmation email
+                Find your booking reference in the travel history page
               </p>
             </div>
 

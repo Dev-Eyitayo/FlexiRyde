@@ -117,7 +117,6 @@ export const BookingInput = ({ submitType }) => {
       }
 
       const selectedTrip = tripResults[0];
-      
       navigate("/check-availability", {
         state: {
           trip: selectedTrip, // ⬅️ contains departure_time, etc.
@@ -146,13 +145,13 @@ export const BookingInput = ({ submitType }) => {
 
     return Object.entries(grouped).map(([cityName, cityParks]) => (
       <div key={cityName}>
-        <p className="px-3 py-1 font-semibold text-sm bg-gray-100 text-gray-700">
+        <p className='px-4 py-2 text-lg bg-gray-50 font-bold text-gray-600 sticky top-0'>
           {cityName}
         </p>
         {cityParks.map((park) => (
           <div
             key={park.id}
-            className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+            className='px-4 py-3 hover:bg-blue-100 cursor-pointer transition-colors border-b border-gray-100 last:border-0'
             onClick={() => {
               setValue(`${park.name} (${park.city.name})`);
               setSelected(park);
@@ -167,23 +166,25 @@ export const BookingInput = ({ submitType }) => {
   };
 
   return (
-    <div className="bg-gray-100 rounded-md p-3 px-4 mt-6 shadow-lg w-full max-w-7xl">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-center">
+    <div className='bg-white rounded-xl p-4 mt-6 shadow-lg w-full border border-gray-200'>
+      <div className='grid grid-cols-1 md:grid-cols-12 gap-4 items-center'>
         {/* FROM DROPDOWN */}
-        <div className="relative w-full" ref={fromDropdownRef}>
-          <div className="flex items-center p-3 rounded-md w-full border-0 bg-white">
-            <FaMapMarkerAlt className="text-gray-500 mr-3" />
-            <input
-              type="text"
-              placeholder="Leaving from"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowFromDropdown(!showFromDropdown);
-              }}
-              className="w-full bg-transparent focus:outline-none cursor-pointer"
-            />
+        <div className='relative md:col-span-3' ref={fromDropdownRef}>
+          <div className='relative'>
+            <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-300 hover:border-blue-500 transition-colors'>
+              <FaMapMarkerAlt className='text-blue-500 mr-3' />
+              <input
+                type='text'
+                placeholder='Leaving from'
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowFromDropdown(!showFromDropdown);
+                }}
+                className='w-full bg-transparent focus:outline-none cursor-pointer placeholder-gray-500'
+              />
+            </div>
           </div>
 
           <AnimatePresence>
@@ -192,18 +193,24 @@ export const BookingInput = ({ submitType }) => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50 max-h-60 overflow-y-auto"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className='absolute left-0 right-0 bg-white shadow-xl rounded-lg mt-1 z-50 max-h-60 overflow-y-auto border border-gray-200'
               >
-                {renderGroupedDropdown(from, setFrom, setShowFromDropdown, setSelectedFrom)}
+                {renderGroupedDropdown(
+                  from,
+                  setFrom,
+                  setShowFromDropdown,
+                  setSelectedFrom
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
         {/* TO DROPDOWN */}
-        <div className="relative w-full" ref={toDropdownRef}>
-          <div className="flex items-center p-3 rounded-md w-full bg-white border-0">
-            <FaMapMarkerAlt className="text-gray-500 mr-3" />
+        <div className='relative md:col-span-3' ref={toDropdownRef}>
+          <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-300 hover:border-blue-500 transition-colors'>
+            <FaMapMarkerAlt className='text-blue-500 mr-3' />
             <input
               type="text"
               placeholder="Going to"
@@ -213,7 +220,7 @@ export const BookingInput = ({ submitType }) => {
                 e.stopPropagation();
                 setShowToDropdown(!showToDropdown);
               }}
-              className="w-full bg-transparent focus:outline-none cursor-pointer"
+              className='w-full bg-transparent focus:outline-none cursor-pointer placeholder-gray-500'
             />
           </div>
 
@@ -223,33 +230,37 @@ export const BookingInput = ({ submitType }) => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50 max-h-60 overflow-y-auto"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className='absolute left-0 right-0 bg-white shadow-xl rounded-lg mt-1 z-50 max-h-60 overflow-y-auto border border-gray-200'
               >
-                {renderGroupedDropdown(to, setTo, setShowToDropdown, setSelectedTo)}
+                {renderGroupedDropdown(
+                  to,
+                  setTo,
+                  setShowToDropdown,
+                  setSelectedTo
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
         {/* Travel Date */}
-        <div className="flex items-center border-0 p-3 rounded-md w-full bg-white">
-          <FaCalendarAlt className="text-gray-500 mr-3" />
+        <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-300 hover:border-blue-500 transition-colors md:col-span-2'>
+          <FaCalendarAlt className='text-blue-500 mr-3' />
           <input
-            type="date"
-            className="w-full bg-transparent focus:outline-none appearance-none"
+            type='date'
+            className='w-full bg-transparent focus:outline-none appearance-none text-gray-700'
             min={new Date().toISOString().split("T")[0]}
             ref={dateRef}
             onFocus={() => dateRef.current?.showPicker()}
           />
         </div>
 
-
-
-        {/* Passengers */}
-        <div className="relative w-full">
+        {/* Number of Passengers */}
+        <div className='relative md:col-span-2'>
           <div
             ref={passengerInputRef}
-            className="flex items-center border-0 p-3 rounded-md w-full bg-white cursor-pointer"
+            className='flex flex-nowrap items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-300 hover:border-blue-500 transition-colors cursor-pointer'
             onClick={(e) => {
               e.stopPropagation();
               setShowPassengerModal((prev) => !prev);
@@ -266,11 +277,12 @@ export const BookingInput = ({ submitType }) => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute left-0 right-0 bg-white shadow-lg rounded-md mt-2 z-50 p-4 flex items-center justify-between"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className='absolute left-0 right-0 bg-white shadow-xl rounded-lg mt-1 z-50 p-4 flex items-center justify-between border border-gray-200'
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  className="p-2 bg-gray-200 rounded-full"
+                  className='p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors'
                   onClick={(e) => {
                     e.stopPropagation();
                     setPassengers(Math.max(1, passengers - 1));
@@ -280,7 +292,7 @@ export const BookingInput = ({ submitType }) => {
                 </button>
                 <span className="text-lg font-semibold">{passengers}</span>
                 <button
-                  className="p-2 bg-gray-200 rounded-full"
+                  className='p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors'
                   onClick={(e) => {
                     e.stopPropagation();
                     setPassengers(Math.min(24, passengers + 1));
@@ -295,7 +307,7 @@ export const BookingInput = ({ submitType }) => {
 
         {/* Submit Button */}
         <button
-          className="bg-blue-600 text-white px-6 py-3 rounded-md w-full md:w-auto font-semibold hover:bg-blue-700 transition"
+          className='bg-blue-600 text-white py-3 rounded-md w-full font-semibold hover:bg-blue-700 transition h-full md:col-span-2'
           onClick={handleCheckAvailability}
         >
           {submitType}
