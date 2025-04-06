@@ -8,7 +8,7 @@ const faqData = {
     {
       question: "Why book bus tickets online on FlexiRyde??",
       answer:
-        "Booking bus tickets on FlexiRyde is the smarter way to travel. Skip long queues and book from anywhere with just a few clicks. Compare bus schedules, choose your preferred seats, and enjoy exclusive discounts. Secure payments ensure your transactions are safe, while real-time updates keep you informed about any schedule changes. Plus, check onboard amenities before booking for a more comfortable journey. Travel smarter with FlexiRyde!",
+        "Booking bus tickets on FlexiRyde is the smarter way to travel. Skip long queues and book from anywhere with just a few clicks. Compare bus schedules, book your seats, and enjoy easy your trip. Secure payments ensure your transactions are safe. Travel smarter with FlexiRyde!",
     },
     {
       question:
@@ -25,7 +25,7 @@ const faqData = {
     {
       question: "Does bus booking online cost me more?",
       answer:
-        "Not at all! The bus ticket price is the same as you would get from the park by going there physically. FlexiRyde reduces the travel budget by comparing the bus ticket prices among various operators, making it a more cost-effective choice. Therefore, online bus booking is increasingly recognized as a more convenient, efficient, and economical mode of securing travel arrangements.",
+        "Not at all! The bus ticket price is the same as you would get from the park by going there physically. FlexiRyde reduces the travel budget by comparing the bus ticket prices among various operators, making it a more cost-effective choice.",
     },
   ],
   Ticket: [
@@ -37,7 +37,7 @@ const faqData = {
     {
       question: "How can I cancel my ticket?",
       answer:
-        "You can't cancel your ticket but you can reschedule it for another travel.",
+        "You can cancel your ticket by going to the travel history page so far it meets the required criteria and you can reschedule as well.",
     },
     {
       question: "Can I transfer my ticket to someone else?",
@@ -122,7 +122,7 @@ export default function FAQSection() {
       </h2>
 
       {/* Tabs */}
-      <div className='flex justify-center space-x-6 border-b border-gray-400 pb-3 mx-2 relative'>
+      <div className='flex justify-center space-x-4 border-b border-gray-400 pb-3 mx-2 relative'>
         {Object.keys(faqData).map((category) => (
           <button
             key={category}
