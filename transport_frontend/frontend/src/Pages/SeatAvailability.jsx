@@ -6,6 +6,7 @@ import RouteVisualization from "../components/RouteVisualization";
 import { FaClock, FaExclamationTriangle } from "react-icons/fa";
 
 export default function SeatAvailability() {
+  const intermediateStops = []; // or whatever makes sense for your data
   const location = useLocation();
   const travelData = location.state?.searchInfo || {
     from: "Lagos",
@@ -83,6 +84,7 @@ export default function SeatAvailability() {
         </p>
       </div>
 
+      
       <RouteVisualization
         route={{ from, to, date, time: selectedTime, intermediateStops }}
       />
@@ -97,11 +99,11 @@ export default function SeatAvailability() {
           <div className='space-y-4'>
             <div className='flex justify-between'>
               <span className='text-gray-600'>From:</span>
-              <span className='font-medium'>{trip?.route.origin_park}</span>
+              <span className='font-medium'>{trip?.origin_park}</span>
             </div>
             <div className='flex justify-between'>
               <span className='text-gray-600'>To:</span>
-              <span className='font-medium'>{trip?.route.destination_city}</span>
+              <span className='font-medium'>{trip?.destination_city}</span>
             </div>
             <div className='flex justify-between'>
               <span className='text-gray-600'>Date:</span>
