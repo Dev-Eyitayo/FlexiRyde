@@ -40,7 +40,7 @@ class Route(models.Model):
     status = models.CharField(max_length=20, choices=[('active', 'Active'), ('disabled', 'Disabled')], default='active')
 
     def __str__(self):
-        return f"{self.origin_park.name} ➜ {self.destination_city.name}"
+        return f"{self.origin_park.name} ➜ {self.destination_park.name}"
 
     
 class IndirectRoute(models.Model):
@@ -98,4 +98,4 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-         return f"{self.user.email} | {self.trip.route.origin_park.name} → {self.trip.route.destination_city.name}"
+         return f"{self.user.email} | {self.trip.route.origin_park.name} → {self.trip.route.destination_park.name}"

@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Seat, SeatReservation
+from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
+
 
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,7 +16,7 @@ class BusParkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BusPark
-        fields = ['id', 'name', 'latitude', 'longitude', 'city', 'city_id']
+        fields = ['id', 'name', 'latitude', 'longitude', 'status', 'city', 'city_id']
 
 
 class RouteSerializer(serializers.ModelSerializer):
@@ -23,86 +24,114 @@ class RouteSerializer(serializers.ModelSerializer):
     origin_park_id = serializers.PrimaryKeyRelatedField(
         queryset=BusPark.objects.all(), source='origin_park', write_only=True
     )
+    destination_park = BusParkSerializer(read_only=True)
+    destination_park_id = serializers.PrimaryKeyRelatedField(
+        queryset=BusPark.objects.all(), source='destination_park', write_only=True
+    )
+
+    class Meta:
+        model = Route
+        fields = [
+            'id', 'origin_park', 'origin_park_id',
+            'destination_park', 'destination_park_id',
+            'distance_km', 'estimated_duration_min', 'status'
+        ]
+
+
+class IndirectRouteSerializer(serializers.ModelSerializer):
+    start_park = BusParkSerializer(read_only=True)
+    start_park_id = serializers.PrimaryKeyRelatedField(
+        queryset=BusPark.objects.all(), source='start_park', write_only=True
+    )
+    transit_city = CitySerializer(read_only=True)
+    transit_city_id = serializers.PrimaryKeyRelatedField(
+        queryset=City.objects.all(), source='transit_city', write_only=True
+    )
     destination_city = CitySerializer(read_only=True)
     destination_city_id = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.all(), source='destination_city', write_only=True
     )
 
     class Meta:
-        model = Route
-        fields = ['id', 'origin_park', 'origin_park_id', 'destination_city', 'destination_city_id', 'distance_km']
-
-
-class IndirectRouteSerializer(serializers.ModelSerializer):
-    class Meta:
         model = IndirectRoute
-        fields = '__all__'
+        fields = [
+            'id', 'start_park', 'start_park_id',
+            'transit_city', 'transit_city_id',
+            'destination_city', 'destination_city_id',
+            'total_distance', 'total_price'
+        ]
 
-class SeatSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Seat
-        fields = ['id', 'seat_number', 'row', 'column']
-
-
-class SeatReservationSerializer(serializers.ModelSerializer):
-    seat = SeatSerializer()
-
-    class Meta:
-        model = SeatReservation
-        fields = ['id', 'seat', 'trip']
-
-class TripSerializer(serializers.ModelSerializer):
-    route = RouteSerializer()
-    bus = BusParkSerializer()
+class TripListSerializer(serializers.ModelSerializer):
+    bus = serializers.SerializerMethodField()
+    route = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
-        fields = ['id', 'route', 'bus', 'travel_date']
+        fields = [
+            'id',
+            'travel_date',
+            'departure_time',
+            'seat_price',
+            'bus',
+            'route',
+        ]
+
+    def get_bus(self, obj):
+        return {
+            "number_plate": obj.bus.number_plate,
+            "total_seats": obj.bus.total_seats,
+        }
+
+    def get_route(self, obj):
+        return {
+            "origin_park": {
+                "id": obj.route.origin_park.id,
+                "name": obj.route.origin_park.name,
+            },
+            "destination_park": {
+                "id": obj.route.destination_park.id,
+                "name": obj.route.destination_park.name,
+            },
+            "distance_km": obj.route.distance_km,
+        }
+
+
+
+class TripSerializer(serializers.ModelSerializer):
+    route = RouteSerializer(read_only=True)
+    route_id = serializers.PrimaryKeyRelatedField(
+        queryset=Route.objects.all(), source='route', write_only=True
+    )
+    bus = serializers.StringRelatedField(read_only=True)
+    bus_id = serializers.PrimaryKeyRelatedField(
+        queryset=Bus.objects.all(), source='bus', write_only=True
+    )
+
+    class Meta:
+        model = Trip
+        fields = [
+            'id', 'route', 'route_id',
+            'bus', 'bus_id',
+            'travel_date', 'departure_time', 'seat_price'
+        ]
 
 
 class BookingSerializer(serializers.ModelSerializer):
-    origin_park = BusParkSerializer(read_only=True)
-    destination_city = CitySerializer(read_only=True)
-    reserved_seat_ids = serializers.ListField(write_only=True, child=serializers.IntegerField(), required=False)
-    trip_id = serializers.IntegerField(write_only=True)
+    trip = TripSerializer(read_only=True)
+    trip_id = serializers.PrimaryKeyRelatedField(
+        queryset=Trip.objects.all(), source='trip', write_only=True
+    )
 
     class Meta:
         model = Booking
         fields = [
-            'id',
-            'origin_park', 'origin_park_id',
-            'destination_city', 'destination_city_id',
-            'travel_date',
-            'price', 'status', 'created_at',
-            'trip_id', 'reserved_seat_ids'
+            'id', 'user', 'trip', 'trip_id',
+            'price', 'payment_reference',
+            'status', 'created_at'
         ]
-        read_only_fields = ['status', 'created_at']
+        read_only_fields = ['user', 'status', 'created_at']
 
     def create(self, validated_data):
-        seat_ids = validated_data.pop('reserved_seat_ids', [])
-        trip_id = validated_data.pop('trip_id')
         user = self.context['request'].user
-
-        trip = Trip.objects.get(id=trip_id)
-        booking = Booking.objects.create(
-            user=user,
-            trip=trip,
-            price=validated_data['price'],
-            status='confirmed',
-        )
-
-        for seat_id in seat_ids:
-            seat = Seat.objects.get(id=seat_id)
-            SeatReservation.objects.create(trip=trip, seat=seat, booking=booking)
-
+        booking = Booking.objects.create(user=user, **validated_data)
         return booking
-
-
-class TripListSerializer(serializers.ModelSerializer):
-    origin_park = serializers.CharField(source='route.origin_park.name')
-    destination_city = serializers.CharField(source='route.destination_city.name')
-    bus_plate = serializers.CharField(source='bus.number_plate')
-
-    class Meta:
-        model = Trip
-        fields = ['id', 'origin_park', 'destination_city', 'travel_date', 'departure_time', 'seat_price', 'bus_plate']
