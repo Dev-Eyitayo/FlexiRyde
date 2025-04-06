@@ -117,14 +117,14 @@ export const BookingInput = ({ submitType }) => {
       }
 
       const selectedTrip = tripResults[0];
-
+      
       navigate("/check-availability", {
         state: {
-          trip: selectedTrip,
+          trip: selectedTrip, // ⬅️ contains departure_time, etc.
           searchInfo: {
-            from: selectedFrom.name,
-            to: selectedTo.city.name,
-            date: travel_date,
+            from: originPark.name,
+            to: destinationPark.city.name,
+            date: dateRef.current.value,
             passengers,
           },
         },

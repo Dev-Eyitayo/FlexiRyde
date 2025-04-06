@@ -7,26 +7,20 @@ import { FaClock, FaExclamationTriangle } from "react-icons/fa";
 
 export default function SeatAvailability() {
   const location = useLocation();
-
-  // Enhanced dummy data with time-based seat availability
-  const dummyTravelData = {
+  const travelData = location.state?.searchInfo || {
     from: "Lagos",
     to: "Abuja",
     date: "2025-04-10",
-    time: "10:00 AM",
-    bookedSeats: 3,
-    intermediateStops: ["Ibadan", "Lokoja"],
+    passengers: 1,
   };
 
   const {
     from,
     to,
     date,
-    time: initialTime,
-    bookedSeats,
-  } = location.state || dummyTravelData;
+    passengers: bookedSeats,
+  } = travelData;
 
-  // Time-based seat availability data
   const timeSlots = {
     "08:00 AM": { totalSeats: 16, takenSeats: 16 },
     "09:00 AM": { totalSeats: 16, takenSeats: 12 },
@@ -36,8 +30,12 @@ export default function SeatAvailability() {
   };
 
   const [price, setPrice] = useState(0);
-  const [selectedTime, setSelectedTime] = useState(initialTime);
-  const [currentSeats, setCurrentSeats] = useState(timeSlots[initialTime]);
+  const defaultTime = "08:00 AM";
+  const [selectedTime, setSelectedTime] = useState(defaultTime);
+  const [currentSeats, setCurrentSeats] = useState(
+    timeSlots[defaultTime] || { totalSeats: 16, takenSeats: 0 }
+  );
+  
 
   useEffect(() => {
     const basePrice = 1500;
@@ -46,9 +44,10 @@ export default function SeatAvailability() {
   }, [currentSeats]);
 
   const handleProceed = () => {
-    if (currentSeats.totalSeats - currentSeats.takenSeats < bookedSeats) {
+    const available = currentSeats.totalSeats - currentSeats.takenSeats;
+    if (available < bookedSeats) {
       toast.error(
-        `Only ${currentSeats.totalSeats - currentSeats.takenSeats} seat(s) available at ${selectedTime}. Please choose another time.`,
+        `Only ${available} seat(s) available at ${selectedTime}. Please choose another time.`,
         {
           position: "top-center",
           autoClose: 5000,
@@ -64,7 +63,7 @@ export default function SeatAvailability() {
   const handleTimeChange = (e) => {
     const newTime = e.target.value;
     setSelectedTime(newTime);
-    setCurrentSeats(timeSlots[newTime]);
+    setCurrentSeats(timeSlots[newTime] || { totalSeats: 16, takenSeats: 0 });
   };
 
   const isSeatAvailable =
@@ -82,7 +81,9 @@ export default function SeatAvailability() {
         </p>
       </div>
 
-      <RouteVisualization route={location.state || dummyTravelData} />
+      <RouteVisualization
+        route={{ from, to, date, time: selectedTime, intermediateStops }}
+      />
 
       <div className='bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100'>
         <h2 className='text-xl font-semibold text-gray-800 mb-4 flex items-center'>
@@ -118,23 +119,13 @@ export default function SeatAvailability() {
                   onChange={handleTimeChange}
                   className='appearance-none w-full p-3 pl-4 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:bg-gray-50'
                 >
-                  {Array.from({ length: 24 }, (_, i) => {
-                    const hour = i % 12 || 12;
-                    const period = i < 12 ? "AM" : "PM";
-                    const time = `${hour.toString().padStart(2, "0")}:00 ${period}`;
-                    return timeSlots[time] ? (
-                      <option
-                        key={time}
-                        value={time}
-                        className='p-2 hover:bg-blue-50'
-                      >
-                        {time} (
-                        {timeSlots[time].totalSeats -
-                          timeSlots[time].takenSeats}{" "}
-                        seats left)
-                      </option>
-                    ) : null;
-                  })}
+                  {Object.keys(timeSlots).map((time) => (
+                    <option key={time} value={time}>
+                      {time} (
+                      {timeSlots[time].totalSeats - timeSlots[time].takenSeats}{" "}
+                      seats left)
+                    </option>
+                  ))}
                 </select>
 
                 <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500'>
@@ -194,7 +185,9 @@ export default function SeatAvailability() {
             <div className='flex items-start'>
               <FaExclamationTriangle className='text-yellow-500 mt-1 mr-2' />
               <div>
-                <p className='font-medium text-yellow-800'>Not Enough Seats</p>
+                <p className='font-medium text-yellow-800'>
+                  Not Enough Seats
+                </p>
                 <p className='text-sm text-yellow-700'>
                   Only {currentSeats.totalSeats - currentSeats.takenSeats}{" "}
                   seat(s) available at {selectedTime}. Please select another
@@ -222,7 +215,9 @@ export default function SeatAvailability() {
           </div>
           <div className='border-t border-gray-200 pt-3'>
             <div className='flex justify-between'>
-              <span className='text-gray-600 font-semibold'>Total Amount:</span>
+              <span className='text-gray-600 font-semibold'>
+                Total Amount:
+              </span>
               <span className='text-gray-800 text-lg font-bold'>
                 ₦{(price * bookedSeats).toLocaleString()}
               </span>
