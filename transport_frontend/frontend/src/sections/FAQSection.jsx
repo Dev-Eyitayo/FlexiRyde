@@ -122,7 +122,7 @@ export default function FAQSection() {
       </h2>
 
       {/* Tabs */}
-      <div className='flex justify-center space-x-6 border-b border-gray-400 pb-3 px-2 relative'>
+      <div className='flex justify-center space-x-6 border-b border-gray-400 pb-3 mx-2 relative'>
         {Object.keys(faqData).map((category) => (
           <button
             key={category}

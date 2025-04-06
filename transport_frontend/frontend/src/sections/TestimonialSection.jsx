@@ -73,7 +73,7 @@ const TestimonialSection = () => {
                 <FaStarHalfAlt className='text-yellow-500' />
               )}
             </div>
-            <p className='mt-2 text-base font-semibold'>
+            <p className='mt-2 text-sm font-semibold'>
               - {testimonial.name}, {testimonial.location}
             </p>
           </motion.div>
