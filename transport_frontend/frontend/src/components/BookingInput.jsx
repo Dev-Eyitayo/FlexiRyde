@@ -105,7 +105,7 @@ export const BookingInput = ({ submitType }) => {
 
     try {
       const response = await authFetch(
-        `/trips/search/?origin_id=${origin_id}&destination_id=${destination_id}&date=${travel_date}`,
+        /trips/search/?origin_id=${origin_id}&destination_id=${destination_id}&date=${travel_date},
         { method: "GET" }
       );
 
@@ -117,13 +117,14 @@ export const BookingInput = ({ submitType }) => {
       }
 
       const selectedTrip = tripResults[0];
+
       navigate("/check-availability", {
         state: {
-          trip: selectedTrip, // ⬅️ contains departure_time, etc.
+          trip: selectedTrip,
           searchInfo: {
-            from: originPark.name,
-            to: destinationPark.city.name,
-            date: dateRef.current.value,
+            from: selectedFrom.name,
+            to: selectedTo.city.name,
+            date: travel_date,
             passengers,
           },
         },
@@ -137,7 +138,7 @@ export const BookingInput = ({ submitType }) => {
   const renderGroupedDropdown = (query, setValue, setDropdown, setSelected) => {
     if (loading) {
       return (
-        <div className="p-3 text-center text-gray-500">Loading parks...</div>
+        <div className='p-3 text-center text-gray-500'>Loading parks...</div>
       );
     }
 
@@ -153,7 +154,7 @@ export const BookingInput = ({ submitType }) => {
             key={park.id}
             className='px-4 py-3 hover:bg-blue-100 cursor-pointer transition-colors border-b border-gray-100 last:border-0'
             onClick={() => {
-              setValue(`${park.name} (${park.city.name})`);
+              setValue(${park.name} (${park.city.name}));
               setSelected(park);
               setDropdown(false);
             }}
@@ -212,8 +213,8 @@ export const BookingInput = ({ submitType }) => {
           <div className='flex items-center p-3 rounded-lg w-full bg-gray-50 border border-gray-300 hover:border-blue-500 transition-colors'>
             <FaMapMarkerAlt className='text-blue-500 mr-3' />
             <input
-              type="text"
-              placeholder="Going to"
+              type='text'
+              placeholder='Going to'
               value={to}
               onChange={(e) => setTo(e.target.value)}
               onClick={(e) => {
@@ -266,8 +267,10 @@ export const BookingInput = ({ submitType }) => {
               setShowPassengerModal((prev) => !prev);
             }}
           >
-            <FaUser className="text-gray-500 mr-3" />
-            <span>{passengers} Seat{passengers > 1 ? "s" : ""}</span>
+            <FaUser className='text-gray-500 mr-3' />
+            <span>
+              {passengers} Seat{passengers > 1 ? "s" : ""}
+            </span>
           </div>
 
           <AnimatePresence>
@@ -290,7 +293,7 @@ export const BookingInput = ({ submitType }) => {
                 >
                   <FaMinus />
                 </button>
-                <span className="text-lg font-semibold">{passengers}</span>
+                <span className='text-lg font-semibold'>{passengers}</span>
                 <button
                   className='p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors'
                   onClick={(e) => {
