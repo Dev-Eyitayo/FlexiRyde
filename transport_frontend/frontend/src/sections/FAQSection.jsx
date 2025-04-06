@@ -116,8 +116,8 @@ export default function FAQSection() {
   };
 
   return (
-    <div className='max-w-4xl mx-auto px-4 py-12 pb-20 pt-18'>
-      <h2 className='md:text-3xl text-2xl font-bold text-center mb-6 mt-6'>
+    <div className='max-w-5xl mx-auto px-4 py-12 pb-20 pt-18'>
+      <h2 className='md:text-2xl text-xl font-bold text-center mb-6 mt-6'>
         FAQs related to Bus Tickets Booking
       </h2>
 
@@ -127,7 +127,7 @@ export default function FAQSection() {
           <button
             key={category}
             onClick={() => setActiveTab(category)}
-            className={`pb-2 px-1 font-semibold relative z-10 ${activeTab === category ? "text-red-500" : "text-gray-600"}`}
+            className={`pb-2 px-1 font-semibold relative z-10 ${activeTab === category ? "text-red-500" : "text-gray-600 text-sm"}`}
           >
             {category}
             {activeTab === category && (
@@ -160,7 +160,7 @@ export default function FAQSection() {
               transition={{ delay: index * 0.05 }}
             >
               <button
-                className='w-full flex justify-between items-center text-left text-lg font-medium'
+                className='w-full flex justify-between items-center text-left text-base font-medium'
                 onClick={() => toggleFAQ(index)}
               >
                 {item.question}
