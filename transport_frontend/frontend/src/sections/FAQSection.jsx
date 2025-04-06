@@ -28,7 +28,7 @@ const faqData = {
         "Not at all! The bus ticket price is the same as you would get from the park by going there physically. FlexiRyde reduces the travel budget by comparing the bus ticket prices among various operators, making it a more cost-effective choice. Therefore, online bus booking is increasingly recognized as a more convenient, efficient, and economical mode of securing travel arrangements.",
     },
   ],
-  "Ticket-related": [
+  Ticket: [
     {
       question: "How can I book bus tickets on FlexiRyde?",
       answer:
