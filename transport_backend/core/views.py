@@ -3,11 +3,12 @@ from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.generics import CreateAPIView
 
 from .models import City, BusPark, Route, IndirectRoute, Booking, Trip
 from .serializers import (
     CitySerializer, BusParkSerializer, RouteSerializer, BookingSerializer,
-    TripSerializer, TripListSerializer, IndirectRouteSerializer
+    TripSerializer, TripListSerializer, IndirectRouteSerializer, BookingCreateSerializer
 )
 
 
@@ -81,3 +82,8 @@ class TripViewSet(viewsets.ModelViewSet):
             "taken_seat_ids": taken_seat_ids,
             "available_seats": available_seats
         })
+
+class BookingCreateAPIView(CreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingCreateSerializer
+    permission_classes = [IsAuthenticated]
