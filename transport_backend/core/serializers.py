@@ -1,4 +1,4 @@
-import random
+import uuid
 from datetime import datetime
 from rest_framework import serializers
 from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
@@ -148,24 +148,19 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         model = Booking
         fields = ["trip", "price"]
 
-    def generate_unique_reference(self):
-        """Generates a unique payment reference not yet used."""
-        while True:
-            ref = f"REF{random.randint(10000, 99999)}"
-            if not Booking.objects.filter(payment_reference=ref).exists():
-                return ref
-
     def create(self, validated_data):
         request = self.context["request"]
         user = request.user
 
-        reference = self.generate_unique_reference()
+        # Shorten UUID for cleaner references
+        short_uuid = uuid.uuid4().hex[:8].upper()  # e.g. 45A7E1F2
+        reference = f"REF-{short_uuid}"
 
         booking = Booking.objects.create(
             user=user,
             trip=validated_data["trip"],
             price=validated_data["price"],
             payment_reference=reference,
-            status="Pending"  # adjust as needed
+            status="Pending"  # Optional default
         )
         return booking
