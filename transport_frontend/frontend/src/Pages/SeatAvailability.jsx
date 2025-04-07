@@ -357,17 +357,31 @@ export default function SeatAvailability() {
   const isSeatAvailable =
     currentSeats.totalSeats - currentSeats.takenSeats >= bookedSeats;
 
-  const handleProceed = () => {
-    const available = currentSeats.totalSeats - currentSeats.takenSeats;
-    if (available < bookedSeats) {
-      toast.error(
-        `Only ${available} seat(s) available. Please choose fewer seats.`,
-        { position: "top-center", autoClose: 5000 }
-      );
-      return;
-    }
-    alert(`Proceeding to payment for ${bookedSeats} seat(s)`);
-  };
+    const handleProceed = () => {
+      const token = localStorage.getItem("token");
+    
+      if (!token) {
+        toast.warning("🔐 Please log in to proceed with booking.", {
+          position: "top-center",
+          autoClose: 4000,
+        });
+        setTimeout(() => {
+          window.location.href = "/login"; // or navigate("/login");
+        }, 1500);
+        return;
+      }
+    
+      const available = currentSeats.totalSeats - currentSeats.takenSeats;
+      if (available < bookedSeats) {
+        toast.error(
+          `Only ${available} seat(s) available. Please choose fewer seats.`,
+          { position: "top-center", autoClose: 5000 }
+        );
+        return;
+      }
+    
+      alert(`Proceeding to payment for ${bookedSeats} seat(s)`);
+    };    
   function formatTime(timeStr) {
     if (!timeStr) return "—";
     const [h, m] = timeStr.split(":");
