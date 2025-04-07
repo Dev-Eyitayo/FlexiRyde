@@ -143,6 +143,7 @@ class BookingSerializer(serializers.ModelSerializer):
         booking = Booking.objects.create(user=user, **validated_data)
         return booking
 
+
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
@@ -152,15 +153,21 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         user = request.user
 
-        # Shorten UUID for cleaner references
-        short_uuid = uuid.uuid4().hex[:8].upper()  # e.g. 45A7E1F2
-        reference = f"REF-{short_uuid}"
+        # Format today’s date as APR07
+        date_str = datetime.now().strftime("%b%d").upper()  # e.g., APR07
+
+        # Generate a short UUID for uniqueness
+        unique_part = uuid.uuid4().hex[:8].upper()  # e.g., 45A7E1F2
+
+        # Combine them
+        reference = f"REF-{date_str}-{unique_part}"
 
         booking = Booking.objects.create(
             user=user,
             trip=validated_data["trip"],
             price=validated_data["price"],
             payment_reference=reference,
-            status="Pending"  # Optional default
+            status="Pending"  # default status
         )
+
         return booking
