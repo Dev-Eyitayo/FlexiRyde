@@ -1,3 +1,4 @@
+from datetime import datetime
 from rest_framework import serializers
 from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
 
@@ -64,6 +65,7 @@ class IndirectRouteSerializer(serializers.ModelSerializer):
 class TripListSerializer(serializers.ModelSerializer):
     bus = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
+    departure_time = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
@@ -94,6 +96,10 @@ class TripListSerializer(serializers.ModelSerializer):
             },
             "distance_km": obj.route.distance_km,
         }
+    def get_departure_time(self, obj):
+        if not obj.departure_time:
+            return None
+        return obj.departure_time.strftime('%I:%M %p')
 
 
 

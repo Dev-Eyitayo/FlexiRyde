@@ -297,14 +297,24 @@ import { FaClock, FaExclamationTriangle } from "react-icons/fa";
 
 export default function SeatAvailability() {
   const location = useLocation();
-  const trip = location.state?.trip;
+  const trips = location.state?.trips || []; // ✅ clear and correct
   const travelData = location.state?.searchInfo || {};
   const { from, to, date, passengers: bookedSeats } = travelData;
 
+  const [selectedTripId, setSelectedTripId] = useState(() => trips[0]?.id || "");
+  const [trip, setTrip] = useState(() => trips[0] || null);
   const [takenSeats, setTakenSeats] = useState([]);
   const [availableSeats, setAvailableSeats] = useState([]);
   const [price, setPrice] = useState(0);
   const [currentSeats, setCurrentSeats] = useState({ totalSeats: 24, takenSeats: 0 });
+
+
+  console.log(trips)  
+
+  useEffect(() => {
+    const selected = trips.find((t) => t.id === selectedTripId);
+    setTrip(selected || null);
+  }, [selectedTripId, trips]);
 
   useEffect(() => {
     const fetchSeatData = async () => {
@@ -321,16 +331,14 @@ export default function SeatAvailability() {
         );
         const data = await response.json();
 
+
         const taken = data.taken_seat_ids?.length || 0;
         const available = data.available_seats?.length || 0;
         const total = taken + available;
 
         setTakenSeats(data.taken_seat_ids || []);
         setAvailableSeats(data.available_seats || []);
-        setCurrentSeats({
-          totalSeats: total,
-          takenSeats: taken,
-        });
+        setCurrentSeats({ totalSeats: total, takenSeats: taken });
 
         const basePrice = trip?.seat_price || 1500;
         const demandFactor = 1 + taken / (total || 1);
@@ -358,6 +366,14 @@ export default function SeatAvailability() {
     }
     alert(`Proceeding to payment for ${bookedSeats} seat(s)`);
   };
+  function formatTime(timeStr) {
+    if (!timeStr) return "—";
+    const [h, m] = timeStr.split(":");
+    const hour = parseInt(h);
+    const suffix = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${m} ${suffix}`;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 lg:px-8">
@@ -367,7 +383,7 @@ export default function SeatAvailability() {
           Seat Availability
         </h1>
         <p className="text-gray-600">
-          Check available seats and confirm your booking details
+          Select departure time to view seat availability
         </p>
       </div>
 
@@ -381,36 +397,54 @@ export default function SeatAvailability() {
         }}
       />
 
-      {/* Travel Info */}
+      {/* Time selection */}
+      <div className="w-full max-w-4xl mb-6">
+        <label htmlFor="time" className="block text-lg text-gray-700 mb-1">
+          Select Departure Time:
+        </label>
+        <select
+          id="time"
+          value={selectedTripId}
+          onChange={(e) => setSelectedTripId(Number(e.target.value))}
+          className="..."
+        >
+          {trips.map((t) => (
+            <option key={t.id} value={t.id}>
+              {formatTime(t.departure_time)} - ₦{t.seat_price.toLocaleString()}
+            </option>
+          ))}
+        </select>
+
+      </div>
+
+      {/* Travel Summary */}
       <div className="bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100">
         <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
           <FaClock className="mr-2 text-blue-500" />
           Travel Details
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-18 gap-6">
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-gray-600">From:</span>
-              <span className="font-medium">{from}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">To:</span>
-              <span className="font-medium">{to}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Date:</span>
-              <span className="font-medium">{date}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Departure Time:</span>
-              <span className="font-medium">{trip?.departure_time || "—"}</span>
-            </div>
+        <div className="space-y-4">
+          <div className="flex justify-between">
+            <span className="text-gray-600">From:</span>
+            <span className="font-medium">{from}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">To:</span>
+            <span className="font-medium">{to}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Date:</span>
+            <span className="font-medium">{date}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Departure:</span>
+            <span className="font-medium">{trip?.departure_time}</span>
           </div>
         </div>
       </div>
 
-      {/* Seat Info */}
+      {/* Seat Breakdown */}
       <div className="bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">
           Seat Availability
@@ -455,7 +489,7 @@ export default function SeatAvailability() {
         )}
       </div>
 
-      {/* Payment Summary */}
+      {/* Payment */}
       <div className="bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">
           Payment Summary
@@ -481,7 +515,6 @@ export default function SeatAvailability() {
         </div>
       </div>
 
-      {/* CTA */}
       <div className="w-full max-w-4xl">
         <button
           onClick={handleProceed}

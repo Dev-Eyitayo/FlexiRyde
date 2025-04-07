@@ -104,10 +104,13 @@ export const BookingInput = ({ submitType }) => {
     const travel_date = dateRef.current.value;
 
     try {
-      const response = await authFetch(
-        `/trips/search/?origin_id=${origin_id}&destination_id=${destination_id}&date=${travel_date}`,
-        { method: "GET" }
-      );
+      const queryParams = new URLSearchParams({
+        origin_id: origin_id,
+        destination_id: destination_id,
+        date: travel_date,
+      });
+      
+      const response = await authFetch(`/trips/search/?${queryParams.toString()}`);
 
       const tripResults = await response.json();
 
@@ -117,10 +120,11 @@ export const BookingInput = ({ submitType }) => {
       }
 
       const selectedTrip = tripResults[0];
+      console.log("Selected trip:", tripResults);
 
       navigate("/check-availability", {
         state: {
-          trip: selectedTrip,
+          trips: tripResults,
           searchInfo: {
             from: selectedFrom.name,
             to: selectedTo.city.name,

@@ -14,7 +14,7 @@ router.register('trips', TripViewSet)
 
 
 urlpatterns = [
-    path('', include(router.urls)),
     path('trips/search/', TripSearchAPIView.as_view(), name='trip-search'),
+    path('', include(router.urls)),
     
 ]
