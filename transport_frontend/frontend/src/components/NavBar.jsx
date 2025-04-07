@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   FaHeadphones,
   FaUser,
@@ -26,37 +26,6 @@ export default function NavBar() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [activeSection, setActiveSection] = useState("");
-
-  // Track scroll position to update active section
-  const handleScroll = useCallback(() => {
-    const bookHero = document.getElementById("bookhero");
-    const about = document.getElementById("about");
-
-    if (!bookHero || !about) return;
-
-    const scrollPosition = window.scrollY + 100; // Add offset
-
-    const bookHeroTop = bookHero.offsetTop;
-    const bookHeroBottom = bookHeroTop + bookHero.offsetHeight;
-    const aboutTop = about.offsetTop;
-    const aboutBottom = aboutTop + about.offsetHeight;
-
-    if (scrollPosition >= bookHeroTop && scrollPosition < bookHeroBottom) {
-      setActiveSection("bookhero");
-    } else if (scrollPosition >= aboutTop && scrollPosition < aboutBottom) {
-      setActiveSection("about");
-    } else {
-      setActiveSection("");
-    }
-  }, []);
-
-  // Effect to set up scroll listener
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Initial check
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
 
   // Effect to close sidebar when clicking outside of it
   useEffect(() => {
@@ -120,33 +89,21 @@ export default function NavBar() {
         <div className='hidden md:flex gap-4 items-center space-x-6'>
           <NavLink
             to='/#bookhero'
-            className={() =>
-              `flex items-center text-gray-700 cursor-pointer hover:text-red-500 ${
-                activeSection === "bookhero" ? "text-red-600" : ""
-              }`
-            }
+            className='flex items-center text-gray-700 cursor-pointer hover:text-red-500'
           >
             <FaBus className='mr-1' size={20} />
             <span className='font-semibold ml-1 text-base'>Book Ride</span>
           </NavLink>
           <NavLink
             to='/#about'
-            className={() =>
-              `flex items-center text-gray-700 hover:text-red-500 hover:cursor-pointer ${
-                activeSection === "about" ? "text-red-600" : ""
-              }`
-            }
+            className='flex items-center text-gray-700 hover:text-red-500 hover:cursor-pointer'
           >
             <FaAddressCard className='mr-1' size={20} />
             <span className='font-semibold ml-1 text-base'>About Us</span>
           </NavLink>
           <NavLink
             to='/contact-support'
-            className={({ isActive }) =>
-              `flex items-center text-gray-700 hover:text-red-500 cursor-pointer ${
-                isActive ? "text-red-600" : ""
-              }`
-            }
+            className='flex items-center text-gray-700 hover:text-red-500 cursor-pointer'
           >
             <FaHeadphones className='mr-1' size={20} />
             <span className='font-semibold ml-1 text-base'>
