@@ -74,8 +74,9 @@ class Trip(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name='trips')
     bus = models.ForeignKey(Bus, on_delete=models.CASCADE, related_name='trips')
     travel_date = models.DateField()
-    departure_time = models.TimeField(null=True) #Take note of this 
+    departure_time = models.TimeField(null=True)
     seat_price = models.FloatField(null=True, blank=True)
+    available_seats = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
         unique_together = ('route', 'bus', 'travel_date')
@@ -83,6 +84,15 @@ class Trip(models.Model):
 
     def __str__(self):
         return f"{self.route} on {self.travel_date}"
+
+    def save(self, *args, **kwargs):
+        if self.pk is None and self.available_seats is None:
+            # On first creation, default to bus total seats
+            self.available_seats = self.bus.total_seats
+        elif self.available_seats is not None and self.available_seats > self.bus.total_seats:
+            raise ValueError("Available seats cannot exceed bus total seats")
+        super().save(*args, **kwargs)
+
 
 class Booking(models.Model):
     STATUS_CHOICES = (
