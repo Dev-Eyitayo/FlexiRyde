@@ -297,14 +297,13 @@ import { FaClock, FaExclamationTriangle } from "react-icons/fa";
 import authFetch from "../utils/authFetch"; 
 import { useNavigate } from "react-router-dom"; 
 
-
 export default function SeatAvailability() {
   const location = useLocation();
   const navigate = useNavigate();
   const trips = location.state?.trips || []; // ✅ clear and correct
   const travelData = location.state?.searchInfo || {};
   const { from, to, date, passengers: bookedSeats } = travelData;
-
+  const [loading, setLoading] = useState(false);
   const [selectedTripId, setSelectedTripId] = useState(() => trips[0]?.id || "");
   const [trip, setTrip] = useState(() => trips[0] || null);
   const [takenSeats, setTakenSeats] = useState([]);
@@ -383,6 +382,8 @@ export default function SeatAvailability() {
       return;
     }
 
+    setLoading(true);
+
     try {
       const response = await authFetch("/bookings/create/", {
         method: "POST",
@@ -401,7 +402,6 @@ export default function SeatAvailability() {
           autoClose: 3000,
         });
 
-        // Redirect or show booking details
         setTimeout(() => {
           navigate("/booking-success", { state: { booking: data } });
         }, 2000);
@@ -411,7 +411,10 @@ export default function SeatAvailability() {
     } catch (err) {
       console.error("❌ Booking error:", err);
       toast.error("Something went wrong while booking.");
+    } finally {
+      setLoading(false);
     }
+
   };
   
 
