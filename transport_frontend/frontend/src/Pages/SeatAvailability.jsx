@@ -403,7 +403,7 @@ export default function SeatAvailability() {
         });
 
         setTimeout(() => {
-          navigate("/booking-success", { state: { booking: data } });
+          navigate("/check-ticket", { state: { booking: data } });
         }, 2000);
       } else {
         toast.error(`Booking failed: ${data?.message || "Please try again."}`);

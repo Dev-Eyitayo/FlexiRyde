@@ -1,82 +1,85 @@
-const Ticket = () => {
-  const ticket = {
-    id: "TRN-2023-4567",
-    passengerName: "Alamu Eden",
-    from: "Lagos",
-    to: "Abuja",
-    departureTime: "Dec 15, 2023 · 08:00 AM",
-    seatNumber: "A12, A11, A10, A12, A13, A14, A26",
-    busCompany: "ABC Transport",
-    fare: "₦15,000",
-    paymentStatus: "Paid",
-    intermediateStops: ["Ibadan", "Ilorin"],
-    qrCodeUrl:
-      "https://api.qrserver.com/v1/create-qr-code/?data=TicketID-TRN-2023-4567",
-  };
+import { useLocation } from "react-router-dom";
 
-  const routePath = ticket.intermediateStops?.length
-    ? [ticket.from, ...ticket.intermediateStops, ticket.to]
-    : [ticket.from, ticket.to];
+const Ticket = () => {
+  const location = useLocation();
+  const booking = location.state?.booking;
+
+  if (!booking) {
+    return <div className="text-center mt-10">No ticket data found.</div>;
+  }
+
+  const {
+    ref_number,
+    price,
+    trip: {
+      travel_date,
+      departure_time,
+      route: { origin_park, destination_city, intermediate_stops = [] },
+      bus: { name: busCompany },
+    },
+    user,
+  } = booking;
+
+  const passengerName = user?.first_name + " " + user?.last_name;
+  const routePath = intermediate_stops.length
+    ? [origin_park.name, ...intermediate_stops, destination_city.name]
+    : [origin_park.name, destination_city.name];
+
+  const formattedDepartureTime = `${new Date(travel_date).toDateString()} · ${departure_time?.slice(0, 5)}`;
+
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${ref_number}`;
 
   return (
     <div className='max-w-md mx-auto my-8 p-4' id='ticket-content'>
       <div className='border-2 border-gray-800 rounded-lg overflow-hidden shadow-lg'>
-        {/* Header */}
         <div className='bg-blue-600 text-white p-4 text-center'>
           <h1 className='text-xl font-bold'>Travel Ticket Pass</h1>
           <p className='text-xs'>FlexiRyde Ticket</p>
         </div>
 
-        {/* Body */}
         <div className='p-4 bg-white'>
           <div className='flex justify-between mb-4'>
             <div>
               <p className='text-xs text-gray-500'>PASSENGER</p>
-              <p className='font-bold'>{ticket.passengerName}</p>
+              <p className='font-bold'>{passengerName}</p>
             </div>
             <div>
               <p className='text-xs text-gray-500'>TICKET NO</p>
-              <p className='font-bold'>{ticket.id}</p>
+              <p className='font-bold'>{ref_number}</p>
             </div>
           </div>
 
           <div className='border-t-2 border-b-2 border-dashed border-gray-300 py-3 my-3'>
-            <div className='flex flex-col items-start gap-1'>
-              <p className='text-xs text-gray-500'>ROUTE</p>
-              <p className='font-semibold text-gray-800'>
-                {routePath.join(" → ")}
-              </p>
-            </div>
+            <p className='text-xs text-gray-500 mb-1'>ROUTE</p>
+            <p className='font-semibold text-gray-800'>
+              {routePath.join(" → ")}
+            </p>
           </div>
 
           <div className='grid grid-cols-2 gap-4 mb-4'>
             <div>
               <p className='text-xs text-gray-500'>DEPARTURE</p>
-              <p className='font-bold'>{ticket.departureTime}</p>
+              <p className='font-bold'>{formattedDepartureTime}</p>
             </div>
             <div>
-              <p className='text-xs text-gray-500'>SEAT</p>
-              <p className='font-bold'>{ticket.seatNumber}</p>
+              <p className='text-xs text-gray-500'>SEAT(S)</p>
+              <p className='font-bold'>{booking?.seats || "—"} seat(s)</p>
             </div>
           </div>
 
           <div className='flex justify-between items-center mb-4'>
             <div>
               <p className='text-xs text-gray-500'>BUS COMPANY</p>
-              <p className='font-bold'>{ticket.busCompany}</p>
+              <p className='font-bold'>{busCompany}</p>
             </div>
             <div className='px-2 py-1 rounded bg-green-100 text-green-800 text-sm'>
-              {ticket.paymentStatus}
+              Paid
             </div>
           </div>
 
-          {/* QR Code Section */}
+          {/* QR Code */}
           <div className='text-center mt-6'>
-            <img
-              src={ticket.qrCodeUrl}
-              alt='QR Code'
-              className='w-24 h-24 mx-auto mb-2'
-            />
+            <img src={qrCodeUrl} alt='QR Code' className='w-24 h-24 mx-auto mb-2' />
             <p className='text-xs text-gray-500 mb-3'>SCAN TO VERIFY</p>
             <button
               onClick={() => {
@@ -107,7 +110,6 @@ const Ticket = () => {
           </div>
         </div>
 
-        {/* Footer */}
         <div className='bg-gray-100 p-2 text-center text-xs text-gray-600'>
           <p>Please arrive 30 minutes before departure</p>
         </div>
