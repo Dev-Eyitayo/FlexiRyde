@@ -318,29 +318,31 @@ export default function SeatAvailability() {
 
   useEffect(() => {
     const fetchSeatData = async () => {
-      if (!trip?.id) return;
-
+      if (!selectedTripId) return;
+  
       try {
         const response = await fetch(
-          `http://localhost:8000/api/trips/${trip.id}/seats/`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+          `http://localhost:8000/api/trips/${selectedTripId}/seats/`
+          // {
+          //   headers: {
+          //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+          //   },
+          // }
         );
         const data = await response.json();
-
-
+  
         const taken = data.taken_seat_ids?.length || 0;
         const available = data.available_seats?.length || 0;
         const total = taken + available;
-
+  
         setTakenSeats(data.taken_seat_ids || []);
         setAvailableSeats(data.available_seats || []);
         setCurrentSeats({ totalSeats: total, takenSeats: taken });
-
-        const basePrice = trip?.seat_price || 1500;
+  
+        const currentTrip = trips.find((t) => t.id === selectedTripId);
+        setTrip(currentTrip || null); // Make sure trip is synced too
+  
+        const basePrice = currentTrip?.seat_price || 1500;
         const demandFactor = 1 + taken / (total || 1);
         setPrice(Math.round(basePrice * demandFactor));
       } catch (err) {
@@ -348,10 +350,10 @@ export default function SeatAvailability() {
         alert("❌ Failed to fetch seat data");
       }
     };
-
+  
     fetchSeatData();
-  }, [trip]);
-
+  }, [selectedTripId, trips]); // <- trigger on ID or trip list change
+  
   const isSeatAvailable =
     currentSeats.totalSeats - currentSeats.takenSeats >= bookedSeats;
 
