@@ -294,9 +294,13 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import RouteVisualization from "../components/RouteVisualization";
 import { FaClock, FaExclamationTriangle } from "react-icons/fa";
+import authFetch from "../utils/authFetch"; 
+import { useNavigate } from "react-router-dom"; 
+
 
 export default function SeatAvailability() {
   const location = useLocation();
+  const navigate = useNavigate();
   const trips = location.state?.trips || []; // ✅ clear and correct
   const travelData = location.state?.searchInfo || {};
   const { from, to, date, passengers: bookedSeats } = travelData;
@@ -356,20 +360,20 @@ export default function SeatAvailability() {
   
   const isSeatAvailable = currentSeats.totalSeats - currentSeats.takenSeats >= bookedSeats;
 
-  const handleProceed = () => {
-    const token = localStorage.getItem("token");
-  
+  const handleProceed = async () => {
+    const token = localStorage.getItem("access") || sessionStorage.getItem("access");
+
     if (!token) {
       toast.warning("🔐 Please log in to proceed with booking.", {
         position: "top-center",
         autoClose: 4000,
       });
       setTimeout(() => {
-        window.location.href = "/auth"; // or navigate("/login");
+        window.location.href = "/auth";
       }, 1500);
       return;
     }
-  
+
     const available = currentSeats.totalSeats - currentSeats.takenSeats;
     if (available < bookedSeats) {
       toast.error(
@@ -378,8 +382,35 @@ export default function SeatAvailability() {
       );
       return;
     }
-  
-    // alert(`Proceeding to payment for ${bookedSeats} seat(s)`);
+
+    try {
+      const response = await authFetch("/bookings/", {
+        method: "POST",
+        body: JSON.stringify({
+          trip: selectedTripId,
+          price: price * bookedSeats,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("🎉 Booking successful!", {
+          position: "top-center",
+          autoClose: 3000,
+        });
+
+        // Redirect or show booking details
+        setTimeout(() => {
+          navigate("/booking-success", { state: { booking: data } });
+        }, 2000);
+      } else {
+        toast.error(`Booking failed: ${data?.message || "Please try again."}`);
+      }
+    } catch (err) {
+      console.error("❌ Booking error:", err);
+      toast.error("Something went wrong while booking.");
+    }
   };
   
 
