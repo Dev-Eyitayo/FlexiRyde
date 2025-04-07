@@ -62,6 +62,7 @@ ROOT_URLCONF = 'transport_backend.urls'
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vite dev server
+    "https://w1nxrvdv-5173.uks1.devtunnels.ms", 
 ]
 
 # JWT Authentication Settings
