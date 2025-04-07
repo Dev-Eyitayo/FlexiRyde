@@ -384,7 +384,7 @@ export default function SeatAvailability() {
     }
 
     try {
-      const response = await authFetch("/bookings/", {
+      const response = await authFetch("/bookings/create/", {
         method: "POST",
         body: JSON.stringify({
           trip: selectedTripId,
@@ -393,6 +393,7 @@ export default function SeatAvailability() {
       });
 
       const data = await response.json();
+      console.log("Booking response:", data);
 
       if (response.ok) {
         toast.success("🎉 Booking successful!", {
