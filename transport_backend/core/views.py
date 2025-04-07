@@ -1,16 +1,20 @@
+from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
-from .models import Trip, Seat, SeatReservation
-from .serializers import TripListSerializer, SeatSerializer
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import viewsets, permissions
-from .models import City, BusPark, Route, IndirectRoute, Booking
-from .serializers import *
+
+from .models import City, BusPark, Route, IndirectRoute, Booking, Trip
+from .serializers import (
+    CitySerializer, BusParkSerializer, RouteSerializer, BookingSerializer,
+    TripSerializer, TripListSerializer, IndirectRouteSerializer
+)
+
 
 class CityViewSet(viewsets.ModelViewSet):
     queryset = City.objects.all()
     serializer_class = CitySerializer
+    permission_classes = [permissions.AllowAny]
 
 
 class BusParkViewSet(viewsets.ModelViewSet):
@@ -36,26 +40,9 @@ class BookingViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user, status='confirmed')
 
 
-class TripSeatAvailabilityView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, trip_id):
-        try:
-            trip = Trip.objects.get(id=trip_id)
-        except Trip.DoesNotExist:
-            return Response({"error": "Trip not found"}, status=404)
-
-        taken_seats = SeatReservation.objects.filter(trip=trip).values_list('seat_id', flat=True)
-        all_seats = Seat.objects.filter(bus=trip.bus)
-
-        return Response({
-            "taken_seat_ids": list(taken_seats),
-            "available_seats": SeatSerializer(all_seats.exclude(id__in=taken_seats), many=True).data
-        })
-
-
 class TripSearchAPIView(ListAPIView):
     serializer_class = TripListSerializer
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
         origin_id = self.request.query_params.get('origin_id')
@@ -63,29 +50,34 @@ class TripSearchAPIView(ListAPIView):
         travel_date = self.request.query_params.get('date')
 
         queryset = Trip.objects.all()
+
         if origin_id:
             queryset = queryset.filter(route__origin_park_id=origin_id)
         if destination_id:
-            queryset = queryset.filter(route__destination_city_id=destination_id)
+            queryset = queryset.filter(route__destination_park_id=destination_id)
         if travel_date:
             queryset = queryset.filter(travel_date=travel_date)
 
         return queryset
 
 
-class TripSeatAvailabilityView(APIView):
-    permission_classes = [IsAuthenticated]
+class TripViewSet(viewsets.ModelViewSet):
+    queryset = Trip.objects.all()
+    serializer_class = TripSerializer
+    permission_classes = [permissions.AllowAny]  # or IsAuthenticated
 
-    def get(self, request, trip_id):
-        try:
-            trip = Trip.objects.get(id=trip_id)
-        except Trip.DoesNotExist:
-            return Response({"error": "Trip not found"}, status=404)
+    @action(detail=True, methods=['get'], url_path='seats')
+    def seat_availability(self, request, pk=None):
+        trip = self.get_object()
 
-        taken_seat_ids = SeatReservation.objects.filter(trip=trip).values_list('seat_id', flat=True)
-        all_seats = Seat.objects.filter(bus=trip.bus)
+        # Mock logic (replace with real seat tracking if needed)
+        total_seats = trip.bus.total_seats
+        booked = trip.bookings.count()
+
+        taken_seat_ids = list(range(1, booked + 1))  # fake seat ids
+        available_seats = list(range(booked + 1, total_seats + 1))
 
         return Response({
-            "taken_seat_ids": list(taken_seat_ids),
-            "available_seats": SeatSerializer(all_seats.exclude(id__in=taken_seat_ids), many=True).data
+            "taken_seat_ids": taken_seat_ids,
+            "available_seats": available_seats
         })
