@@ -93,7 +93,7 @@ class Booking(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookings')
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='bookings', null=True)
     price = models.FloatField()
-    payment_reference = models.CharField(max_length=100, null=True, blank=True)  #Take note of this 
+    payment_reference = models.CharField(max_length=100, unique=True)  #Take note of this 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
     created_at = models.DateTimeField(auto_now_add=True)
 
