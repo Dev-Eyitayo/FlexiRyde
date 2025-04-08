@@ -120,7 +120,7 @@ export const BookingInput = ({ submitType }) => {
       }
 
       const selectedTrip = tripResults[0];
-      console.log("Selected trip:", tripResults);
+      // console.log("Selected trip:", tripResults);
 
       navigate("/check-availability", {
         state: {
@@ -134,7 +134,7 @@ export const BookingInput = ({ submitType }) => {
         },
       });
     } catch (error) {
-      console.error("Trip search failed", error);
+      // console.error("Trip search failed", error);
       alert("Failed to search trips.");
     }
   };

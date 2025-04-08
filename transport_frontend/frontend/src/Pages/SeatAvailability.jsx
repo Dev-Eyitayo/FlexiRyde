@@ -312,7 +312,7 @@ export default function SeatAvailability() {
   const [currentSeats, setCurrentSeats] = useState({ totalSeats: 24, takenSeats: 0 });
 
 
-  console.log(trips)  
+  // console.log(trips)  
 
   useEffect(() => {
     const selected = trips.find((t) => t.id === selectedTripId);
@@ -451,22 +451,38 @@ export default function SeatAvailability() {
 
       {/* Time selection */}
       <div className="w-full max-w-4xl mb-6">
-        <label htmlFor="time" className="block text-lg text-gray-700 mb-1">
-          Select Departure Time:
+        <label htmlFor="time" className="block text-lg text-gray-700 mb-2 font-medium">
+          Select Departure Time
         </label>
-        <select
-          id="time"
-          value={selectedTripId}
-          onChange={(e) => setSelectedTripId(Number(e.target.value))}
-          className="..."
-        >
-          {trips.map((t) => (
-            <option key={t.id} value={t.id}>
-              {formatTime(t.departure_time)} - ₦{t.seat_price.toLocaleString()}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            id="time"
+            value={selectedTripId}
+            onChange={(e) => setSelectedTripId(Number(e.target.value))}
+            className="w-full appearance-none border border-gray-300 bg-white rounded-lg pl-4 pr-10 py-3 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:bg-gray-50"
+          >
+            {trips.map((t) => (
+              <option key={t.id} value={t.id}>
+                {formatTime(t.departure_time)} — ₦{t.seat_price.toLocaleString()} (
+                {t.total_seats - t.taken_seats} left)
+              </option>
+            ))}
+          </select>
 
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500">
+            <svg
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 11.585l3.71-4.356a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Travel Summary */}

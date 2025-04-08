@@ -4,6 +4,8 @@ const Ticket = () => {
   const location = useLocation();
   const booking = location.state?.booking;
 
+  console.log("Booking data:", booking); // Debugging line to check booking data
+
   if (!booking) {
     return <div className="text-center mt-10">No ticket data found.</div>;
   }
