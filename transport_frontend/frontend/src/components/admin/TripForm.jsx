@@ -24,9 +24,11 @@ export default function TripForm({ parkId, trip, onClear }) {
         setRoutes(routesData);
 
         // Fetch buses
-        const busesRes = await authFetch(`/parks/${parkId}/buses/`);
+        console.log("Fetching buses for parkId:", parkId); // Debugging line
+        const busesRes = await authFetch(`/parks/${parkId}/buses`);
         if (!busesRes.ok) throw new Error("Failed to fetch buses");
         const busesData = await busesRes.json();
+        console.log("Fetched buses:", busesData); // Debugging line
         setBuses(busesData);
       } catch (error) {
         console.error("Error fetching routes and buses:", error);

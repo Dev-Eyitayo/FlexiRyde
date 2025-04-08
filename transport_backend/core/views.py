@@ -123,15 +123,15 @@ class TripViewSet(viewsets.ModelViewSet):
                 raise permissions.PermissionDenied("You can only create trips for your park.")
         serializer.save()
 
-    # Your existing seat_availability action remains unchanged
-    @action(detail=True, methods=['get'], url_path='seats')
-    def seat_availability(self, request, pk=None):
-        trip = self.get_object()
-        total_seats = trip.bus.total_seats
-        booked = trip.bookings.count()
-        taken_seat_ids = list(range(1, booked + 1))
-        available_seats = list(range(booked + 1, total_seats + 1))
-        return Response({"taken_seat_ids": taken_seat_ids, "available_seats": available_seats})
+    # # Your existing seat_availability action remains unchanged
+    # @action(detail=True, methods=['get'], url_path='seats')
+    # def seat_availability(self, request, pk=None):
+    #     trip = self.get_object()
+    #     total_seats = trip.bus.total_seats
+    #     booked = trip.bookings.count()
+    #     taken_seat_ids = list(range(1, booked + 1))
+    #     available_seats = list(range(booked + 1, total_seats + 1))
+    #     return Response({"taken_seat_ids": taken_seat_ids, "available_seats": available_seats})
 
 # Add this new ViewSet for buses
 class BusViewSet(viewsets.ModelViewSet):
@@ -156,7 +156,7 @@ class ParkBusesView(APIView):
     def get(self, request, park_id):
         try:
             park = BusPark.objects.get(id=park_id, admin=request.user)
-            buses = park.buses.filter(status="active")
+            buses = park.buses.filter(status="available")
             serializer = BusSerializer(buses, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except BusPark.DoesNotExist:
