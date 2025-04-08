@@ -18,13 +18,13 @@ export default function TripForm({ parkId, trip, onClear }) {
     const fetchRoutesAndBuses = async () => {
       try {
         // Fetch routes
-        const routesRes = await authFetch(`/api/parks/${parkId}/routes/`);
+        const routesRes = await authFetch(`/parks/${parkId}/routes/`);
         if (!routesRes.ok) throw new Error("Failed to fetch routes");
         const routesData = await routesRes.json();
         setRoutes(routesData);
 
         // Fetch buses
-        const busesRes = await authFetch(`/api/parks/${parkId}/buses/`);
+        const busesRes = await authFetch(`/parks/${parkId}/buses/`);
         if (!busesRes.ok) throw new Error("Failed to fetch buses");
         const busesData = await busesRes.json();
         setBuses(busesData);
@@ -57,7 +57,7 @@ export default function TripForm({ parkId, trip, onClear }) {
     setLoading(true);
 
     try {
-      const res = await authFetch(`/api/parks/${parkId}/trips/create/`, {
+      const res = await authFetch(`/parks/${parkId}/trips/create/`, {
         method: "POST",
         body: JSON.stringify({
           route_id: formData.route_id,
