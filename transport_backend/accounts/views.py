@@ -6,6 +6,9 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .serializers import UserSerializer  
 
 User = get_user_model()
 
@@ -63,3 +66,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+class UserSerializer(serializers.ModelSerializer):
+    managed_parks = BusParkSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'role', 'managed_parks']

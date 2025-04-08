@@ -90,6 +90,7 @@ class BookingCreateAPIView(CreateAPIView):
 
 
 
+
 # Add this custom permission class (if not already present)
 class IsParkAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
