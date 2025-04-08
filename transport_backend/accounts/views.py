@@ -8,15 +8,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UserSerializer  # Add this import
+from .serializers import UserSerializer
 
 User = get_user_model()
 
 def generate_temp_nin():
-    """
-    Generate a clearly fake 11-digit NIN that starts with '9'.
-    Nigerian NINs do not start with 9, so this is safe for placeholders.
-    """
     while True:
         fake_nin = f"9{random.randint(10**9, 10**10 - 1)}"
         if not User.objects.filter(nin=fake_nin).exists():
@@ -64,7 +60,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]

@@ -1,3 +1,4 @@
+// src/components/NavBar.jsx
 import { useState, useRef, useEffect } from "react";
 import {
   FaHeadphones,
@@ -27,7 +28,17 @@ export default function NavBar() {
   const { isAuthenticated, user, logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Effect to close sidebar when clicking outside of it
+  // Debug authentication state
+  useEffect(() => {
+    console.log("NavBar - isAuthenticated:", isAuthenticated);
+    console.log("NavBar - user:", user);
+    console.log("NavBar - localStorage:", {
+      access: localStorage.getItem("access"),
+      refresh: localStorage.getItem("refresh"),
+      user: localStorage.getItem("user"),
+    });
+  }, [isAuthenticated, user]);
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
@@ -50,7 +61,6 @@ export default function NavBar() {
     setIsDesktopDropdownOpen(false);
   };
 
-  // Effect to handle clicks outside dropdowns
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -132,7 +142,6 @@ export default function NavBar() {
                     Hi, {user?.first_name || user?.email?.split("@")[0]} 👋
                   </div>
                 )}
-                {/* Add "Manage Trips" for park admins only - Desktop */}
                 {isAuthenticated && user?.role === 'park_admin' && (
                   <>
                     <button
@@ -209,7 +218,6 @@ export default function NavBar() {
                 ref={mobileDropdownRef}
                 className='absolute right-0 py-4 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg'
               >
-                {/* Add "Manage Trips" for park admins only - Mobile */}
                 {isAuthenticated && user?.role === 'park_admin' && (
                   <>
                     <button
@@ -237,7 +245,7 @@ export default function NavBar() {
                 <button
                   onClick={() => {
                     navigate("/check-ticket");
-                    setIsMobileDropdownOpen(false); // Fix typo here
+                    setIsMobileDropdownOpen(false);
                   }}
                   className='block px-4 py-2 w-full text-start text-gray-700 hover:bg-gray-100 transition'
                 >
