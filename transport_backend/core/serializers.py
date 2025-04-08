@@ -171,3 +171,14 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         )
 
         return booking
+    
+
+class BusSerializer(serializers.ModelSerializer):
+    park = BusParkSerializer(read_only=True)
+    park_id = serializers.PrimaryKeyRelatedField(
+        queryset=BusPark.objects.all(), source='park', write_only=True
+    )
+
+    class Meta:
+        model = Bus
+        fields = ['id', 'number_plate', 'total_seats', 'park', 'park_id', 'driver_name', 'status']

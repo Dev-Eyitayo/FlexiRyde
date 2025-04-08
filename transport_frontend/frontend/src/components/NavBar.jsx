@@ -70,7 +70,6 @@ export default function NavBar() {
         setIsMobileDropdownOpen(false);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -132,6 +131,21 @@ export default function NavBar() {
                   <div className='px-4 py-2 text-lg font-semibold text-gray-600'>
                     Hi, {user?.first_name || user?.email?.split("@")[0]} 👋
                   </div>
+                )}
+                {/* Add "Manage Trips" for park admins only - Desktop */}
+                {isAuthenticated && user?.role === 'park_admin' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        navigate("/trip-dashboard");
+                        setIsDesktopDropdownOpen(false);
+                      }}
+                      className='block px-4 text-start w-full py-2 text-gray-700 hover:bg-gray-100 transition hover:cursor-pointer'
+                    >
+                      Manage Trips
+                    </button>
+                    <hr className='my-1 border-gray-200' />
+                  </>
                 )}
                 <button
                   onClick={() => {
@@ -195,6 +209,21 @@ export default function NavBar() {
                 ref={mobileDropdownRef}
                 className='absolute right-0 py-4 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg'
               >
+                {/* Add "Manage Trips" for park admins only - Mobile */}
+                {isAuthenticated && user?.role === 'park_admin' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        navigate("/trip-dashboard");
+                        setIsMobileDropdownOpen(false);
+                      }}
+                      className='block w-full text-start px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
+                    >
+                      Manage Trips
+                    </button>
+                    <hr className='my-1 border-gray-200' />
+                  </>
+                )}
                 <button
                   onClick={() => {
                     navigate("/modify-bookings");
@@ -208,7 +237,7 @@ export default function NavBar() {
                 <button
                   onClick={() => {
                     navigate("/check-ticket");
-                    setIsDesktopDropdownOpen(false);
+                    setIsMobileDropdownOpen(false); // Fix typo here
                   }}
                   className='block px-4 py-2 w-full text-start text-gray-700 hover:bg-gray-100 transition'
                 >

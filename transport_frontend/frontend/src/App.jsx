@@ -11,6 +11,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Ticket from "./Pages/Ticket";
 import TravelHistory from "./Pages/TravelHistory";
+import TripDashboard from "./components/admin/TripDashboard";
 export default function App() {
   return (
     <>
@@ -29,6 +30,7 @@ export default function App() {
         <Route path='/check-ticket' element={<Ticket />} />
         <Route path='/contact-support' element={<ContactSupport />} />
         <Route path='/travel-history' element={<TravelHistory />} />
+        <Route path='/trip-dashboard' element={<TripDashboard />} />
       </Routes>
       <Footer />
     </>

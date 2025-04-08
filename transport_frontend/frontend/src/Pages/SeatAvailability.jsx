@@ -463,8 +463,7 @@ export default function SeatAvailability() {
           >
             {trips.map((t) => (
               <option key={t.id} value={t.id}>
-                {formatTime(t.departure_time)} — ₦{t.seat_price.toLocaleString()} (
-                {t.total_seats - t.taken_seats} left)
+                {formatTime(t.departure_time)} — ₦{t.seat_price.toLocaleString()}
               </option>
             ))}
           </select>

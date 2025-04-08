@@ -66,6 +66,11 @@ class Bus(models.Model):
     driver_name = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
 
+    def save(self, *args, **kwargs):
+        if self.park.admin and self.park.admin.role != 'park_admin':
+            raise ValueError("Bus can only be assigned to a park managed by a park admin.")
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.number_plate} ({self.total_seats} seats at {self.park.name})"
 
