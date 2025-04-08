@@ -105,7 +105,7 @@ export default function TripForm({ parkId, trip, onClear }) {
             required
           >
             <option value="">Select Route</option>
-            {routes.map((route) => (
+            {routes.m   ((route) => (
               <option key={route.id} value={route.id}>
                 {route.origin_park.name} to {route.destination_park.name}
               </option>

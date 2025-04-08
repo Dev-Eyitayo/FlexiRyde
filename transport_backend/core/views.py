@@ -31,6 +31,11 @@ class RouteViewSet(viewsets.ModelViewSet):
     serializer_class = RouteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        if self.request.user.role == 'park_admin':
+            return Route.objects.filter(origin_park__admin=self.request.user, status="active")
+        return Route.objects.all()
+
 
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
