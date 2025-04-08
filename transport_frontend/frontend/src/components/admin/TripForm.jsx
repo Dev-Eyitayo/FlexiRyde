@@ -1,149 +1,179 @@
 // src/components/admin/TripForm.jsx
-import { useEffect, useState } from "react";
-import authFetch from "../../utils/authFetch";  // Use authFetch
+import { useState, useEffect } from "react";
+import authFetch from "../../utils/authFetch";
+import toast from "react-hot-toast";
 
 export default function TripForm({ parkId, trip, onClear }) {
+  const [routes, setRoutes] = useState([]);
+  const [buses, setBuses] = useState([]);
   const [formData, setFormData] = useState({
     route_id: "",
     bus_id: "",
-    travel_date: "",
     departure_time: "",
     seat_price: "",
   });
-  const [routes, setRoutes] = useState([]);
-  const [buses, setBuses] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchOptions = async () => {
+    const fetchRoutesAndBuses = async () => {
       try {
-        const [routesRes, busesRes] = await Promise.all([
-          authFetch(`/api/routes/?origin_park=${parkId}`),
-          authFetch(`/api/buses/?park=${parkId}`),
-        ]);
-        if (!routesRes.ok || !busesRes.ok) throw new Error("Failed to fetch options");
-        setRoutes(await routesRes.json());
-        setBuses(await busesRes.json());
+        // Fetch routes
+        const routesRes = await authFetch(`/api/parks/${parkId}/routes/`);
+        if (!routesRes.ok) throw new Error("Failed to fetch routes");
+        const routesData = await routesRes.json();
+        setRoutes(routesData);
+
+        // Fetch buses
+        const busesRes = await authFetch(`/api/parks/${parkId}/buses/`);
+        if (!busesRes.ok) throw new Error("Failed to fetch buses");
+        const busesData = await busesRes.json();
+        setBuses(busesData);
       } catch (error) {
-        console.error("Error fetching options:", error);
+        console.error("Error fetching routes and buses:", error);
+        toast.error("Failed to load routes and buses.");
       }
     };
-    if (parkId) {
-      fetchOptions();
-    }
+
+    fetchRoutesAndBuses();
+
+    // If editing a trip, pre-fill the form
     if (trip) {
       setFormData({
-        route_id: trip.route_id,
-        bus_id: trip.bus_id,
-        travel_date: trip.travel_date,
-        departure_time: trip.departure_time || "",
-        seat_price: trip.seat_price || "",
+        route_id: trip.route.id,
+        bus_id: trip.bus.id || "", // bus might be a string in TripSerializer
+        departure_time: trip.departure_time.slice(0, 16), // Format for datetime-local input
+        seat_price: trip.seat_price,
       });
     }
   }, [parkId, trip]);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const method = trip ? "PUT" : "POST";
-    const url = trip ? `/api/trips/${trip.id}/` : "/api/trips/";
+    setLoading(true);
+
     try {
-      const res = await authFetch(url, {
-        method,
-        body: JSON.stringify(formData),
+      const res = await authFetch(`/api/parks/${parkId}/trips/create/`, {
+        method: "POST",
+        body: JSON.stringify({
+          route_id: formData.route_id,
+          bus_id: formData.bus_id,
+          departure_time: formData.departure_time,
+          seat_price: formData.seat_price,
+        }),
       });
-      if (res.ok) {
-        alert(trip ? "Trip updated!" : "Trip created!");
-        setFormData({ route_id: "", bus_id: "", travel_date: "", departure_time: "", seat_price: "" });
-        onClear();
-      } else {
+
+      if (!res.ok) {
         const errorData = await res.json();
-        alert("Error: " + JSON.stringify(errorData));
+        throw new Error(errorData.error || "Failed to create trip");
       }
+
+      const newTrip = await res.json();
+      toast.success(trip ? "Trip updated successfully!" : "Trip created successfully!");
+      setFormData({
+        route_id: "",
+        bus_id: "",
+        departure_time: "",
+        seat_price: "",
+      });
+      onClear(); // Clear the form and refresh the trip list
     } catch (error) {
-      console.error("Error submitting trip:", error);
+      console.error("Error creating trip:", error);
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-4">
-      <h2 className="text-xl font-semibold mb-2">{trip ? "Edit Trip" : "Create Trip"}</h2>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium">Route</label>
+    <div className="border rounded-lg p-4 shadow-md">
+      <h2 className="text-xl font-semibold mb-4">
+        {trip ? "Edit Trip" : "Create Trip"}
+      </h2>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-1">Route</label>
           <select
+            name="route_id"
             value={formData.route_id}
-            onChange={(e) => setFormData({ ...formData, route_id: e.target.value })}
-            className="mt-1 block w-full border rounded-md p-2"
+            onChange={handleChange}
+            className="w-full border rounded p-2"
             required
           >
             <option value="">Select Route</option>
             {routes.map((route) => (
               <option key={route.id} value={route.id}>
-                {route.origin_park.name} → {route.destination_park.name}
+                {route.origin_park.name} to {route.destination_park.name}
               </option>
             ))}
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium">Bus</label>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-1">Bus</label>
           <select
+            name="bus_id"
             value={formData.bus_id}
-            onChange={(e) => setFormData({ ...formData, bus_id: e.target.value })}
-            className="mt-1 block w-full border rounded-md p-2"
+            onChange={handleChange}
+            className="w-full border rounded p-2"
             required
           >
             <option value="">Select Bus</option>
             {buses.map((bus) => (
               <option key={bus.id} value={bus.id}>
-                {bus.number_plate} ({bus.total_seats} seats)
+                {bus.number_plate} (Capacity: {bus.total_seats})
               </option>
             ))}
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium">Travel Date</label>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-1">Travel Date</label>
           <input
-            type="date"
-            value={formData.travel_date}
-            onChange={(e) => setFormData({ ...formData, travel_date: e.target.value })}
-            className="mt-1 block w-full border rounded-md p-2"
+            type="datetime-local"
+            name="departure_time"
+            value={formData.departure_time}
+            onChange={handleChange}
+            className="w-full border rounded p-2"
             required
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium">Departure Time</label>
-          <input
-            type="time"
-            value={formData.departure_time}
-            onChange={(e) => setFormData({ ...formData, departure_time: e.target.value })}
-            className="mt-1 block w-full border rounded-md p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Seat Price</label>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-1">Seat Price</label>
           <input
             type="number"
-            step="0.01"
+            name="seat_price"
             value={formData.seat_price}
-            onChange={(e) => setFormData({ ...formData, seat_price: e.target.value })}
-            className="mt-1 block w-full border rounded-md p-2"
+            onChange={handleChange}
+            className="w-full border rounded p-2"
+            min="0"
+            step="0.01"
+            required
           />
         </div>
+
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+          disabled={loading}
         >
-          {trip ? "Update Trip" : "Create Trip"}
+          {loading ? "Processing..." : trip ? "Update Trip" : "Create Trip"}
         </button>
         {trip && (
           <button
             type="button"
             onClick={onClear}
-            className="w-full mt-2 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
+            className="w-full mt-2 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
           >
             Cancel Edit
           </button>
         )}
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }
