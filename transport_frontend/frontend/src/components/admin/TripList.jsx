@@ -9,7 +9,7 @@ export default function TripList({ parkId, onEdit }) {
 
   const fetchTrips = async () => {
     try {
-      const res = await authFetch(`/api/parks/${parkId}/trips/`);
+      const res = await authFetch(`/parks/${parkId}/trips/`);
       if (!res.ok) throw new Error("Failed to fetch trips");
       const data = await res.json();
       setTrips(data);
