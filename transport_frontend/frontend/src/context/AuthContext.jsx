@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       if (!refresh) return;
-      authFetch("/api/auth/token/refresh/", {  // Use authFetch
+      authFetch("/auth/token/refresh/", {  // Use authFetch
         method: "POST",
         body: JSON.stringify({ refresh }),
       })
@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }) => {
     const fetchUserProfile = async () => {
       if (access && user) {
         try {
-          const res = await authFetch("/api/auth/user/");
+          const res = await authFetch("/auth/user/");
           if (res.ok) {
             const userData = await res.json();
             setUser(userData);
