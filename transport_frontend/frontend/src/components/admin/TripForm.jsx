@@ -1,5 +1,6 @@
+// src/components/admin/TripForm.jsx
 import { useEffect, useState } from "react";
-import authFetch from "../../utils/authFetch";
+import authFetch from "../../utils/authFetch";  // Use authFetch
 
 export default function TripForm({ parkId, trip, onClear }) {
   const [formData, setFormData] = useState({
@@ -14,15 +15,30 @@ export default function TripForm({ parkId, trip, onClear }) {
 
   useEffect(() => {
     const fetchOptions = async () => {
-      const [routesRes, busesRes] = await Promise.all([
-        authFetch(`/api/routes/?origin_park=${parkId}`),
-        authFetch(`/api/buses/?park=${parkId}`),  // Updated endpoint
-      ]);
-      setRoutes(await routesRes.json());
-      setBuses(await busesRes.json());  // No need for parkData.buses
+      try {
+        const [routesRes, busesRes] = await Promise.all([
+          authFetch(`/api/routes/?origin_park=${parkId}`),
+          authFetch(`/api/buses/?park=${parkId}`),
+        ]);
+        if (!routesRes.ok || !busesRes.ok) throw new Error("Failed to fetch options");
+        setRoutes(await routesRes.json());
+        setBuses(await busesRes.json());
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      }
     };
-    fetchOptions();
-    // ... rest of the code ...
+    if (parkId) {
+      fetchOptions();
+    }
+    if (trip) {
+      setFormData({
+        route_id: trip.route_id,
+        bus_id: trip.bus_id,
+        travel_date: trip.travel_date,
+        departure_time: trip.departure_time || "",
+        seat_price: trip.seat_price || "",
+      });
+    }
   }, [parkId, trip]);
 
   const handleSubmit = async (e) => {

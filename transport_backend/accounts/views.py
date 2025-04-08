@@ -8,10 +8,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UserSerializer  
+from .serializers import UserSerializer  # Add this import
 
 User = get_user_model()
-
 
 def generate_temp_nin():
     """
@@ -19,10 +18,9 @@ def generate_temp_nin():
     Nigerian NINs do not start with 9, so this is safe for placeholders.
     """
     while True:
-        fake_nin = f"9{random.randint(10**9, 10**10 - 1)}"  # e.g. 9XXXXXXXXXX
+        fake_nin = f"9{random.randint(10**9, 10**10 - 1)}"
         if not User.objects.filter(nin=fake_nin).exists():
             return fake_nin
-
 
 @api_view(['POST'])
 def signup(request):
@@ -35,7 +33,7 @@ def signup(request):
             first_name=data.get('first_name', ''),
             last_name=data.get('last_name', ''),
             nin=generate_temp_nin(),
-            role='passenger'  # Default role
+            role='passenger'
         )
         refresh = RefreshToken.for_user(user)
         return Response({
@@ -67,9 +65,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
-class UserSerializer(serializers.ModelSerializer):
-    managed_parks = BusParkSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = User
-        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'role', 'managed_parks']
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)

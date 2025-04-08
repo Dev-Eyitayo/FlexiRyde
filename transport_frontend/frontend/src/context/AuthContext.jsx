@@ -113,34 +113,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.getItem("refresh") || sessionStorage.getItem("refresh") || null
   );
 
-  // Fetch full user profile when the app loads or after login
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (access) {
-        try {
-          const res = await authFetch("/api/auth/user/");
-          if (res.ok) {
-            const userData = await res.json();
-            setUser(userData);
-            const storage = localStorage.getItem("access") ? localStorage : sessionStorage;
-            storage.setItem("user", JSON.stringify(userData));
-          } else {
-            logout();
-          }
-        } catch (error) {
-          console.error("Failed to fetch user profile:", error);
-          logout();
-        }
-      }
-    };
-    fetchUserProfile();
-  }, [access]);
-
   // Auto token refresh every 60s
   useEffect(() => {
     const interval = setInterval(() => {
       if (!refresh) return;
-      authFetch("/api/auth/token/refresh/", {  // Use authFetch instead of fetch
+      authFetch("/api/auth/token/refresh/", {  // Use authFetch
         method: "POST",
         body: JSON.stringify({ refresh }),
       })
@@ -151,14 +128,42 @@ export const AuthProvider = ({ children }) => {
             const storage = localStorage.getItem("access") ? localStorage : sessionStorage;
             storage.setItem("access", data.access);
           } else {
-            logout();
+            // Don't logout immediately; let the user stay logged in until they try a protected action
+            console.warn("Token refresh failed. Please log in again.");
           }
         })
-        .catch(() => logout());
+        .catch((error) => {
+          console.error("Token refresh error:", error);
+          // Don't logout immediately
+        });
     }, 60 * 1000);
 
     return () => clearInterval(interval);
   }, [refresh]);
+
+  // Fetch user profile to get managed_parks
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (access && user) {
+        try {
+          const res = await authFetch("/api/auth/user/");
+          if (res.ok) {
+            const userData = await res.json();
+            setUser(userData);
+            const storage = localStorage.getItem("access") ? localStorage : sessionStorage;
+            storage.setItem("user", JSON.stringify(userData));
+          } else {
+            console.warn("Failed to fetch user profile:", res.statusText);
+            // Don't logout; keep the existing user data
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          // Don't logout; keep the existing user data
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [access, user]); // Depend on both access and user to ensure we fetch after login
 
   const login = async (data, remember = false) => {
     const { access, refresh, user: loginUser } = data;
@@ -171,21 +176,6 @@ export const AuthProvider = ({ children }) => {
     storage.setItem("access", access);
     storage.setItem("refresh", refresh);
     storage.setItem("user", JSON.stringify(loginUser));
-
-    // Fetch full user profile after login
-    try {
-      const res = await authFetch("/api/auth/user/");
-      if (res.ok) {
-        const userData = await res.json();
-        setUser(userData);
-        storage.setItem("user", JSON.stringify(userData));
-      } else {
-        logout();
-      }
-    } catch (error) {
-      console.error("Failed to fetch user profile after login:", error);
-      logout();
-    }
 
     toast.success(`Welcome, ${loginUser.username || loginUser.email}`);
   };

@@ -1,5 +1,6 @@
+// src/components/admin/TripList.jsx
 import { useEffect, useState } from "react";
-import authFetch from "../../utils/authFetch";
+import authFetch from "../../utils/authFetch";  // Use authFetch
 
 export default function TripList({ parkId, onEdit }) {
   const [trips, setTrips] = useState([]);
@@ -9,6 +10,7 @@ export default function TripList({ parkId, onEdit }) {
     const fetchTrips = async () => {
       try {
         const res = await authFetch(`/api/trips/?origin_park=${parkId}`);
+        if (!res.ok) throw new Error("Failed to fetch trips");
         const data = await res.json();
         setTrips(data);
       } catch (error) {
@@ -17,7 +19,9 @@ export default function TripList({ parkId, onEdit }) {
         setLoading(false);
       }
     };
-    fetchTrips();
+    if (parkId) {
+      fetchTrips();
+    }
   }, [parkId]);
 
   if (loading) return <div>Loading...</div>;

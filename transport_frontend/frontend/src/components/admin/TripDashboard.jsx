@@ -1,4 +1,3 @@
-// src/components/admin/TripDashboard.jsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import authFetch from "../../utils/authFetch";  // Import authFetch

@@ -1,4 +1,3 @@
-# accounts/serializers.py
 from rest_framework import serializers
 from .models import User
 from core.serializers import BusParkSerializer
