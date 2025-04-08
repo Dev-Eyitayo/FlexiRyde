@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from django.utils import timezone
 from rest_framework import serializers
 from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
 
@@ -104,7 +105,6 @@ class TripListSerializer(serializers.ModelSerializer):
 
 
 
-
 class TripSerializer(serializers.ModelSerializer):
     route = RouteSerializer(read_only=True)
     route_id = serializers.PrimaryKeyRelatedField(
@@ -114,7 +114,6 @@ class TripSerializer(serializers.ModelSerializer):
     bus_id = serializers.PrimaryKeyRelatedField(
         queryset=Bus.objects.all(), source='bus', write_only=True
     )
-    # Combine travel_date and departure_time into a single field for the form
     departure_time = serializers.DateTimeField(source='departure_time', format='%Y-%m-%dT%H:%M', required=True)
 
     class Meta:
@@ -122,34 +121,27 @@ class TripSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'route', 'route_id',
             'bus', 'bus_id',
-            'travel_date', 'departure_time', 'seat_price', 'status'
+            'travel_date', 'departure_time', 'seat_price'
         ]
-        # Remove travel_date from the fields since we're using departure_time
         extra_kwargs = {
             'travel_date': {'write_only': True, 'required': False},
-            'status': {'required': False, 'default': 'scheduled'},
         }
 
     def validate(self, data):
-        # Ensure departure_time is in the future
         departure_time = data.get('departure_time')
-        if departure_time and departure_time < datetime.now().astimezone():
+        if departure_time and departure_time < timezone.now():
             raise serializers.ValidationError("Departure time must be in the future.")
         return data
 
     def create(self, validated_data):
-        # If travel_date is not provided, extract it from departure_time
         if 'travel_date' not in validated_data and 'departure_time' in validated_data:
             validated_data['travel_date'] = validated_data['departure_time'].date()
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        # If travel_date is not provided, extract it from departure_time
         if 'travel_date' not in validated_data and 'departure_time' in validated_data:
             validated_data['travel_date'] = validated_data['departure_time'].date()
         return super().update(instance, validated_data)
-
-
 class BookingSerializer(serializers.ModelSerializer):
     trip = TripSerializer(read_only=True)
     trip_id = serializers.PrimaryKeyRelatedField(
