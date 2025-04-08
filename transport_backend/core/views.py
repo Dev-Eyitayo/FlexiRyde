@@ -1,14 +1,16 @@
+from rest_framework.views import APIView
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
+from rest_framework import status
 
-from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
+from .models import *
 from .serializers import (
     CitySerializer, BusParkSerializer, RouteSerializer, BookingSerializer,
-    TripSerializer, TripListSerializer, IndirectRouteSerializer, BookingCreateSerializer, BusSerializer
+    TripSerializer, TripListSerializer, IndirectRouteSerializer, BookingCreateSerializer, BusSerializer, 
 )
 
 
@@ -88,7 +90,7 @@ class BookingCreateAPIView(CreateAPIView):
     serializer_class = BookingCreateSerializer
     permission_classes = [IsAuthenticated]
 
-
+ 
 
 
 # Add this custom permission class (if not already present)
@@ -141,3 +143,67 @@ class BusViewSet(viewsets.ModelViewSet):
         if park_id:
             return Bus.objects.filter(park_id=park_id)
         return self.queryset
+    
+
+class ParkBusesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, park_id):
+        try:
+            park = BusPark.objects.get(id=park_id, admin=request.user)
+            buses = park.buses.filter(status="active")
+            serializer = BusSerializer(buses, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except BusPark.DoesNotExist:
+            return Response(
+                {"error": "Park not found or you do not have access."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+class ParkRoutesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, park_id):
+        try:
+            park = BusPark.objects.get(id=park_id, admin=request.user)
+            routes = park.routes_from.filter(status="active")
+            serializer = RouteSerializer(routes, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except BusPark.DoesNotExist:
+            return Response(
+                {"error": "Park not found or you do not have access."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+class ParkTripsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, park_id):
+        try:
+            park = BusPark.objects.get(id=park_id, admin=request.user)
+            trips = Trip.objects.filter(route__origin_park=park)
+            serializer = TripListSerializer(trips, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except BusPark.DoesNotExist:
+            return Response(
+                {"error": "Park not found or you do not have access."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+class TripCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, park_id):
+        try:
+            park = BusPark.objects.get(id=park_id, admin=request.user)
+        except BusPark.DoesNotExist:
+            return Response(
+                {"error": "Park not found or you do not have access."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = TripSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
