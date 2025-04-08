@@ -102,16 +102,16 @@ export default function TripForm({ parkId, trip, onClear }) {
             value={formData.route_id}
             onChange={handleChange}
             className="w-full border rounded p-2"
-              required
-            >
-              <option value="">Select Route</option>
-              {routes.m   ((route) => (
-                <option key={route.id} value={route.id}>
-                  {route.origin_park.name} to {route.destination_park.name}
-                </option>
-              ))}
-            </select>
-          </div>
+            required
+          >
+            <option value="">Select Route</option>
+            {routes.map((route) => (
+              <option key={route.id} value={route.id}>
+                {route.origin_park.name} to {route.destination_park.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="mb-4">
           <label className="block text-gray-700 mb-1">Bus</label>
