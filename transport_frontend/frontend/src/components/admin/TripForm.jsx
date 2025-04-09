@@ -1,9 +1,8 @@
-// src/components/admin/TripForm.jsx
 import { useState, useEffect } from "react";
 import authFetch from "../../utils/authFetch";
 import toast from "react-hot-toast";
 
-export default function TripForm({ parkId, trip, onClear }) {
+export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
   const [routes, setRoutes] = useState([]);
   const [buses, setBuses] = useState([]);
   const [formData, setFormData] = useState({
@@ -17,18 +16,14 @@ export default function TripForm({ parkId, trip, onClear }) {
   useEffect(() => {
     const fetchRoutesAndBuses = async () => {
       try {
-        // Fetch routes
         const routesRes = await authFetch(`/parks/${parkId}/routes/`);
         if (!routesRes.ok) throw new Error("Failed to fetch routes");
         const routesData = await routesRes.json();
         setRoutes(routesData);
 
-        // Fetch buses
-        console.log("Fetching buses for parkId:", parkId); // Debugging line
         const busesRes = await authFetch(`/parks/${parkId}/buses`);
         if (!busesRes.ok) throw new Error("Failed to fetch buses");
         const busesData = await busesRes.json();
-        console.log("Fetched buses:", busesData); // Debugging line
         setBuses(busesData);
       } catch (error) {
         console.error("Error fetching routes and buses:", error);
@@ -38,12 +33,11 @@ export default function TripForm({ parkId, trip, onClear }) {
 
     fetchRoutesAndBuses();
 
-    // If editing a trip, pre-fill the form
     if (trip) {
       setFormData({
         route_id: trip.route.id,
-        bus_id: trip.bus.id || "", // bus might be a string in TripSerializer
-        departure_time: trip.departure_time.slice(0, 16), // Format for datetime-local input
+        bus_id: trip.bus.id || "",
+        departure_time: trip.departure_time.slice(0, 16),
         seat_price: trip.seat_price,
       });
     }
@@ -64,19 +58,17 @@ export default function TripForm({ parkId, trip, onClear }) {
         body: JSON.stringify({
           route_id: formData.route_id,
           bus_id: formData.bus_id,
-          departure_time: formData.departure_time,
+          departure_datetime: formData.departure_time,
           seat_price: formData.seat_price,
         }),
       });
-      console.log("Form data being sent:", formData); // Debugging line
-      console.log("Response from trip creation:", res); // Debugging line
 
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to create trip");
       }
 
-      const newTrip = await res.json();
+      await res.json(); // Process the response
       toast.success(trip ? "Trip updated successfully!" : "Trip created successfully!");
       setFormData({
         route_id: "",
@@ -84,7 +76,8 @@ export default function TripForm({ parkId, trip, onClear }) {
         departure_time: "",
         seat_price: "",
       });
-      onClear(); // Clear the form and refresh the trip list
+      onClear(); // Clear the form
+      onTripSaved(); // Trigger trip list refresh
     } catch (error) {
       console.error("Error creating trip:", error);
       toast.error(error.message);

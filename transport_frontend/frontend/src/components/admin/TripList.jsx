@@ -1,9 +1,8 @@
-// src/components/admin/TripList.jsx
 import { useState, useEffect } from "react";
 import authFetch from "../../utils/authFetch";
 import toast from "react-hot-toast";
 
-export default function TripList({ parkId, onEdit }) {
+export default function TripList({ parkId, onEdit, refreshTrigger }) {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +22,7 @@ export default function TripList({ parkId, onEdit }) {
 
   useEffect(() => {
     fetchTrips();
-  }, [parkId]);
+  }, [parkId, refreshTrigger]); // Refetch when refreshTrigger changes
 
   if (loading) {
     return <div className="text-gray-500">Loading trips...</div>;

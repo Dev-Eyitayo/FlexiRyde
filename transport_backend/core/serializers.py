@@ -104,69 +104,6 @@ class TripListSerializer(serializers.ModelSerializer):
         return obj.departure_time.strftime('%I:%M %p')
 
 
-
-class TripSerializer(serializers.ModelSerializer):
-    route = RouteSerializer(read_only=True)
-    route_id = serializers.PrimaryKeyRelatedField(
-        queryset=Route.objects.all(), source='route', write_only=True
-    )
-    bus = serializers.StringRelatedField(read_only=True)
-    bus_id = serializers.PrimaryKeyRelatedField(
-        queryset=Bus.objects.all(), source='bus', write_only=True
-    )
-    departure_time = serializers.DateTimeField(format='%Y-%m-%dT%H:%M', required=True)
-
-    class Meta:
-        model = Trip
-        fields = [
-            'id', 'route', 'route_id',
-            'bus', 'bus_id',
-            'travel_date', 'departure_time', 'seat_price'
-        ]
-        extra_kwargs = {
-            'travel_date': {'write_only': True, 'required': False},
-        }
-
-    def validate(self, data):
-        departure_time = data.get('departure_time')
-        if departure_time and departure_time < timezone.now():
-            raise serializers.ValidationError("Departure time must be in the future.")
-        return data
-
-    def create(self, validated_data):
-        dt = validated_data.pop('departure_time')
-        validated_data['travel_date'] = dt.date()
-        validated_data['departure_time'] = dt.time()
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        if 'departure_time' in validated_data:
-            dt = validated_data.pop('departure_time')
-            validated_data['travel_date'] = dt.date()
-            validated_data['departure_time'] = dt.time()
-        return super().update(instance, validated_data)
-
-class BookingSerializer(serializers.ModelSerializer):
-    trip = TripSerializer(read_only=True)
-    trip_id = serializers.PrimaryKeyRelatedField(
-        queryset=Trip.objects.all(), source='trip', write_only=True
-    )
-
-    class Meta:
-        model = Booking
-        fields = [
-            'id', 'user', 'trip', 'trip_id',
-            'price', 'payment_reference',
-            'status', 'created_at'
-        ]
-        read_only_fields = ['user', 'status', 'created_at']
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        booking = Booking.objects.create(user=user, **validated_data)
-        return booking
-
-
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
@@ -205,3 +142,75 @@ class BusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bus
         fields = ['id', 'number_plate', 'total_seats', 'park', 'park_id', 'driver_name', 'status']
+
+class TripSerializer(serializers.ModelSerializer):
+    # Let user post route_id / bus_id
+    route_id = serializers.PrimaryKeyRelatedField(
+        queryset=Route.objects.all(), source='route', write_only=True
+    )
+    bus_id = serializers.PrimaryKeyRelatedField(
+        queryset=Bus.objects.all(), source='bus', write_only=True
+    )
+    route = RouteSerializer(read_only=True)
+    bus = BusSerializer(read_only=True)
+
+    # 1) New input field: user supplies a FULL date+time
+    departure_datetime = serializers.DateTimeField(write_only=True)
+
+    # 2) These two are read-only for the actual stored date & time
+    travel_date = serializers.DateField(read_only=True)
+    departure_time = serializers.TimeField(read_only=True)
+
+    class Meta:
+        model = Trip
+        fields = [
+            'id',
+            'route_id', 'bus_id',  # incoming references
+            'route', 'bus',        # read-only details
+            'departure_datetime',  # the full datetime from the frontend
+            'travel_date',         # read-only date in DB
+            'departure_time',      # read-only time in DB
+            'seat_price',
+        ]
+
+    def validate_departure_datetime(self, dt):
+        """Optional: ensure it's in the future."""
+        if dt < timezone.now():
+            raise serializers.ValidationError("Departure time must be in the future.")
+        return dt
+
+    def create(self, validated_data):
+        # Extract the single datetime from the client
+        dt = validated_data.pop('departure_datetime')
+        # Convert to separate fields
+        validated_data['travel_date'] = dt.date()
+        validated_data['departure_time'] = dt.time()
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'departure_datetime' in validated_data:
+            dt = validated_data.pop('departure_datetime')
+            validated_data['travel_date'] = dt.date()
+            validated_data['departure_time'] = dt.time()
+        return super().update(instance, validated_data)
+       
+class BookingSerializer(serializers.ModelSerializer):
+    trip = TripSerializer(read_only=True)
+    trip_id = serializers.PrimaryKeyRelatedField(
+        queryset=Trip.objects.all(), source='trip', write_only=True
+    )
+
+    class Meta:
+        model = Booking
+        fields = [
+            'id', 'user', 'trip', 'trip_id',
+            'price', 'payment_reference',
+            'status', 'created_at'
+        ]
+        read_only_fields = ['user', 'status', 'created_at']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        booking = Booking.objects.create(user=user, **validated_data)
+        return booking
+        return super().update(instance, validated_data)

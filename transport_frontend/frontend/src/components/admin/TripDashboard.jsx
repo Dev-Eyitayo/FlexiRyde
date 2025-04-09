@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import authFetch from "../../utils/authFetch";  // Import authFetch
+import authFetch from "../../utils/authFetch";
 import TripList from "./TripList";
 import TripForm from "./TripForm";
 
@@ -10,6 +10,7 @@ export default function TripDashboard() {
   const [park, setPark] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tripsUpdated, setTripsUpdated] = useState(0); // State to trigger refresh
 
   useEffect(() => {
     const fetchPark = async () => {
@@ -38,6 +39,11 @@ export default function TripDashboard() {
     fetchPark();
   }, [user, isAuthenticated]);
 
+  // Function to trigger trip list refresh
+  const refreshTrips = () => {
+    setTripsUpdated((prev) => prev + 1);
+  };
+
   if (loading) {
     return <div className="text-gray-500">Loading...</div>;
   }
@@ -52,8 +58,8 @@ export default function TripDashboard() {
         Trip Management - {park?.name || "Unknown Park"}
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <TripList parkId={park?.id} onEdit={setSelectedTrip} />
-        <TripForm parkId={park?.id} trip={selectedTrip} onClear={() => setSelectedTrip(null)} />
+        <TripList parkId={park?.id} onEdit={setSelectedTrip} refreshTrigger={tripsUpdated} />
+        <TripForm parkId={park?.id} trip={selectedTrip} onClear={() => setSelectedTrip(null)} onTripSaved={refreshTrips} />
       </div>
     </div>
   );
