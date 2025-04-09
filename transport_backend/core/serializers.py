@@ -114,7 +114,7 @@ class TripSerializer(serializers.ModelSerializer):
     bus_id = serializers.PrimaryKeyRelatedField(
         queryset=Bus.objects.all(), source='bus', write_only=True
     )
-    departure_time = serializers.DateTimeField(source='departure_time', format='%Y-%m-%dT%H:%M', required=True)
+    departure_time = serializers.DateTimeField(format='%Y-%m-%dT%H:%M', required=True)
 
     class Meta:
         model = Trip
@@ -134,14 +134,18 @@ class TripSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        if 'travel_date' not in validated_data and 'departure_time' in validated_data:
-            validated_data['travel_date'] = validated_data['departure_time'].date()
+        dt = validated_data.pop('departure_time')
+        validated_data['travel_date'] = dt.date()
+        validated_data['departure_time'] = dt.time()
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if 'travel_date' not in validated_data and 'departure_time' in validated_data:
-            validated_data['travel_date'] = validated_data['departure_time'].date()
+        if 'departure_time' in validated_data:
+            dt = validated_data.pop('departure_time')
+            validated_data['travel_date'] = dt.date()
+            validated_data['departure_time'] = dt.time()
         return super().update(instance, validated_data)
+
 class BookingSerializer(serializers.ModelSerializer):
     trip = TripSerializer(read_only=True)
     trip_id = serializers.PrimaryKeyRelatedField(

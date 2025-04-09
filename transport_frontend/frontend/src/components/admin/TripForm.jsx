@@ -68,6 +68,8 @@ export default function TripForm({ parkId, trip, onClear }) {
           seat_price: formData.seat_price,
         }),
       });
+      console.log("Form data being sent:", formData); // Debugging line
+      console.log("Response from trip creation:", res); // Debugging line
 
       if (!res.ok) {
         const errorData = await res.json();
