@@ -3,8 +3,8 @@ from django.conf import settings
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User
 
-admin.site.site_header = "Transport Booking Admin"
-admin.site.site_title = "Transport System"
+admin.site.site_header = "FlexiRyde Admin"
+admin.site.site_title = "FlexiRyde"
 admin.site.index_title = "Welcome to the Control Center"
 
 
