@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getBusParks } from "../api";
 import authFetch from "../utils/authFetch";
 import { useNavigate } from "react-router-dom";
-
+import { toast } from "react-toastify";
 import {
   FaMapMarkerAlt,
   FaCalendarAlt,
@@ -95,7 +95,9 @@ export const BookingInput = ({ submitType }) => {
 
   const handleCheckAvailability = async () => {
     if (!selectedFrom || !selectedTo || !dateRef.current?.value) {
-      alert("Please complete all fields.");
+      toast.error("Please complete all fileds", {
+        autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
+      });
       return;
     }
 
@@ -115,7 +117,10 @@ export const BookingInput = ({ submitType }) => {
       const tripResults = await response.json();
 
       if (tripResults.length === 0) {
-        alert("No trips found for that route and date.");
+        toast.error("No trips found for that route and date", {
+          autoClose: 1000,
+        }); // Speed up toast by reducing display time to 1.5 seconds
+        // alert("No trips found for that route and date.");
         return;
       }
 
