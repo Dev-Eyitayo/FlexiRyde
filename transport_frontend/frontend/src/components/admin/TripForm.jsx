@@ -1,4 +1,3 @@
-// TripForm.jsx
 import { useState, useEffect } from "react";
 import authFetch from "../../utils/authFetch";
 import { showToast, dismissToast } from "../../utils/toastUtils";
@@ -39,7 +38,7 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
       setFormData({
         route_id: trip.route.id,
         bus_id: trip.bus.id || "",
-        departure_time: trip.departure_time.slice(0, 16), // Assuming ISO format
+        departure_time: trip.departure_time, // Now in YYYY-MM-DDThh:mm format
         seat_price: trip.seat_price,
       });
     }
@@ -59,10 +58,10 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
       const isEditing = !!trip;
       const method = isEditing ? "PUT" : "POST";
       const payload = {
-        ...(isEditing && { id: trip.id }), // Include ID for updates
+        ...(isEditing && { id: trip.id }),
         route_id: formData.route_id,
         bus_id: formData.bus_id,
-        departure_datetime: formData.departure_time, // Matches serializer field
+        departure_datetime: formData.departure_time,
         seat_price: formData.seat_price,
       };
 
