@@ -78,26 +78,31 @@ class Bus(models.Model):
 class Trip(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name='trips')
     bus = models.ForeignKey(Bus, on_delete=models.CASCADE, related_name='trips')
-    travel_date = models.DateField(null=True, blank=True)
-    departure_time = models.TimeField(null=True)
+    departure_datetime = models.DateTimeField()  # Replace travel_date and departure_time
     seat_price = models.FloatField(null=True, blank=True)
     available_seats = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
-        unique_together = ('route', 'bus', 'travel_date')
-        ordering = ['travel_date']
+        unique_together = ('route', 'bus', 'departure_datetime')
+        ordering = ['departure_datetime']
 
     def __str__(self):
-        return f"{self.route} on {self.travel_date}"
+        return f"{self.route} on {self.departure_datetime.date()}"
+
+    @property
+    def travel_date(self):
+        return self.departure_datetime.date()
+
+    @property
+    def departure_time(self):
+        return self.departure_datetime.time()
 
     def save(self, *args, **kwargs):
         if self.pk is None and self.available_seats is None:
-            # On first creation, default to bus total seats
             self.available_seats = self.bus.total_seats
         elif self.available_seats is not None and self.available_seats > self.bus.total_seats:
             raise ValueError("Available seats cannot exceed bus total seats")
         super().save(*args, **kwargs)
-
 
 class Booking(models.Model):
     STATUS_CHOICES = (
