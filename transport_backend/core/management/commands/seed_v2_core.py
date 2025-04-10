@@ -56,7 +56,6 @@ class Command(BaseCommand):
         self.create_cities_and_parks()
         self.create_buses()
         self.create_routes_and_trips()
-        self.create_bookings()
 
         self.stdout.write(self.style.SUCCESS('✅ Database seeded successfully.'))
 
@@ -154,35 +153,35 @@ class Command(BaseCommand):
                     )
                     self.routes.append(route)
 
-        for route in self.routes:
-            for i in range(7):
-                travel_date = date.today() + timedelta(days=i)
-                for _ in range(random.randint(1, 2)):
-                    bus = random.choice(self.buses)
-                    key = (route.id, bus.id, travel_date)
-                    if key in used_keys:
-                        continue
-                    used_keys.add(key)
-                    trip = Trip.objects.create(
-                        route=route,
-                        bus=bus,
-                        travel_date=travel_date,
-                        departure_time=time(hour=random.randint(6, 18), minute=random.choice([0, 30])),
-                        seat_price=random.randint(3000, 8000)
-                    )
-                    self.trips.append(trip)
+        # for route in self.routes:
+        #     for i in range(7):
+        #         travel_date = date.today() + timedelta(days=i)
+        #         for _ in range(random.randint(1, 2)):
+        #             bus = random.choice(self.buses)
+        #             key = (route.id, bus.id, travel_date)
+        #             if key in used_keys:
+        #                 continue
+        #             used_keys.add(key)
+        #             trip = Trip.objects.create(
+        #                 route=route,
+        #                 bus=bus,
+        #                 travel_date=travel_date,
+        #                 departure_time=time(hour=random.randint(6, 18), minute=random.choice([0, 30])),
+        #                 seat_price=random.randint(3000, 8000)
+        #             )
+        #             self.trips.append(trip)
 
-    def create_bookings(self):
-        for _ in range(200):
-            user = random.choice(self.passengers)
-            trip = random.choice(self.trips)
-            seat_count = random.randint(1, 4)
-            price = trip.seat_price * seat_count
+    # def create_bookings(self):
+    #     for _ in range(200):
+    #         user = random.choice(self.passengers)
+    #         trip = random.choice(self.trips)
+    #         seat_count = random.randint(1, 4)
+    #         price = trip.seat_price * seat_count
 
-            Booking.objects.create(
-                user=user,
-                trip=trip,
-                price=price,
-                payment_reference=f"REF{random.randint(10000, 99999)}",
-                status='confirmed'
-            )
+    #         Booking.objects.create(
+    #             user=user,
+    #             trip=trip,
+    #             price=price,
+    #             payment_reference=f"REF{random.randint(10000, 99999)}",
+    #             status='confirmed'
+    #         )

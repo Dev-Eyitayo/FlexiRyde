@@ -78,7 +78,7 @@ class Bus(models.Model):
 class Trip(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name='trips')
     bus = models.ForeignKey(Bus, on_delete=models.CASCADE, related_name='trips')
-    departure_datetime = models.DateTimeField()  # Replace travel_date and departure_time
+    departure_datetime = models.DateTimeField(null=True, blank=True)  # Replace travel_date and departure_time
     seat_price = models.FloatField(null=True, blank=True)
     available_seats = models.PositiveIntegerField(null=True, blank=True)
 
