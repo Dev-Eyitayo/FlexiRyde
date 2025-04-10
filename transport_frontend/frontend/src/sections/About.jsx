@@ -12,7 +12,7 @@ export const About = () => {
         <h2 className='md:text-4xl text-2xl font-bold mt-16 text-gray-800 mb-4'>
           Seamless Travel, Simplified
         </h2>
-        <p className='text-base text-gray-600'>
+        <p className='md:text-lg text-base text-gray-600'>
           At{" "}
           <span className='font-semibold md:text-base text-base'>
             FlexiRyde
@@ -37,10 +37,12 @@ export const About = () => {
           >
             <div className='text-blue-600 text-3xl'>{feature.icon}</div>
             <div>
-              <h3 className='text-base font-semibold text-gray-800'>
+              <h3 className='text-base md:text-lg font-semibold text-gray-800'>
                 {feature.title}
               </h3>
-              <p className='text-gray-600 text-sm'>{feature.description}</p>
+              <p className='text-gray-600 md:text-base text-sm'>
+                {feature.description}
+              </p>
             </div>
           </motion.div>
         ))}
@@ -54,7 +56,7 @@ export const About = () => {
         className='mt-12 text-center'
       >
         <a
-          className='bg-blue-600 text-white px-6 py-4 rounded-lg text-base font-semibold hover:bg-blue-700 transition'
+          className='bg-blue-600 text-white px-6 py-4 rounded-lg md:text-lg text-base font-semibold hover:bg-blue-700 transition'
           href='#bookhero'
         >
           Book Your Ride Now

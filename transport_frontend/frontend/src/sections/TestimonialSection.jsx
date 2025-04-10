@@ -49,7 +49,7 @@ const testimonials = [
 const TestimonialSection = () => {
   return (
     <div className='max-w-6xl mx-auto pt-24 px-6 py-12'>
-      <h2 className='md:text-2xl text-xl font-bold text-center mb-8'>
+      <h2 className='md:text-4xl text-2xl font-bold text-center mb-8'>
         What Our Users Say
       </h2>
       <motion.div
@@ -64,7 +64,9 @@ const TestimonialSection = () => {
             className='p-6 bg-white shadow-lg rounded-xl'
             whileHover={{ scale: 1.05 }}
           >
-            <p className='text-gray-700 text-sm'>"{testimonial.review}"</p>
+            <p className='text-gray-700 md:text-base text-sm'>
+              "{testimonial.review}"
+            </p>
             <div className='flex items-center mt-4'>
               {[...Array(Math.floor(testimonial.rating))].map((_, i) => (
                 <FaStar key={i} className='text-yellow-500' />
@@ -73,7 +75,7 @@ const TestimonialSection = () => {
                 <FaStarHalfAlt className='text-yellow-500' />
               )}
             </div>
-            <p className='mt-2 text-sm font-semibold'>
+            <p className='mt-2 md:text-base text-sm font-semibold'>
               - {testimonial.name}, {testimonial.location}
             </p>
           </motion.div>
