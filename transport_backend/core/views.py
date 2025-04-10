@@ -64,7 +64,7 @@ class TripSearchAPIView(ListAPIView):
         if destination_id:
             queryset = queryset.filter(route__destination_park_id=destination_id)
         if travel_date:
-            queryset = queryset.filter(travel_date=travel_date)
+            queryset = queryset.filter(departure_datetime__date=travel_date)
 
         return queryset
 
