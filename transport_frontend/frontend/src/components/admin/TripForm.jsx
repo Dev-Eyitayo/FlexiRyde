@@ -34,16 +34,33 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
       }
     };
   
-    fetchRoutesAndBuses();
+    const populateTripData = async () => {
+      if (trip) {
+        try {
+          // Fetch the full trip details to get bus_id
+          const tripRes = await authFetch(`/trips/${trip.id}/`);
+          if (!tripRes.ok) throw new Error("Failed to fetch trip details");
+          const tripData = await tripRes.json();
   
-    if (trip) {
-      setFormData({
-        route_id: trip.route.id,
-        bus_id: trip.bus.id || "",
-        departure_time: trip.departure_time.slice(0, 16),
-        seat_price: trip.seat_price,
-      });
-    }
+          // Combine travel_date and departure_time into datetime-local format
+          const departureDateTime = new Date(`${trip.travel_date} ${trip.departure_time}`);
+          const formattedDateTime = departureDateTime.toISOString().slice(0, 16);
+  
+          setFormData({
+            route_id: tripData.route.id, // Full trip data has the route ID
+            bus_id: tripData.bus.id,     // Full trip data has the bus ID
+            departure_time: formattedDateTime,
+            seat_price: trip.seat_price,
+          });
+        } catch (error) {
+          console.error("Error fetching trip details:", error);
+          showToast("error", "Failed to load trip details.");
+        }
+      }
+    };
+  
+    fetchRoutesAndBuses();
+    populateTripData();
   }, [parkId, trip]);
 
   const handleChange = (e) => {
@@ -55,10 +72,13 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
     e.preventDefault();
     setLoading(true);
     const toastId = showToast("loading", "Processing trip...");
-
+  
     try {
-      const res = await authFetch(`/parks/${parkId}/trips/create/`, {
-        method: "POST",
+      const url = trip ? `/trips/${trip.id}/` : `/parks/${parkId}/trips/create/`;
+      const method = trip ? "PATCH" : "POST";
+  
+      const res = await authFetch(url, {
+        method,
         body: JSON.stringify({
           route_id: formData.route_id,
           bus_id: formData.bus_id,
@@ -66,29 +86,27 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
           seat_price: formData.seat_price,
         }),
       });
-
+  
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to create trip");
+        throw new Error(errorData.error || `Failed to ${trip ? "update" : "create"} trip`);
       }
-
+  
       await res.json();
-      // showToast("success", trip ? "Trip updated successfully!" : "Trip created successfully!");
       setFormData({ route_id: "", bus_id: "", departure_time: "", seat_price: "" });
       onClear();
-      toast.success("Trip created successfully! 🎉", {
-        autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
-      });       
+      toast.success(`${trip ? "Trip updated" : "Trip created"} successfully! 🎉`, {
+        autoClose: 1000,
+      });
       onTripSaved();
     } catch (error) {
-      console.error("Error creating trip:", error);
+      console.error(`Error ${trip ? "updating" : "creating"} trip:`, error);
       showToast("error", error.message);
     } finally {
       setLoading(false);
       dismissToast(toastId);
     }
   };
-
   return (
     <div className="border rounded-lg p-4 shadow-md">
       <h2 className="text-xl font-semibold mb-4">
