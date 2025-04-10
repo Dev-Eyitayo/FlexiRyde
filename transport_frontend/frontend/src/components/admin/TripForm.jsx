@@ -1,8 +1,7 @@
+// TripForm.jsx
 import { useState, useEffect } from "react";
 import authFetch from "../../utils/authFetch";
-import { showToast } from "../../utils/toastUtils";
-import {dismissToast} from "../../utils/toastUtils";
-// import toast from "react-hot-toast";
+import { showToast, dismissToast } from "../../utils/toastUtils";
 import { toast } from "react-toastify";
 
 export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
@@ -40,7 +39,7 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
       setFormData({
         route_id: trip.route.id,
         bus_id: trip.bus.id || "",
-        departure_time: trip.departure_time.slice(0, 16),
+        departure_time: trip.departure_time.slice(0, 16), // Assuming ISO format
         seat_price: trip.seat_price,
       });
     }
@@ -57,31 +56,35 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
     const toastId = showToast("loading", "Processing trip...");
 
     try {
+      const isEditing = !!trip;
+      const method = isEditing ? "PUT" : "POST";
+      const payload = {
+        ...(isEditing && { id: trip.id }), // Include ID for updates
+        route_id: formData.route_id,
+        bus_id: formData.bus_id,
+        departure_datetime: formData.departure_time, // Matches serializer field
+        seat_price: formData.seat_price,
+      };
+
       const res = await authFetch(`/parks/${parkId}/trips/create/`, {
-        method: "POST",
-        body: JSON.stringify({
-          route_id: formData.route_id,
-          bus_id: formData.bus_id,
-          departure_datetime: formData.departure_time,
-          seat_price: formData.seat_price,
-        }),
+        method,
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to create trip");
+        throw new Error(errorData.error || "Failed to process trip");
       }
 
       await res.json();
-      // showToast("success", trip ? "Trip updated successfully!" : "Trip created successfully!");
       setFormData({ route_id: "", bus_id: "", departure_time: "", seat_price: "" });
       onClear();
-      toast.success("Trip created successfully! 🎉", {
-        autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
-      });       
+      toast.success(isEditing ? "Trip updated successfully! 🎉" : "Trip created successfully! 🎉", {
+        autoClose: 1000,
+      });
       onTripSaved();
     } catch (error) {
-      console.error("Error creating trip:", error);
+      console.error("Error processing trip:", error);
       showToast("error", error.message);
     } finally {
       setLoading(false);

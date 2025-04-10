@@ -103,37 +103,33 @@ class IsParkAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'park_admin'
 
-# Update your existing TripViewSet
+
 class TripViewSet(viewsets.ModelViewSet):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
-    permission_classes = [permissions.IsAuthenticated]  # Update to IsAuthenticated
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Add this to restrict park admins to their own park's trips
         if self.request.user.role == 'park_admin':
             return Trip.objects.filter(route__origin_park__admin=self.request.user)
         return self.queryset
 
     def perform_create(self, serializer):
-        # Add this to ensure park admins only create trips for their park
         if self.request.user.role == 'park_admin':
             route = serializer.validated_data['route']
             if route.origin_park.admin != self.request.user:
                 raise permissions.PermissionDenied("You can only create trips for your park.")
         serializer.save()
 
-    # # Your existing seat_availability action remains unchanged
-    # @action(detail=True, methods=['get'], url_path='seats')
-    # def seat_availability(self, request, pk=None):
-    #     trip = self.get_object()
-    #     total_seats = trip.bus.total_seats
-    #     booked = trip.bookings.count()
-    #     taken_seat_ids = list(range(1, booked + 1))
-    #     available_seats = list(range(booked + 1, total_seats + 1))
-    #     return Response({"taken_seat_ids": taken_seat_ids, "available_seats": available_seats})
+    def perform_update(self, serializer):
+        if self.request.user.role == 'park_admin':
+            trip = self.get_object()
+            if trip.route.origin_park.admin != self.request.user:
+                raise permissions.PermissionDenied("You can only update trips for your park.")
+        serializer.save()
 
-# Add this new ViewSet for buses
+  
+# ViewSet for buses
 class BusViewSet(viewsets.ModelViewSet):
     queryset = Bus.objects.all()
     serializer_class = BusSerializer
@@ -195,11 +191,12 @@ class ParkTripsView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         
+# views.py
 class TripCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, park_id):
-        print("Incoming request data:", request.data)
+        print("Incoming request data (POST):", request.data)
         try:
             park = BusPark.objects.get(id=park_id, admin=request.user)
         except BusPark.DoesNotExist:
@@ -214,4 +211,35 @@ class TripCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         print("Trip creation errors:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, park_id):
+        print("Incoming request data (PUT):", request.data)
+        trip_id = request.data.get('id')
+        if not trip_id:
+            return Response(
+                {"error": "Trip ID is required for updating."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            park = BusPark.objects.get(id=park_id, admin=request.user)
+            trip = Trip.objects.get(id=trip_id, route__origin_park=park)
+        except BusPark.DoesNotExist:
+            return Response(
+                {"error": "Park not found or you do not have access."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Trip.DoesNotExist:
+            return Response(
+                {"error": "Trip not found or you do not have access."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = TripSerializer(trip, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        print("Trip update errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -82,12 +82,14 @@ class TripListSerializer(serializers.ModelSerializer):
 
     def get_bus(self, obj):
         return {
+            "id": obj.bus.id,  # Add id for pre-filling
             "number_plate": obj.bus.number_plate,
             "total_seats": obj.bus.total_seats,
         }
 
     def get_route(self, obj):
         return {
+            "id": obj.route.id,  # Add id for pre-filling
             "origin_park": {
                 "id": obj.route.origin_park.id,
                 "name": obj.route.origin_park.name,
@@ -98,10 +100,14 @@ class TripListSerializer(serializers.ModelSerializer):
             },
             "distance_km": obj.route.distance_km,
         }
+
     def get_departure_time(self, obj):
-        if not obj.departure_time:
+        if not obj.departure_time or not obj.travel_date:
             return None
-        return obj.departure_time.strftime('%I:%M %p')
+        # Combine travel_date and departure_time into a datetime object
+        combined_datetime = datetime.combine(obj.travel_date, obj.departure_time)
+        # Return in ISO format (YYYY-MM-DDThh:mm)
+        return combined_datetime.strftime('%Y-%m-%dT%H:%M')
 
 
 class BookingCreateSerializer(serializers.ModelSerializer):
