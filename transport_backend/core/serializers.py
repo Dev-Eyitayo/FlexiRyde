@@ -148,7 +148,7 @@ class TripSerializer(serializers.ModelSerializer):
     )
     route = RouteSerializer(read_only=True)
     bus = BusSerializer(read_only=True)
-    departure_datetime = serializers.DateTimeField()  # Already correct
+    departure_datetime = serializers.DateTimeField()
 
     class Meta:
         model = Trip
@@ -161,6 +161,10 @@ class TripSerializer(serializers.ModelSerializer):
         ]
 
     def validate_departure_datetime(self, dt):
+        # Ensure the datetime is timezone-aware
+        if not timezone.is_aware(dt):
+            # Assume the input is in UTC if not timezone-aware
+            dt = timezone.make_aware(dt, timezone=timezone.utc)
         if dt < timezone.now():
             raise serializers.ValidationError("Departure time must be in the future.")
         return dt
