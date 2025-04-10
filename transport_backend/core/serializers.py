@@ -69,18 +69,40 @@ class TripListSerializer(serializers.ModelSerializer):
     route = serializers.SerializerMethodField()
     departure_time = serializers.SerializerMethodField()
 
+    class Meta:
+        model = Trip
+        fields = [
+            'id',
+            'travel_date',
+            'departure_time',
+            'seat_price',
+            'bus',
+            'route',
+        ]
+
     def get_bus(self, obj):
-        return {"number_plate": obj.bus.number_plate, "total_seats": obj.bus.total_seats}
+        return {
+            "number_plate": obj.bus.number_plate,
+            "total_seats": obj.bus.total_seats,
+        }
 
     def get_route(self, obj):
         return {
-            "origin_park": {"id": obj.route.origin_park.id, "name": obj.route.origin_park.name},
-            "destination_park": {"id": obj.route.destination_park.id, "name": obj.route.destination_park.name},
+            "origin_park": {
+                "id": obj.route.origin_park.id,
+                "name": obj.route.origin_park.name,
+            },
+            "destination_park": {
+                "id": obj.route.destination_park.id,
+                "name": obj.route.destination_park.name,
+            },
             "distance_km": obj.route.distance_km,
         }
-
     def get_departure_time(self, obj):
-        return obj.departure_time.strftime('%I:%M %p') if obj.departure_time else None
+        if not obj.departure_time:
+            return None
+        return obj.departure_time.strftime('%I:%M %p')
+
 
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
