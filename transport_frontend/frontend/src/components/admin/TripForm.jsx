@@ -23,7 +23,7 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
         if (!routesRes.ok) throw new Error("Failed to fetch routes");
         const routesData = await routesRes.json();
         setRoutes(routesData);
-
+  
         const busesRes = await authFetch(`/parks/${parkId}/buses`);
         if (!busesRes.ok) throw new Error("Failed to fetch buses");
         const busesData = await busesRes.json();
@@ -33,9 +33,9 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
         showToast("error", "Failed to load routes and buses.");
       }
     };
-
+  
     fetchRoutesAndBuses();
-
+  
     if (trip) {
       setFormData({
         route_id: trip.route.id,
