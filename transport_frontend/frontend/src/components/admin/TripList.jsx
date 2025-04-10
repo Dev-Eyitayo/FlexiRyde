@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import authFetch from "../../utils/authFetch";
-import toast from "react-hot-toast";
+import { showToast } from "../../utils/toastUtils";
+import {dismissToast} from "../../utils/toastUtils";
+import { toast } from "react-toastify";
 
 export default function TripList({ parkId, onEdit, refreshTrigger }) {
   const [trips, setTrips] = useState([]);
@@ -14,7 +16,7 @@ export default function TripList({ parkId, onEdit, refreshTrigger }) {
       setTrips(data);
     } catch (error) {
       console.error("Error fetching trips:", error);
-      toast.error("Failed to load trips.");
+      showToast("error", "Failed to load trips.");
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import authFetch from "../../utils/authFetch";
-import toast from "react-hot-toast";
+import { showToast } from "../../utils/toastUtils";
+import {dismissToast} from "../../utils/toastUtils";
+// import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 
 export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
   const [routes, setRoutes] = useState([]);
@@ -27,7 +30,7 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
         setBuses(busesData);
       } catch (error) {
         console.error("Error fetching routes and buses:", error);
-        toast.error("Failed to load routes and buses.");
+        showToast("error", "Failed to load routes and buses.");
       }
     };
 
@@ -51,6 +54,7 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const toastId = showToast("loading", "Processing trip...");
 
     try {
       const res = await authFetch(`/parks/${parkId}/trips/create/`, {
@@ -68,21 +72,20 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
         throw new Error(errorData.error || "Failed to create trip");
       }
 
-      await res.json(); // Process the response
-      toast.success(trip ? "Trip updated successfully!" : "Trip created successfully!");
-      setFormData({
-        route_id: "",
-        bus_id: "",
-        departure_time: "",
-        seat_price: "",
-      });
-      onClear(); // Clear the form
-      onTripSaved(); // Trigger trip list refresh
+      await res.json();
+      // showToast("success", trip ? "Trip updated successfully!" : "Trip created successfully!");
+      setFormData({ route_id: "", bus_id: "", departure_time: "", seat_price: "" });
+      onClear();
+      toast.success("Trip created successfully! 🎉", {
+        autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
+      });       
+      onTripSaved();
     } catch (error) {
       console.error("Error creating trip:", error);
-      toast.error(error.message);
+      showToast("error", error.message);
     } finally {
       setLoading(false);
+      dismissToast(toastId);
     }
   };
 

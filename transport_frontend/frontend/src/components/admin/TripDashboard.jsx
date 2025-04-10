@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import authFetch from "../../utils/authFetch";
 import TripList from "./TripList";
 import TripForm from "./TripForm";
+import { showToast } from "../../utils/toastUtils";
 
 export default function TripDashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -10,24 +11,28 @@ export default function TripDashboard() {
   const [park, setPark] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [tripsUpdated, setTripsUpdated] = useState(0); // State to trigger refresh
+  const [tripsUpdated, setTripsUpdated] = useState(0);
 
   useEffect(() => {
     const fetchPark = async () => {
       if (!isAuthenticated || !user) {
         setError("Please log in to access this page.");
+        showToast("error", "Please log in to access this page.");
         setLoading(false);
         return;
       }
 
       if (user.role !== "park_admin") {
+        
         setError("Access Denied: Only park admins can access this page.");
+        showToast("error", "Access Denied: Only park admins can access this page.");
         setLoading(false);
         return;
       }
 
       if (!user.managed_parks || user.managed_parks.length === 0) {
         setError("No parks assigned to this admin.");
+        showToast("error", "No parks assigned to this admin.");
         setLoading(false);
         return;
       }
@@ -39,7 +44,6 @@ export default function TripDashboard() {
     fetchPark();
   }, [user, isAuthenticated]);
 
-  // Function to trigger trip list refresh
   const refreshTrips = () => {
     setTripsUpdated((prev) => prev + 1);
   };
