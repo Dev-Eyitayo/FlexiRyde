@@ -1,7 +1,9 @@
+// TripForm.jsx
 import { useState, useEffect } from "react";
 import authFetch from "../../utils/authFetch";
 import { showToast, dismissToast } from "../../utils/toastUtils";
 import { toast } from "react-toastify";
+import { format, parseISO } from "date-fns";
 
 export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
   const [routes, setRoutes] = useState([]);
@@ -35,10 +37,15 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
     fetchRoutesAndBuses();
 
     if (trip) {
+      // Parse the ISO datetime string (e.g., "2025-04-10T13:42:00Z")
+      const departureDateTime = parseISO(trip.departure_datetime);
+      // Format for datetime-local input (YYYY-MM-DDThh:mm)
+      const formattedDateTime = format(departureDateTime, "yyyy-MM-dd'T'HH:mm");
+
       setFormData({
         route_id: trip.route.id,
         bus_id: trip.bus.id || "",
-        departure_time: trip.departure_time, // Now in YYYY-MM-DDThh:mm format
+        departure_time: formattedDateTime,
         seat_price: trip.seat_price,
       });
     }
@@ -61,7 +68,7 @@ export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
         ...(isEditing && { id: trip.id }),
         route_id: formData.route_id,
         bus_id: formData.bus_id,
-        departure_datetime: formData.departure_time,
+        departure_datetime: formData.departure_time, // Will be in local time, backend will handle conversion
         seat_price: formData.seat_price,
       };
 
