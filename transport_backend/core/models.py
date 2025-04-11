@@ -98,10 +98,13 @@ class Trip(models.Model):
         return self.departure_datetime.time()
 
     def save(self, *args, **kwargs):
+        # If creating a new Trip and no explicit 'available_seats', 
+        # default it to the bus capacity.
         if self.pk is None and self.available_seats is None:
             self.available_seats = self.bus.total_seats
-        elif self.available_seats is not None and self.available_seats > self.bus.total_seats:
-            raise ValueError("Available seats cannot exceed bus total seats")
+        # Prevent user from assigning a value bigger than the bus capacity:
+        if self.available_seats and self.available_seats > self.bus.total_seats:
+            raise ValueError("Available seats cannot exceed the bus total seats.")
         super().save(*args, **kwargs)
 
 class Booking(models.Model):
