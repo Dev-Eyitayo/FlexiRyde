@@ -300,53 +300,69 @@ export default function SeatAvailability() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // 1) Pull from location.state: an array of trips and the user's search data
   const trips = location.state?.trips || [];
   const travelData = location.state?.searchInfo || {};
   const { from, to, date, passengers: bookedSeats } = travelData;
 
-  const [loading, setLoading] = useState(false);
+  // 2) Keep track of the user’s currently selected trip
   const [selectedTripId, setSelectedTripId] = useState(trips[0]?.id || "");
-  const [trip, setTrip] = useState(() => trips[0] || null);
+  const [trip, setTrip] = useState(trips[0] || null);
 
-  // For seat endpoint
-  const [takenSeats, setTakenSeats] = useState([]);
-  const [availableSeats, setAvailableSeats] = useState([]);
-
-  // This tracks total seats and how many are taken
+  // 3) For seat calculations and price
   const [currentSeats, setCurrentSeats] = useState({
     totalSeats: 24,
     takenSeats: 0,
   });
   const [price, setPrice] = useState(0);
+  const [loading, setLoading] = useState(false);
 
+  // Whenever user changes trip selection, update `trip`
   useEffect(() => {
-    // whenever user picks a new trip from dropdown, update 'trip'
-    const selected = trips.find((t) => t.id === selectedTripId);
+    const selected = trips.find((t) => t.id === Number(selectedTripId));
     setTrip(selected || null);
   }, [selectedTripId, trips]);
 
+  // If you want to rely solely on the trip’s own fields
+  // (trip.available_seats, trip.bus.total_seats, trip.seat_price, etc.),
+  // then do so here:
+  useEffect(() => {
+    if (!trip) return;
 
-  const isSeatAvailable = currentSeats.totalSeats - currentSeats.takenSeats >= bookedSeats;
+    const totalSeats = trip.bus?.total_seats ?? 24;
+    // If trip.available_seats is the number of seats left,
+    // then "booked" = totalSeats - trip.available_seats
+    const booked = totalSeats - (trip.available_seats ?? 0);
 
+    setCurrentSeats({ totalSeats, takenSeats: booked });
+    setPrice(trip.seat_price ?? 1500); // or your dynamic logic
+  }, [trip]);
+
+  // Check if enough seats remain for the user’s desired seat_count (bookedSeats)
+  const isSeatAvailable =
+    currentSeats.totalSeats - currentSeats.takenSeats >= bookedSeats;
+
+  // 4) Handle booking
   const handleProceed = async () => {
-    const token = localStorage.getItem("access") || sessionStorage.getItem("access");
+    const token =
+      localStorage.getItem("access") || sessionStorage.getItem("access");
     if (!token) {
       toast.warning("🔐 Please log in to proceed with booking.", {
         position: "top-center",
         autoClose: 4000,
       });
       setTimeout(() => {
-        window.location.href = "/auth";
+        window.location.href = "/auth"; // or navigate("/auth")
       }, 1500);
       return;
     }
 
     const available = currentSeats.totalSeats - currentSeats.takenSeats;
     if (available < bookedSeats) {
-      toast.error(
-        `Only ${available} seat(s) available. Please choose fewer seats.`,
-        { position: "top-center", autoClose: 5000 }
-      );
+      toast.error(`Only ${available} seat(s) available. Please choose fewer seats.`, {
+        position: "top-center",
+        autoClose: 5000,
+      });
       return;
     }
 
@@ -356,9 +372,9 @@ export default function SeatAvailability() {
       const response = await authFetch("/bookings/create/", {
         method: "POST",
         body: JSON.stringify({
-          trip: selectedTripId,
-          seat_count: bookedSeats,     // <--- Important line
-          price: price * bookedSeats,  // or let the backend recalc
+          trip: Number(selectedTripId),
+          seat_count: bookedSeats,
+          price: price * bookedSeats, // or let the backend recalc
         }),
       });
 
@@ -371,6 +387,7 @@ export default function SeatAvailability() {
           autoClose: 3000,
         });
         setTimeout(() => {
+          // Navigate to ticket or confirmation page
           navigate("/check-ticket", { state: { booking: data } });
         }, 2000);
       } else {
@@ -384,7 +401,7 @@ export default function SeatAvailability() {
     }
   };
 
-  // convenience helper
+  // Time display helper
   function formatTime(timeStr) {
     if (!timeStr) return "—";
     const [h, m] = timeStr.split(":");
@@ -397,11 +414,16 @@ export default function SeatAvailability() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 lg:px-8">
       <ToastContainer position="top-center" autoClose={5000} />
+
+      {/* Title */}
       <div className="w-full max-w-6xl text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Seat Availability</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          Seat Availability
+        </h1>
         <p className="text-gray-600">Select departure time to view seat availability</p>
       </div>
 
+      {/* Optional route visualization (if you have a component for it) */}
       <RouteVisualization
         route={{
           from,
@@ -412,7 +434,7 @@ export default function SeatAvailability() {
         }}
       />
 
-      {/* Time selection */}
+      {/* Trip selection */}
       <div className="w-full max-w-4xl mb-6">
         <label htmlFor="time" className="block text-lg text-gray-700 mb-2 font-medium">
           Select Departure Time
@@ -421,7 +443,7 @@ export default function SeatAvailability() {
           <select
             id="time"
             value={selectedTripId}
-            onChange={(e) => setSelectedTripId(Number(e.target.value))}
+            onChange={(e) => setSelectedTripId(e.target.value)}
             className="w-full appearance-none border border-gray-300 bg-white rounded-lg pl-4 pr-10 py-3 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:bg-gray-50"
           >
             {trips.map((t) => (
@@ -430,6 +452,7 @@ export default function SeatAvailability() {
               </option>
             ))}
           </select>
+
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500">
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
@@ -497,7 +520,9 @@ export default function SeatAvailability() {
             <div className="flex items-start">
               <FaExclamationTriangle className="text-yellow-500 mt-1 mr-2" />
               <div>
-                <p className="font-medium text-yellow-800">Not Enough Seats</p>
+                <p className="font-medium text-yellow-800">
+                  Not Enough Seats
+                </p>
                 <p className="text-sm text-yellow-700">
                   Only {currentSeats.totalSeats - currentSeats.takenSeats} seat(s) available.
                   Please reduce number of passengers.
@@ -510,7 +535,9 @@ export default function SeatAvailability() {
 
       {/* Payment */}
       <div className="bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">Payment Summary</h3>
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">
+          Payment Summary
+        </h3>
         <div className="space-y-3">
           <div className="flex justify-between">
             <span className="text-gray-600">Seats to Book:</span>
@@ -518,7 +545,9 @@ export default function SeatAvailability() {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Price per Seat:</span>
-            <span className="font-medium">₦{price.toLocaleString()}</span>
+            <span className="font-medium">
+              ₦{price.toLocaleString()}
+            </span>
           </div>
           <div className="border-t border-gray-200 pt-3">
             <div className="flex justify-between">
@@ -535,14 +564,16 @@ export default function SeatAvailability() {
       <div className="w-full max-w-4xl">
         <button
           onClick={handleProceed}
-          disabled={!isSeatAvailable}
+          disabled={!isSeatAvailable || loading}
           className={`w-full py-4 px-6 rounded-lg text-lg font-semibold transition-all duration-300 shadow-md ${
             isSeatAvailable
               ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 hover:shadow-lg"
               : "bg-gray-200 text-gray-500 cursor-not-allowed"
           }`}
         >
-          {isSeatAvailable
+          {loading
+            ? "Booking..."
+            : isSeatAvailable
             ? `Proceed to Book ${bookedSeats} Seat(s)`
             : "Not Enough Seats"}
         </button>
@@ -550,4 +581,3 @@ export default function SeatAvailability() {
     </div>
   );
 }
-
