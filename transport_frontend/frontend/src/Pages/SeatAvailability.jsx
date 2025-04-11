@@ -289,79 +289,47 @@
 // }
 
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import RouteVisualization from "../components/RouteVisualization";
 import { FaClock, FaExclamationTriangle } from "react-icons/fa";
-import authFetch from "../utils/authFetch"; 
-import { useNavigate } from "react-router-dom"; 
+import authFetch from "../utils/authFetch";
 
 export default function SeatAvailability() {
   const location = useLocation();
   const navigate = useNavigate();
-  const trips = location.state?.trips || []; // ✅ clear and correct
+
+  const trips = location.state?.trips || [];
   const travelData = location.state?.searchInfo || {};
   const { from, to, date, passengers: bookedSeats } = travelData;
+
   const [loading, setLoading] = useState(false);
-  const [selectedTripId, setSelectedTripId] = useState(() => trips[0]?.id || "");
+  const [selectedTripId, setSelectedTripId] = useState(trips[0]?.id || "");
   const [trip, setTrip] = useState(() => trips[0] || null);
+
+  // For seat endpoint
   const [takenSeats, setTakenSeats] = useState([]);
   const [availableSeats, setAvailableSeats] = useState([]);
+
+  // This tracks total seats and how many are taken
+  const [currentSeats, setCurrentSeats] = useState({
+    totalSeats: 24,
+    takenSeats: 0,
+  });
   const [price, setPrice] = useState(0);
-  const [currentSeats, setCurrentSeats] = useState({ totalSeats: 24, takenSeats: 0 });
-
-
-  // console.log(trips)  
 
   useEffect(() => {
+    // whenever user picks a new trip from dropdown, update 'trip'
     const selected = trips.find((t) => t.id === selectedTripId);
     setTrip(selected || null);
   }, [selectedTripId, trips]);
 
-  useEffect(() => {
-    const fetchSeatData = async () => {
-      if (!selectedTripId) return;
-  
-      try {
-        const response = await fetch(
-          `http://localhost:8000/api/trips/${selectedTripId}/seats/`,
-          // {
-          //   headers: {
-          //     Authorization: `Bearer ${localStorage.getItem("token")}`,
-          //   },
-          // }
-        );
-        const data = await response.json();
-  
-        const taken = data.taken_seat_ids?.length || 0;
-        const available = data.available_seats?.length || 0;
-        const total = taken + available;
-  
-        setTakenSeats(data.taken_seat_ids || []);
-        setAvailableSeats(data.available_seats || []);
-        setCurrentSeats({ totalSeats: total, takenSeats: taken });
-  
-        const currentTrip = trips.find((t) => t.id === selectedTripId);
-        setTrip(currentTrip || null); // Make sure trip is synced too
-  
-        const basePrice = currentTrip?.seat_price || 1500;
-        const demandFactor = 1 + taken / (total || 1);
-        setPrice(Math.round(basePrice * demandFactor));
-      } catch (err) {
-        console.error("❌ Failed to fetch seat data:", err);
-        alert("❌ Failed to fetch seat data");
-      }
-    };
-  
-    fetchSeatData();
-  }, [selectedTripId, trips]); // <- trigger on ID or trip list change
-  
+
   const isSeatAvailable = currentSeats.totalSeats - currentSeats.takenSeats >= bookedSeats;
 
   const handleProceed = async () => {
     const token = localStorage.getItem("access") || sessionStorage.getItem("access");
-
     if (!token) {
       toast.warning("🔐 Please log in to proceed with booking.", {
         position: "top-center",
@@ -389,7 +357,8 @@ export default function SeatAvailability() {
         method: "POST",
         body: JSON.stringify({
           trip: selectedTripId,
-          price: price * bookedSeats,
+          seat_count: bookedSeats,     // <--- Important line
+          price: price * bookedSeats,  // or let the backend recalc
         }),
       });
 
@@ -401,7 +370,6 @@ export default function SeatAvailability() {
           position: "top-center",
           autoClose: 3000,
         });
-
         setTimeout(() => {
           navigate("/check-ticket", { state: { booking: data } });
         }, 2000);
@@ -414,14 +382,13 @@ export default function SeatAvailability() {
     } finally {
       setLoading(false);
     }
-
   };
-  
 
+  // convenience helper
   function formatTime(timeStr) {
     if (!timeStr) return "—";
     const [h, m] = timeStr.split(":");
-    const hour = parseInt(h);
+    const hour = parseInt(h, 10);
     const suffix = hour >= 12 ? "PM" : "AM";
     const hour12 = hour % 12 || 12;
     return `${hour12}:${m} ${suffix}`;
@@ -431,12 +398,8 @@ export default function SeatAvailability() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 lg:px-8">
       <ToastContainer position="top-center" autoClose={5000} />
       <div className="w-full max-w-6xl text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Seat Availability
-        </h1>
-        <p className="text-gray-600">
-          Select departure time to view seat availability
-        </p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Seat Availability</h1>
+        <p className="text-gray-600">Select departure time to view seat availability</p>
       </div>
 
       <RouteVisualization
@@ -463,17 +426,12 @@ export default function SeatAvailability() {
           >
             {trips.map((t) => (
               <option key={t.id} value={t.id}>
-                {formatTime(t.departure_time)} — ₦{t.seat_price.toLocaleString()}
+                {formatTime(t.departure_time)} — ₦{t.seat_price?.toLocaleString()}
               </option>
             ))}
           </select>
-
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500">
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
                 fillRule="evenodd"
                 d="M5.23 7.21a.75.75 0 011.06.02L10 11.585l3.71-4.356a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z"
@@ -490,7 +448,6 @@ export default function SeatAvailability() {
           <FaClock className="mr-2 text-blue-500" />
           Travel Details
         </h2>
-
         <div className="space-y-4">
           <div className="flex justify-between">
             <span className="text-gray-600">From:</span>
@@ -513,10 +470,7 @@ export default function SeatAvailability() {
 
       {/* Seat Breakdown */}
       <div className="bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">
-          Seat Availability
-        </h3>
-
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">Seat Availability</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-gray-600">Total Seats</p>
@@ -543,12 +497,10 @@ export default function SeatAvailability() {
             <div className="flex items-start">
               <FaExclamationTriangle className="text-yellow-500 mt-1 mr-2" />
               <div>
-                <p className="font-medium text-yellow-800">
-                  Not Enough Seats
-                </p>
+                <p className="font-medium text-yellow-800">Not Enough Seats</p>
                 <p className="text-sm text-yellow-700">
-                  Only {currentSeats.totalSeats - currentSeats.takenSeats} seat(s)
-                  available. Please reduce number of passengers.
+                  Only {currentSeats.totalSeats - currentSeats.takenSeats} seat(s) available.
+                  Please reduce number of passengers.
                 </p>
               </div>
             </div>
@@ -558,10 +510,7 @@ export default function SeatAvailability() {
 
       {/* Payment */}
       <div className="bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">
-          Payment Summary
-        </h3>
-
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">Payment Summary</h3>
         <div className="space-y-3">
           <div className="flex justify-between">
             <span className="text-gray-600">Seats to Book:</span>
@@ -582,16 +531,16 @@ export default function SeatAvailability() {
         </div>
       </div>
 
+      {/* Book Button */}
       <div className="w-full max-w-4xl">
         <button
           onClick={handleProceed}
           disabled={!isSeatAvailable}
-          className={`w-full py-4 px-6 rounded-lg text-lg font-semibold transition-all duration-300 shadow-md
-            ${
-              isSeatAvailable
-                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 hover:shadow-lg"
-                : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            }`}
+          className={`w-full py-4 px-6 rounded-lg text-lg font-semibold transition-all duration-300 shadow-md ${
+            isSeatAvailable
+              ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 hover:shadow-lg"
+              : "bg-gray-200 text-gray-500 cursor-not-allowed"
+          }`}
         >
           {isSeatAvailable
             ? `Proceed to Book ${bookedSeats} Seat(s)`
@@ -601,3 +550,4 @@ export default function SeatAvailability() {
     </div>
   );
 }
+
