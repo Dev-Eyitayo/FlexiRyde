@@ -1,4 +1,5 @@
 import uuid
+from .utils import generate_ref_code
 from datetime import datetime
 from django.utils import timezone
 from rest_framework import serializers
@@ -130,12 +131,14 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         trip.available_seats -= seat_count
         trip.save()
 
+        payment_reference = generate_ref_code(trip)
+
         booking = Booking.objects.create(
             user=self.context["request"].user,
             trip=trip,
             seat_count=seat_count,
             price=validated_data["price"],
-            payment_reference=generate_ref_code(),  # your function
+            payment_reference=payment_reference,  
             status="confirmed"
         )
         return booking
