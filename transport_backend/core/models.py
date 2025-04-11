@@ -119,6 +119,8 @@ class Booking(models.Model):
     payment_reference = models.CharField(max_length=100, unique=True)  #Take note of this 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
     created_at = models.DateTimeField(auto_now_add=True)
+        # How many seats this booking is actually taking
+    seat_count = models.PositiveIntegerField(default=1)
 
     def __str__(self):
          return f"{self.user.email} | {self.trip.route.origin_park.name} → {self.trip.route.destination_park.name}"
