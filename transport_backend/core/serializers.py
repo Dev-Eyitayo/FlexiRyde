@@ -103,29 +103,39 @@ class TripListSerializer(serializers.ModelSerializer):
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ["trip", "price"]
+        fields = ["trip", "seat_count", "price"]
+
+    def validate(self, attrs):
+        trip = attrs["trip"]
+        seat_count = attrs["seat_count"]
+
+        if seat_count < 1:
+            raise serializers.ValidationError("Must book at least 1 seat.")
+
+        # Ensure the trip has enough seats left
+        if seat_count > trip.available_seats:
+            raise serializers.ValidationError(
+                f"Only {trip.available_seats} seats are available."
+            )
+
+        return attrs
 
     def create(self, validated_data):
-        request = self.context["request"]
-        user = request.user
+        trip = validated_data["trip"]
+        seat_count = validated_data["seat_count"]
 
-        # Format today’s date as APR07
-        date_str = datetime.now().strftime("%b%d").upper()  # e.g., APR07
-
-        # Generate a short UUID for uniqueness
-        unique_part = uuid.uuid4().hex[:8].upper()  # e.g., 45A7E1F2
-
-        # Combine them
-        reference = f"REF-{date_str}-{unique_part}"
+        # Deduct seats from the trip
+        trip.available_seats -= seat_count
+        trip.save()
 
         booking = Booking.objects.create(
-            user=user,
-            trip=validated_data["trip"],
+            user=self.context["request"].user,
+            trip=trip,
+            seat_count=seat_count,
             price=validated_data["price"],
-            payment_reference=reference,
-            status="Pending"  # default status
+            payment_reference=generate_ref_code(),  # your function
+            status="confirmed"
         )
-
         return booking
     
 
