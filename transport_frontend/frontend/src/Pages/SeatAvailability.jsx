@@ -334,6 +334,8 @@ export default function SeatAvailability() {
     // then "booked" = totalSeats - trip.available_seats
     const booked = totalSeats - (trip.available_seats ?? 0);
 
+    console.log("Trip object =>", JSON.stringify(trip, null, 2));
+    console.log(totalSeats);
     setCurrentSeats({ totalSeats, takenSeats: booked });
     setPrice(trip.seat_price ?? 1500); // or your dynamic logic
   }, [trip]);
@@ -504,7 +506,7 @@ export default function SeatAvailability() {
           <div className="bg-green-50 p-4 rounded-lg">
             <p className="text-gray-600">Available Seats</p>
             <p className="text-2xl font-bold text-green-600">
-              {currentSeats.totalSeats - currentSeats.takenSeats}
+              {currentSeats.totalSeats - currentSeats.takenSeats} 
             </p>
           </div>
           <div className="bg-red-50 p-4 rounded-lg">

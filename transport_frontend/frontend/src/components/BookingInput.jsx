@@ -124,6 +124,8 @@ export const BookingInput = ({ submitType }) => {
         return;
       }
 
+      console.log("Trip search results:", JSON.stringify(tripResults, null, 2));
+
       const selectedTrip = tripResults[0];
       // console.log("Selected trip:", tripResults);
 

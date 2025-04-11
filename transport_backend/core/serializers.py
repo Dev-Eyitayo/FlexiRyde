@@ -68,16 +68,18 @@ class TripListSerializer(serializers.ModelSerializer):
     bus = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
     departure_datetime = serializers.DateTimeField()  # Use the new field
+    available_seats = serializers.IntegerField(read_only=True)
 
     class Meta:
-        model = Trip
-        fields = [
-            'id',
-            'departure_datetime',
-            'seat_price',
-            'bus',
-            'route',
-        ]
+            model = Trip
+            fields = [
+                'id',
+                'departure_datetime',
+                'seat_price',
+                'bus',
+                'route',
+                'available_seats',  # Make sure to include it here
+            ]
 
     def get_bus(self, obj):
         return {
