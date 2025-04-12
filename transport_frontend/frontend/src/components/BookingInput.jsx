@@ -102,7 +102,7 @@ export const BookingInput = ({ submitType }) => {
     }
 
     const origin_id = selectedFrom.id;
-    const destination_id = selectedTo.city.id;
+    const destination_id = selectedTo.id;
     const travel_date = dateRef.current.value;
 
     try {
@@ -116,6 +116,8 @@ export const BookingInput = ({ submitType }) => {
 
       const tripResults = await response.json();
 
+      console.log("Trip search response:", tripResults);
+
       if (tripResults.length === 0) {
         toast.error("No trips found for that route and date", {
           autoClose: 1000,
@@ -123,6 +125,8 @@ export const BookingInput = ({ submitType }) => {
         // alert("No trips found for that route and date.");
         return;
       }
+
+      console.log("Trip search results:", JSON.stringify(tripResults, null, 2));
 
       const selectedTrip = tripResults[0];
       // console.log("Selected trip:", tripResults);

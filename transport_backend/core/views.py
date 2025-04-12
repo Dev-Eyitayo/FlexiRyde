@@ -11,6 +11,7 @@ from .models import *
 from .serializers import (
     CitySerializer, BusParkSerializer, RouteSerializer, BookingSerializer,
     TripSerializer, TripListSerializer, IndirectRouteSerializer, BookingCreateSerializer, BusSerializer, 
+    BookingDetailSerializer 
 )
 
 
@@ -58,7 +59,10 @@ class TripSearchAPIView(ListAPIView):
         travel_date = self.request.query_params.get('date')
 
         queryset = Trip.objects.all()
-
+        print("Initial queryset:", queryset)  # Debugging line
+        print("Origin ID:", origin_id)  # Debugging line
+        print("Destination ID:", destination_id)  # Debugging line
+        print("Travel Date:", travel_date)  # Debugging line
         if origin_id:
             queryset = queryset.filter(route__origin_park_id=origin_id)
         if destination_id:
@@ -66,6 +70,7 @@ class TripSearchAPIView(ListAPIView):
         if travel_date:
             queryset = queryset.filter(departure_datetime__date=travel_date)
 
+        print("Queryset after filtering:", queryset)  # Debugging line
         return queryset
 
 
@@ -94,6 +99,15 @@ class BookingCreateAPIView(CreateAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingCreateSerializer
     permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        booking = serializer.save()
+
+        # Use the detailed serializer for the response
+        response_data = BookingDetailSerializer(booking).data
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
  
 

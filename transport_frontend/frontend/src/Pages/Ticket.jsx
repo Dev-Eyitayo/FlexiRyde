@@ -4,8 +4,6 @@ const Ticket = () => {
   const location = useLocation();
   const booking = location.state?.booking;
 
-  console.log("Booking data:", booking); // Debugging line to check booking data
-
   if (!booking) {
     return <div className='text-center mt-10 mb-95'>No ticket data found.</div>;
   }
@@ -13,21 +11,40 @@ const Ticket = () => {
   const {
     ref_number,
     price,
+    seats,
+    seat_count,
     trip: {
-      travel_date,
-      departure_time,
-      route: { origin_park, destination_city, intermediate_stops = [] },
+      departure_datetime,
+      route: {
+        origin_park,
+        destination_park,
+        origin_city,
+        destination_city,
+        intermediate_stops = []
+      },
       bus: { name: busCompany },
     },
     user,
   } = booking;
 
-  const passengerName = user?.first_name + " " + user?.last_name;
-  const routePath = intermediate_stops.length
-    ? [origin_park.name, ...intermediate_stops, destination_city.name]
-    : [origin_park.name, destination_city.name];
+  const passengerName = `${user?.first_name || ""} ${user?.last_name || ""}`;
 
-  const formattedDepartureTime = `${new Date(travel_date).toDateString()} · ${departure_time?.slice(0, 5)}`;
+  // Build the route path
+  const routePath = intermediate_stops.length
+    ? [origin_park.name, ...intermediate_stops, destination_park.name]
+    : [origin_park.name, destination_park.name];
+
+  // Format datetime
+  const departureDateObj = new Date(departure_datetime);
+  const formattedDepartureTime = departureDateObj.toLocaleString("en-NG", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${ref_number}`;
 
@@ -56,6 +73,9 @@ const Ticket = () => {
             <p className='font-semibold text-gray-800'>
               {routePath.join(" → ")}
             </p>
+            <p className='text-xs text-gray-500 mt-1'>
+              {origin_city?.name} → {destination_city?.name}
+            </p>
           </div>
 
           <div className='grid grid-cols-2 gap-4 mb-4'>
@@ -65,7 +85,7 @@ const Ticket = () => {
             </div>
             <div>
               <p className='text-xs text-gray-500'>SEAT(S)</p>
-              <p className='font-bold'>{booking?.seats || "—"} seat(s)</p>
+              <p className='font-bold'>{seats ?? seat_count ?? "—"} seat(s)</p>
             </div>
           </div>
 
