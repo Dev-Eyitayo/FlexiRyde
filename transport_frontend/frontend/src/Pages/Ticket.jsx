@@ -16,7 +16,7 @@ const Ticket = () => {
     trip: {
       travel_date,
       departure_time,
-      route: { origin_park, destination_city, intermediate_stops = [] },
+      route: { origin_park, destination_park, destination_city, intermediate_stops = [] },
       bus: { name: busCompany },
     },
     user,
@@ -24,8 +24,8 @@ const Ticket = () => {
 
   const passengerName = user?.first_name + " " + user?.last_name;
   const routePath = intermediate_stops.length
-    ? [origin_park.name, ...intermediate_stops, destination_city.name]
-    : [origin_park.name, destination_city.name];
+    ? [origin_park.name, ...intermediate_stops, destination_park.name]
+    : [origin_park.name, destination_park.name];
 
   const formattedDepartureTime = `${new Date(travel_date).toDateString()} · ${departure_time?.slice(0, 5)}`;
 
