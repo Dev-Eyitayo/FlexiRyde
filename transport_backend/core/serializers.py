@@ -203,4 +203,6 @@ class BookingSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         booking = Booking.objects.create(user=user, **validated_data)
         return booking
+    def update(self, instance, validated_data):
+        # custom update logic
         return super().update(instance, validated_data)
