@@ -111,6 +111,8 @@ class Booking(models.Model):
     STATUS_CHOICES = (
         ('confirmed', 'Confirmed'),
         ('cancelled', 'Cancelled'),
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookings')
