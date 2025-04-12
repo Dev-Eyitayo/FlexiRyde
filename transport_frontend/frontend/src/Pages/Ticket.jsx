@@ -20,7 +20,7 @@ const Ticket = () => {
         destination_park,
         origin_city,
         destination_city,
-        intermediate_stops = []
+        intermediate_stops = [],
       },
       bus: { name: busCompany },
     },
