@@ -102,7 +102,7 @@ export const BookingInput = ({ submitType }) => {
     }
 
     const origin_id = selectedFrom.id;
-    const destination_id = selectedTo.city.id;
+    const destination_id = selectedTo.id;
     const travel_date = dateRef.current.value;
 
     try {
@@ -115,6 +115,8 @@ export const BookingInput = ({ submitType }) => {
       const response = await authFetch(`/trips/search/?${queryParams.toString()}`);
 
       const tripResults = await response.json();
+
+      console.log("Trip search response:", tripResults);
 
       if (tripResults.length === 0) {
         toast.error("No trips found for that route and date", {

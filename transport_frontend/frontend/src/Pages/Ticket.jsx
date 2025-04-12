@@ -65,7 +65,7 @@ const Ticket = () => {
             </div>
             <div>
               <p className='text-xs text-gray-500'>SEAT(S)</p>
-              <p className='font-bold'>{booking?.seats || "—"} seat(s)</p>
+              <p className='font-bold'>{booking?.seats ?? booking?.seat_count ?? "—"} seat(s)</p>
             </div>
           </div>
 

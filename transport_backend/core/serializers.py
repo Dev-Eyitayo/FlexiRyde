@@ -202,7 +202,46 @@ class BookingSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         booking = Booking.objects.create(user=user, **validated_data)
-        return booking
+        # return the full nested serialized booking
+        return BookingDetailSerializer(booking).data
+    
     def update(self, instance, validated_data):
         # custom update logic
         return super().update(instance, validated_data)
+
+class TripShortSerializer(serializers.ModelSerializer):
+    route = serializers.SerializerMethodField()
+    bus = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Trip
+        fields = ["departure_datetime", "seat_price", "route", "bus"]
+
+    def get_route(self, obj):
+        return {
+            "origin_park": {"name": obj.route.origin_park.name},
+            "destination_city": {"name": obj.route.destination_park.name},
+            "intermediate_stops": []  # or provide if available
+        }
+
+    def get_bus(self, obj):
+        return {
+            "name": obj.bus.number_plate
+        }
+
+class BookingDetailSerializer(serializers.ModelSerializer):
+    trip = TripShortSerializer()
+    user = serializers.SerializerMethodField()
+    ref_number = serializers.CharField(source="payment_reference")
+    seats = serializers.IntegerField(source="seat_count")
+
+    class Meta:
+        model = Booking
+        fields = ["ref_number", "price", "trip", "user", "seats"]
+
+    def get_user(self, obj):
+        return {
+            "first_name": obj.user.first_name,
+            "last_name": obj.user.last_name
+        }
+

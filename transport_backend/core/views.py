@@ -58,7 +58,10 @@ class TripSearchAPIView(ListAPIView):
         travel_date = self.request.query_params.get('date')
 
         queryset = Trip.objects.all()
-
+        print("Initial queryset:", queryset)  # Debugging line
+        print("Origin ID:", origin_id)  # Debugging line
+        print("Destination ID:", destination_id)  # Debugging line
+        print("Travel Date:", travel_date)  # Debugging line
         if origin_id:
             queryset = queryset.filter(route__origin_park_id=origin_id)
         if destination_id:
@@ -66,6 +69,7 @@ class TripSearchAPIView(ListAPIView):
         if travel_date:
             queryset = queryset.filter(departure_datetime__date=travel_date)
 
+        print("Queryset after filtering:", queryset)  # Debugging line
         return queryset
 
 
