@@ -209,7 +209,7 @@ class BookingSerializer(serializers.ModelSerializer):
         # custom update logic
         return super().update(instance, validated_data)
 
-class TripShortSerializer(serializers.ModelSerializer):
+class TripTicketSerializer(serializers.ModelSerializer):
     route = serializers.SerializerMethodField()
     bus = serializers.SerializerMethodField()
 
@@ -221,7 +221,6 @@ class TripShortSerializer(serializers.ModelSerializer):
         return {
             "origin_park": {"name": obj.route.origin_park.name},
             "destination_city": {"name": obj.route.destination_park.name},
-            "intermediate_stops": []  # or provide if available
         }
 
     def get_bus(self, obj):
@@ -230,7 +229,7 @@ class TripShortSerializer(serializers.ModelSerializer):
         }
 
 class BookingDetailSerializer(serializers.ModelSerializer):
-    trip = TripShortSerializer()
+    trip = TripTicketSerializer()
     user = serializers.SerializerMethodField()
     ref_number = serializers.CharField(source="payment_reference")
     seats = serializers.IntegerField(source="seat_count")

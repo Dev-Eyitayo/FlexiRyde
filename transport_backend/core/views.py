@@ -11,6 +11,7 @@ from .models import *
 from .serializers import (
     CitySerializer, BusParkSerializer, RouteSerializer, BookingSerializer,
     TripSerializer, TripListSerializer, IndirectRouteSerializer, BookingCreateSerializer, BusSerializer, 
+    BookingDetailSerializer 
 )
 
 
@@ -98,6 +99,15 @@ class BookingCreateAPIView(CreateAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingCreateSerializer
     permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        booking = serializer.save()
+
+        # Use the detailed serializer for the response
+        response_data = BookingDetailSerializer(booking).data
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
  
 
