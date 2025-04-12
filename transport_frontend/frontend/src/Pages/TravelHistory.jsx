@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import authFetch from "../utils/authFetch"; 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -97,10 +98,12 @@ const dummyTrips = [
 ];
 
 const TravelHistory = () => {
-  const [trips, setTrips] = useState(dummyTrips);
+  // const [trips, setTrips] = useState(dummyTrips);
   const [showModal, setShowModal] = useState(false);
   const [cancelTrip, setCancelTrip] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [trips, setTrips] = useState([]);
+
 
   const handleCancel = (trip) => {
     setCancelTrip(trip);
@@ -122,6 +125,42 @@ const TravelHistory = () => {
   const filteredTrips = trips.filter(
     (trip) => filter === "all" || trip.status === filter
   );
+
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const response = await authFetch("/bookings/");
+        const data = await response.json();
+        setTrips(
+          data.map((booking) => ({
+            id: booking.id,
+            from: booking.trip.route.origin_park.name,
+            to: booking.trip.route.destination_park.name,
+            date: new Date(booking.trip.departure_datetime).toLocaleDateString("en-NG", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              year: "numeric"
+            }),
+            time: new Date(booking.trip.departure_datetime).toLocaleTimeString("en-NG", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true
+            }),
+            seats: booking.seat_count,
+            price: `₦${Number(booking.price).toLocaleString()}`,
+            bookingRef: booking.payment_reference,
+            status: booking.status.toLowerCase(), // "confirmed", "cancelled", etc.
+          }))
+        );
+      } catch (err) {
+        console.error("Error loading bookings", err);
+      }
+    };
+  
+    fetchTrips();
+  }, []);
+  
 
   return (
     <div className='min-h-screen bg-gray-100/45 p-4 md:p-6'>
