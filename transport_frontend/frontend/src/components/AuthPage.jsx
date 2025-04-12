@@ -1,73 +1,75 @@
-import { useContext, useState } from "react";
-import { motion } from "framer-motion";
-import { FaTimes, FaGoogle } from "react-icons/fa";
+import { useState } from "react";
+import { motion } from "framer-motion"; // eslint-disable-line no-unused-vars
+import { FaTimes, FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { login, signup } from "../api";
 import { toast } from "react-toastify";
 import { FaSpinner } from "react-icons/fa";
 
-// import API_BASE_URL from "../api";
-
 export default function AuthPage({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState("login");
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [loginForm, setLoginForm] = useState({
+    email: "",
+    password: "",
+    remember: false,
+  });
+  const [signupForm, setSignupForm] = useState({
+    first_name: "",
+    last_name: "",
+    username: "",
+    email: "",
+    password: "",
+  });
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // Loading state
+  const [loading, setLoading] = useState(false);
   const { login: loginToContext } = useAuth();
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginForm({ ...loginForm, [name]: value });
+  };
+
+  const handleSignupChange = (e) => {
+    const { name, value } = e.target;
+    setSignupForm({ ...signupForm, [name]: value });
   };
 
   const handleCheckBoxChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+    const { name, checked } = e.target;
+    setLoginForm({ ...loginForm, [name]: checked });
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
-    setLoading(true); // Start loading
+    setError("");
+    setLoading(true);
 
     try {
-      const data = await login(form); // Get full object: access, refresh, user
-      loginToContext(data, true); // true = remember user in localStorage
-
-      console.log("🔑 Auth Success:", data);
-      toast.success("Login successful! 🎉", {
-        autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
-      });
-      onClose(); // Close modal on success
+      const data = await login(loginForm);
+      loginToContext(data, true);
+      toast.success("Login successful! 🎉", { autoClose: 1000 });
+      onClose();
     } catch (err) {
       setError(err.message);
-      toast.error("Login failed! " + err.message, {
-        autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
-      });
+      toast.error("Login failed! " + err.message, { autoClose: 1000 });
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true); // Start loading
+    setLoading(true);
     try {
-      const data = await signup(form);
-      loginToContext(data, true); // Automatically login user
-      onClose(); // Close modal
-
-      // Display success message
-      toast.success("Signup successful! 🎉", {
-        autoClose: 1500, // Speed up toast by reducing display time to 1.5 seconds
-      });
+      const data = await signup(signupForm);
+      loginToContext(data, true);
+      onClose();
+      toast.success("Signup successful! 🎉", { autoClose: 1500 });
     } catch (err) {
       setError(err.message);
-
-      // Display error message
-      toast.error("Signup failed! ❌ " + err.message, {
-        autoClose: 1500, // Speed up toast by reducing display time to 1.5 seconds
-      });
+      toast.error("Signup failed! ❌ " + err.message, { autoClose: 1500 });
     } finally {
       setLoading(false);
     }
@@ -84,9 +86,7 @@ export default function AuthPage({ isOpen, onClose }) {
         transition={{ duration: 0.3 }}
         className='bg-white w-[900px] m-4 flex rounded-lg shadow-lg overflow-hidden'
       >
-        {/* Left Section - Form */}
         <div className='w-full md:w-1/2 p-6'>
-          {/* Close Button */}
           <div className='flex justify-end'>
             <button
               onClick={onClose}
@@ -96,31 +96,48 @@ export default function AuthPage({ isOpen, onClose }) {
             </button>
           </div>
 
-          {/* Tabs - Login & Signup */}
           <div className='flex space-x-6 mb-4'>
             <button
               className={`pb-2 text-lg font-medium ${activeTab === "login" ? "text-blue-600 border-b-2 border-blue-500" : "text-gray-500"}`}
-              onClick={() => setActiveTab("login")}
+              onClick={() => {
+                setActiveTab("login");
+                setError("");
+                setSignupForm({
+                  first_name: "",
+                  last_name: "",
+                  username: "",
+                  email: "",
+                  password: "",
+                });
+                setPasswordVisible(false);
+              }}
             >
               Login
             </button>
             <button
               className={`pb-2 text-lg font-medium ${activeTab === "signup" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500"}`}
-              onClick={() => setActiveTab("signup")}
+              onClick={() => {
+                setActiveTab("signup");
+                setError("");
+                setLoginForm({
+                  email: "",
+                  password: "",
+                  remember: false,
+                });
+                setPasswordVisible(false);
+              }}
             >
               Signup
             </button>
           </div>
 
-          {/* Animated Login & Signup Forms */}
           <motion.div
-            key={activeTab} // Key ensures the animation will trigger on state change
-            initial={{ opacity: 0, x: 50 }} // Initial state for the form
-            animate={{ opacity: 1, x: 0 }} // Final state for the form
-            exit={{ opacity: 0, x: -50 }} // Exit animation
-            transition={{ duration: 0.5 }} // Animation duration
+            key={activeTab}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.5 }}
           >
-            {/* Login Form */}
             {activeTab === "login" && (
               <form onSubmit={handleLogin}>
                 <label className='text-base font-semibold text-gray-700'>
@@ -129,28 +146,37 @@ export default function AuthPage({ isOpen, onClose }) {
                 <input
                   type='email'
                   name='email'
-                  value={form.email}
-                  onChange={handleChange}
+                  value={loginForm.email}
+                  onChange={handleLoginChange}
                   placeholder='johndoe@gmail.com'
                   className='w-full border px-3 py-2 mt-1 mb-3 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
                 />
                 <label className='text-base font-semibold text-gray-700 mt-8'>
                   Password
                 </label>
-                <input
-                  type='password'
-                  name='password'
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder='Enter your Password'
-                  className='w-full border px-3 py-2 mt-1 mb-3 text-sm rounded-md focus:outline-none border-gray-200 focus:ring-1 focus:ring-blue-500'
-                />
+                <div className='relative'>
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    name='password'
+                    value={loginForm.password}
+                    onChange={handleLoginChange}
+                    placeholder='Enter your Password'
+                    className='w-full border px-3 py-2 mt-1 mb-3 text-sm rounded-md focus:outline-none border-gray-200 focus:ring-1 focus:ring-blue-500'
+                  />
+                  <button
+                    type='button'
+                    onClick={() => setPasswordVisible(!passwordVisible)}
+                    className='absolute right-3 top-3 text-gray-500 hover:text-gray-700'
+                  >
+                    {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
                 <div className='flex justify-between items-center mb-3'>
                   <label className='flex items-center text-sm text-gray-600'>
                     <input
                       type='checkbox'
                       name='remember'
-                      checked={form.remember}
+                      checked={loginForm.remember}
                       onChange={handleCheckBoxChange}
                       className='mr-2'
                     />
@@ -177,8 +203,7 @@ export default function AuthPage({ isOpen, onClose }) {
                 <div className='flex items-center justify-between mt-4'>
                   <hr className='flex-grow border-gray-300' />
                   <p className='w-auto text-center text-gray-500 text-sm'>
-                    {" "}
-                    or login with{" "}
+                    or login with
                   </p>
                   <hr className='flex-grow border-gray-300' />
                 </div>
@@ -198,7 +223,6 @@ export default function AuthPage({ isOpen, onClose }) {
               </form>
             )}
 
-            {/* Signup Form */}
             {activeTab === "signup" && (
               <form onSubmit={handleSignup}>
                 <div className='flex flex-row gap-2 justify-between items-center'>
@@ -209,8 +233,8 @@ export default function AuthPage({ isOpen, onClose }) {
                     <input
                       type='text'
                       name='first_name'
-                      value={form.first_name}
-                      onChange={handleChange}
+                      value={signupForm.first_name}
+                      onChange={handleSignupChange}
                       placeholder='Enter your first name'
                       className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
                     />
@@ -223,8 +247,8 @@ export default function AuthPage({ isOpen, onClose }) {
                     <input
                       type='text'
                       name='last_name'
-                      value={form.last_name}
-                      onChange={handleChange}
+                      value={signupForm.last_name}
+                      onChange={handleSignupChange}
                       placeholder='Enter your last name'
                       className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
                     />
@@ -237,8 +261,8 @@ export default function AuthPage({ isOpen, onClose }) {
                 <input
                   type='text'
                   name='username'
-                  value={form.username}
-                  onChange={handleChange}
+                  value={signupForm.username}
+                  onChange={handleSignupChange}
                   placeholder='Choose a username'
                   className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
                 />
@@ -249,8 +273,8 @@ export default function AuthPage({ isOpen, onClose }) {
                 <input
                   type='email'
                   name='email'
-                  value={form.email}
-                  onChange={handleChange}
+                  value={signupForm.email}
+                  onChange={handleSignupChange}
                   placeholder='Enter your Email address'
                   className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
                 />
@@ -258,14 +282,23 @@ export default function AuthPage({ isOpen, onClose }) {
                 <label className='text-base font-semibold text-gray-700'>
                   Password
                 </label>
-                <input
-                  type='password'
-                  name='password'
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder='Enter your password'
-                  className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
-                />
+                <div className='relative'>
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    name='password'
+                    value={signupForm.password}
+                    onChange={handleSignupChange}
+                    placeholder='Enter your password'
+                    className='w-full border px-3 py-2 mt-1 mb-2 text-sm rounded-md focus:outline-none focus:ring-1 border-gray-200 focus:ring-blue-500'
+                  />
+                  <button
+                    type='button'
+                    onClick={() => setPasswordVisible(!passwordVisible)}
+                    className='absolute right-3 top-3 text-gray-500 hover:text-gray-700'
+                  >
+                    {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
 
                 {error && <p className='text-sm text-red-500'>{error}</p>}
 
@@ -304,7 +337,6 @@ export default function AuthPage({ isOpen, onClose }) {
           </motion.div>
         </div>
 
-        {/* Right Section - Branding (Only visible on medium and larger screens) */}
         <div className='hidden w-1/2 bg-blue-900 text-white md:flex flex-col items-center justify-center gap-1 p-6'>
           <h2 className='text-2xl self-center font-bold'>
             Welcome to your{" "}

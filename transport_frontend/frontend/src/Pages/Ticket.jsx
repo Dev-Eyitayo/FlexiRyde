@@ -5,7 +5,7 @@ const Ticket = () => {
   const booking = location.state?.booking;
 
   if (!booking) {
-    return <div className="text-center mt-10">No ticket data found.</div>;
+    return <div className='text-center mt-10 mb-95'>No ticket data found.</div>;
   }
 
   const {
@@ -20,7 +20,7 @@ const Ticket = () => {
         destination_park,
         origin_city,
         destination_city,
-        intermediate_stops = []
+        intermediate_stops = [],
       },
       bus: { name: busCompany },
     },
@@ -101,7 +101,11 @@ const Ticket = () => {
 
           {/* QR Code */}
           <div className='text-center mt-6'>
-            <img src={qrCodeUrl} alt='QR Code' className='w-24 h-24 mx-auto mb-2' />
+            <img
+              src={qrCodeUrl}
+              alt='QR Code'
+              className='w-24 h-24 mx-auto mb-2'
+            />
             <p className='text-xs text-gray-500 mb-3'>SCAN TO VERIFY</p>
             <button
               onClick={() => {
