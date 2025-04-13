@@ -94,7 +94,7 @@ const Ticket = () => {
             </div>
             <div>
               <p className='text-xs text-gray-500'>SEAT(S)</p>
-              <p className='font-bold'>{totalSeats} seat(s)</p>
+              <p className='font-bold'>{totalSeats} seat{totalSeats > 1 ? "s": ""}</p>
             </div>
           </div>
 
