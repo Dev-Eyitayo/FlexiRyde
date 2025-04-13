@@ -9,25 +9,34 @@ const Ticket = () => {
   }
 
   const {
+    payment_reference,
     ref_number,
     price,
-    seats,
     seat_count,
-    trip: {
-      departure_datetime,
-      route: {
-        origin_park,
-        destination_park,
-        origin_city,
-        destination_city,
-        intermediate_stops = [],
-      },
-      bus: { name: busCompany },
-    },
-    user,
+    seats,
+    trip = {},
+    user = {},
   } = booking;
-
+  
+  const {
+    departure_datetime,
+    route = {},
+    bus = {},
+  } = trip;
+  
+  const {
+    origin_park = {},
+    destination_park = {},
+    origin_city = {},
+    destination_city = {},
+    intermediate_stops = [],
+  } = route;
+  
   const passengerName = `${user?.first_name || ""} ${user?.last_name || ""}`;
+  const ticketRef = ref_number || payment_reference || "—";
+  const totalSeats = seats ?? seat_count ?? "—";
+  const busCompany = bus.name || bus.number_plate || "—";
+  
 
   // Build the route path
   const routePath = intermediate_stops.length
@@ -64,7 +73,7 @@ const Ticket = () => {
             </div>
             <div>
               <p className='text-xs text-gray-500'>TICKET NO</p>
-              <p className='font-bold'>{ref_number}</p>
+              <p className='font-bold'>{ticketRef}</p>
             </div>
           </div>
 
@@ -85,13 +94,13 @@ const Ticket = () => {
             </div>
             <div>
               <p className='text-xs text-gray-500'>SEAT(S)</p>
-              <p className='font-bold'>{seats ?? seat_count ?? "—"} seat(s)</p>
+              <p className='font-bold'>{totalSeats} seat(s)</p>
             </div>
           </div>
 
           <div className='flex justify-between items-center mb-4'>
             <div>
-              <p className='text-xs text-gray-500'>BUS COMPANY</p>
+              <p className='text-xs text-gray-500'>BUS PlATE NUMBER</p>
               <p className='font-bold'>{busCompany}</p>
             </div>
             <div className='px-2 py-1 rounded bg-green-100 text-green-800 text-sm'>
