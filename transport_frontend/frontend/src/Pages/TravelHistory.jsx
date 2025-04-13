@@ -311,7 +311,7 @@ export default function TravelHistory() {
         const formatted = data.map((booking) => {
           const trip = booking.trip;
           const datetime = new Date(trip.departure_datetime);
-
+        
           return {
             id: booking.id,
             from: trip.route.origin_park.name,
@@ -333,8 +333,10 @@ export default function TravelHistory() {
             price: `₦${Number(booking.price).toLocaleString()}`,
             bookingRef: booking.payment_reference,
             status: booking.status.toLowerCase(),
+            originalBooking: booking, // ✅ Add this line
           };
         });
+        
 
         setTrips(formatted);
       } catch (err) {
@@ -500,7 +502,9 @@ export default function TravelHistory() {
                       </button>
                     )}
                     <button
-                      onClick={() => navigate("/check-ticket", { state: { booking: trip.originalBooking } })}
+                      onClick={() =>
+                          navigate("/check-ticket", { state: { booking: trip.originalBooking } })
+                      }
                       className='ml-3 bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition'
                     >
                       View Ticket
