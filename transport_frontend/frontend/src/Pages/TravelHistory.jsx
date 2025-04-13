@@ -309,15 +309,16 @@ export default function TravelHistory() {
         const data = await response.json();
 
         const formatted = data.map((booking) => {
-          const trip = booking.trip;
+          const trip = booking.trip || {};
+          const route = trip.route || {};
           const datetime = new Date(trip.departure_datetime);
         
           return {
             id: booking.id,
-            from: trip.route.origin_park.name,
-            fromCity: trip.route.origin_city?.name,
-            to: trip.route.destination_park.name,
-            toCity: trip.route.destination_city?.name,
+            from: route.origin_park?.name || "—",
+            fromCity: route.origin_city?.name || "",
+            to: route.destination_park?.name || "—",
+            toCity: route.destination_city?.name || "",
             date: datetime.toLocaleDateString("en-NG", {
               weekday: "short",
               month: "short",
@@ -329,13 +330,16 @@ export default function TravelHistory() {
               minute: "2-digit",
               hour12: true,
             }),
-            seats: booking.seat_count,
+            seats: booking.seats ?? booking.seat_count ?? "—",
             price: `₦${Number(booking.price).toLocaleString()}`,
-            bookingRef: booking.payment_reference,
-            status: booking.status.toLowerCase(),
-            originalBooking: booking, // ✅ Add this line
+            bookingRef: booking.ref_number ?? booking.payment_reference,
+            status: booking.status?.toLowerCase() || "confirmed",
+            originalBooking: booking,
           };
         });
+        
+
+        console.log("Raw bookings response:", data);
         
 
         setTrips(formatted);
