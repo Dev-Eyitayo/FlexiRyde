@@ -39,7 +39,10 @@ class RouteViewSet(viewsets.ModelViewSet):
 
 
 class BookingViewSet(viewsets.ModelViewSet):
-    serializer_class = BookingSerializer
+    def get_serializer_class(self):
+        if self.action == "list" or self.action == "retrieve":
+            return BookingDetailSerializer
+        return BookingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
