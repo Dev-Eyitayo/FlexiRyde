@@ -288,12 +288,16 @@ import { useEffect, useState } from "react";
 import { FaMapMarkerAlt, FaCalendarAlt, FaClock, FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 import authFetch from "../utils/authFetch";
+import { useNavigate } from "react-router-dom";
+
 
 export default function TravelHistory() {
   const [trips, setTrips] = useState([]);
   const [filter, setFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [cancelTrip, setCancelTrip] = useState(null);
+  const navigate = useNavigate();
+
 
   // --------------------
   // Fetch bookings
@@ -495,6 +499,12 @@ export default function TravelHistory() {
                         Cancel
                       </button>
                     )}
+                    <button
+                      onClick={() => navigate("/check-ticket", { state: { booking: trip.originalBooking } })}
+                      className='ml-3 bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition'
+                    >
+                      View Ticket
+                    </button>
                   </div>
                 </div>
               );
