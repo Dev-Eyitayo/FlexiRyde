@@ -55,7 +55,7 @@ const Ticket = () => {
     hour12: true,
   });
 
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${ref_number}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${ticketRef}`;
 
   return (
     <div className='max-w-md mx-auto my-8 p-4' id='ticket-content'>
