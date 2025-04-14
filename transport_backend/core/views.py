@@ -62,9 +62,6 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         return bookings
 
-    def get_queryset(self):
-        return Booking.objects.filter(user=self.request.user)
-
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, status='confirmed')
 
