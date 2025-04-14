@@ -133,8 +133,6 @@ export default function NavBar() {
             <button
               ref={desktopToggleRef}
               onClick={toggleDesktopDropdown}
-              onMouseEnter={() => setIsDesktopDropdownOpen(true)}
-              onMouseLeave={() => setIsDesktopDropdownOpen(false)}
               className='flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 focus:bg-gray-200 hover:bg-gray-200 transition-all focus:outline-none'
               aria-expanded={isDesktopDropdownOpen}
               aria-haspopup='true'
