@@ -29,6 +29,7 @@ export default function SeatAvailability() {
 
   // Whenever user changes trip selection, update `trip`
   useEffect(() => {
+    console.log("Selected trip ID:", JSON.stringify(trips, null, 2));
     const selected = trips.find((t) => t.id === Number(selectedTripId));
     setTrip(selected || null);
   }, [selectedTripId, trips]);
@@ -114,14 +115,15 @@ export default function SeatAvailability() {
   };
 
   // Time display helper
-  function formatTime(timeStr) {
-    if (!timeStr) return "—";
-    const [h, m] = timeStr.split(":");
-    const hour = parseInt(h, 10);
-    const suffix = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${m} ${suffix}`;
-  }
+function formatTime(datetimeStr) {
+  if (!datetimeStr) return "—";
+  const date = new Date(datetimeStr);
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const suffix = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 || 12;
+  return `${hour12}:${minutes} ${suffix}`;
+}
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 lg:px-8">
