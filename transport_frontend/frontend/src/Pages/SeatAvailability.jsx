@@ -200,7 +200,7 @@ function formatTime(datetimeStr) {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Departure:</span>
-            <span className="font-medium">{trip?.departure_time}</span>
+            <span className="font-medium">{formatTime(trip?.departure_datetime)}</span>
           </div>
         </div>
       </div>
