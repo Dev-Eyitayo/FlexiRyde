@@ -288,12 +288,16 @@ import { useEffect, useState } from "react";
 import { FaMapMarkerAlt, FaCalendarAlt, FaClock, FaUser } from "react-icons/fa";
 import { toast } from "react-toastify";
 import authFetch from "../utils/authFetch";
+import { useNavigate } from "react-router-dom";
+
 
 export default function TravelHistory() {
   const [trips, setTrips] = useState([]);
   const [filter, setFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [cancelTrip, setCancelTrip] = useState(null);
+  const navigate = useNavigate();
+
 
   // --------------------
   // Fetch bookings
@@ -305,15 +309,16 @@ export default function TravelHistory() {
         const data = await response.json();
 
         const formatted = data.map((booking) => {
-          const trip = booking.trip;
+          const trip = booking.trip || {};
+          const route = trip.route || {};
           const datetime = new Date(trip.departure_datetime);
-
+        
           return {
             id: booking.id,
-            from: trip.route.origin_park.name,
-            fromCity: trip.route.origin_city?.name,
-            to: trip.route.destination_park.name,
-            toCity: trip.route.destination_city?.name,
+            from: route.origin_park?.name || "—",
+            fromCity: route.origin_city?.name || "",
+            to: route.destination_park?.name || "—",
+            toCity: route.destination_city?.name || "",
             date: datetime.toLocaleDateString("en-NG", {
               weekday: "short",
               month: "short",
@@ -325,12 +330,17 @@ export default function TravelHistory() {
               minute: "2-digit",
               hour12: true,
             }),
-            seats: booking.seat_count,
+            seats: booking.seats ?? booking.seat_count ?? "—",
             price: `₦${Number(booking.price).toLocaleString()}`,
-            bookingRef: booking.payment_reference,
-            status: booking.status.toLowerCase(),
+            bookingRef: booking.ref_number ?? booking.payment_reference,
+            status: booking.status?.toLowerCase() || "confirmed",
+            originalBooking: booking,
           };
         });
+        
+
+        console.log("Raw bookings response:", data);
+        
 
         setTrips(formatted);
       } catch (err) {
@@ -497,6 +507,14 @@ export default function TravelHistory() {
                         Cancel
                       </button>
                     )}
+                    <button
+                      onClick={() =>
+                          navigate("/check-ticket", { state: { booking: trip.originalBooking } })
+                      }
+                      className='ml-3 bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition'
+                    >
+                      View Ticket
+                    </button>
                   </div>
                 </div>
               );
