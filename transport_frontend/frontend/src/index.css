@@ -1,7 +1,27 @@
 @import "tailwindcss";
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
 html,
 body {
   margin: 0;
   padding: 0;
   font-family: "Roboto";
+}
+
+@layer utilities {
+  .animate-dropdown-open {
+    animation: dropdown-open 0.2s ease-out;
+  }
+
+  @keyframes dropdown-open {
+    0% {
+      opacity: 0;
+      transform: scale(0.95) translateY(-10px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
 }

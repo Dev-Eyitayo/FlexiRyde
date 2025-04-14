@@ -383,15 +383,15 @@ export default function TravelHistory() {
   // UI
   // --------------------
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-purple-50 px-4 py-10">
-      <div className="max-w-5xl mx-auto">
+    <div className='min-h-screen bg-gradient-to-br from-white via-blue-50 to-purple-50 px-4 py-10'>
+      <div className='max-w-5xl mx-auto'>
         {/* Title */}
-        <h1 className="text-4xl md:text-5xl font-extrabold text-center text-gray-700 mb-8 tracking-tight">
+        <h1 className='text-4xl md:text-5xl font-extrabold text-center text-gray-700 mb-8 tracking-tight'>
           Travel History
         </h1>
 
         {/* Filter Buttons */}
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
+        <div className='flex flex-wrap justify-center gap-3 mb-8'>
           {["all", "confirmed", "completed", "cancelled"].map((type) => (
             <button
               key={type}
@@ -412,14 +412,15 @@ export default function TravelHistory() {
 
         {/* Trip List */}
         {filteredTrips.length === 0 ? (
-          <p className="text-center text-gray-500 mt-10">
+          <p className='text-center text-gray-500 mt-10'>
             No trips found for this status.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
+          <div className='grid grid-cols-1 gap-6'>
             {filteredTrips.map((trip) => {
               // Determine badge style by status
-              let badgeClasses = "px-3 py-1 text-xs rounded-full font-semibold ";
+              let badgeClasses =
+                "px-3 py-1 text-xs rounded-full font-semibold ";
               if (trip.status === "confirmed") {
                 badgeClasses += "bg-green-100 text-green-700";
               } else if (trip.status === "completed") {
@@ -431,7 +432,7 @@ export default function TravelHistory() {
               return (
                 <div
                   key={trip.id}
-                  className="relative bg-white shadow-md hover:shadow-lg transition-shadow rounded-xl p-6"
+                  className='relative bg-white shadow-md hover:shadow-lg transition-shadow rounded-xl p-6'
                 >
                   {/* Status Badge */}
                   <span className={`absolute top-3 right-3 ${badgeClasses}`}>
@@ -439,58 +440,59 @@ export default function TravelHistory() {
                   </span>
 
                   {/* Route + Reference */}
-                  <div className="sm:flex sm:justify-between sm:items-start">
-                    <div className="mb-4 sm:mb-0">
-                      <h2 className="text-xl font-bold text-gray-800 mb-1">
+                  <div className='sm:flex sm:justify-between sm:items-start'>
+                    <div className='mb-4 sm:mb-0'>
+                      <h2 className='text-xl font-bold text-gray-800 mb-1'>
                         {trip.from}{" "}
                         {trip.fromCity && (
-                          <span className="text-sm text-gray-500">
+                          <span className='text-sm text-gray-500'>
                             ({trip.fromCity})
                           </span>
                         )}
-                        <span className="mx-2 text-gray-400">→</span>
+                        <span className='mx-2 text-gray-400'>→</span>
                         {trip.to}{" "}
                         {trip.toCity && (
-                          <span className="text-sm text-gray-500">
+                          <span className='text-sm text-gray-500'>
                             ({trip.toCity})
                           </span>
                         )}
                       </h2>
-                      <p className="text-xs text-gray-500">
-                        Ref: <span className="font-mono">{trip.bookingRef}</span>
+                      <p className='text-xs text-gray-500'>
+                        Ref:{" "}
+                        <span className='font-mono'>{trip.bookingRef}</span>
                       </p>
                     </div>
                   </div>
 
                   {/* Trip Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
-                    <div className="flex items-center text-gray-700 text-sm">
-                      <FaCalendarAlt className="mr-2 text-blue-500" />
+                  <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mt-5'>
+                    <div className='flex items-center text-gray-700 text-sm'>
+                      <FaCalendarAlt className='mr-2 text-blue-500' />
                       {trip.date}
                     </div>
-                    <div className="flex items-center text-gray-700 text-sm">
-                      <FaClock className="mr-2 text-blue-500" />
+                    <div className='flex items-center text-gray-700 text-sm'>
+                      <FaClock className='mr-2 text-blue-500' />
                       {trip.time}
                     </div>
-                    <div className="flex items-center text-gray-700 text-sm">
-                      <FaUser className="mr-2 text-blue-500" />
+                    <div className='flex items-center text-gray-700 text-sm'>
+                      <FaUser className='mr-2 text-blue-500' />
                       {trip.seats} seat{trip.seats > 1 ? "s" : ""}
                     </div>
                   </div>
 
                   {/* Price + Actions */}
-                  <div className="flex justify-between items-center mt-6">
-                    <span className="text-xl font-bold text-gray-800">
+                  <div className='flex justify-between items-center mt-6'>
+                    <span className='text-xl font-bold text-gray-800'>
                       {trip.price}
                     </span>
 
                     {trip.status === "confirmed" && (
                       <button
                         onClick={() => handleCancelClick(trip)}
-                        className="px-4 py-2 rounded-md text-sm font-medium
+                        className='px-4 py-2 rounded-md text-sm font-medium
                           border border-red-600 text-red-600
                           hover:bg-red-50 transition-colors
-                          focus:outline-none"
+                          focus:outline-none'
                       >
                         Cancel
                       </button>
@@ -504,33 +506,33 @@ export default function TravelHistory() {
 
         {/* Cancel Modal */}
         {showModal && cancelTrip && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className='fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50'>
             <div
-              className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md
-                         transform transition-all duration-300 scale-100"
+              className='bg-white p-6 rounded-xl shadow-lg w-full max-w-md
+                         transform transition-all duration-300 scale-100'
             >
-              <h2 className="text-2xl font-bold text-red-600 mb-3">
+              <h2 className='text-2xl font-bold text-red-600 mb-3'>
                 Cancel Trip
               </h2>
-              <p className="text-sm text-gray-600 mb-5">
+              <p className='text-sm text-gray-600 mb-5'>
                 Are you sure you want to cancel your trip from{" "}
                 <strong>{cancelTrip.from}</strong> to{" "}
                 <strong>{cancelTrip.to}</strong>?
               </p>
-              <div className="flex justify-end space-x-3">
+              <div className='flex justify-end space-x-3'>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-md text-sm bg-gray-200 text-gray-700
+                  className='px-4 py-2 rounded-md text-sm bg-gray-200 text-gray-700
                              hover:bg-gray-300 transition-colors
-                             focus:outline-none"
+                             focus:outline-none'
                 >
                   Close
                 </button>
                 <button
                   onClick={confirmCancel}
-                  className="px-4 py-2 rounded-md text-sm bg-red-600 text-white
+                  className='px-4 py-2 rounded-md text-sm bg-red-600 text-white
                              hover:bg-red-700 transition-colors
-                             focus:outline-none"
+                             focus:outline-none'
                 >
                   Confirm Cancel
                 </button>
