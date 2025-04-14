@@ -247,10 +247,11 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     ref_number = serializers.CharField(source="payment_reference")
     seats = serializers.IntegerField(source="seat_count")
+    status = serializers.CharField() 
 
     class Meta:
         model = Booking
-        fields = ["id", "ref_number", "price", "trip", "user", "seats"]
+        fields = ["id", "ref_number", "price", "trip", "user", "seats", "status"]
 
     def get_user(self, obj):
         return {
