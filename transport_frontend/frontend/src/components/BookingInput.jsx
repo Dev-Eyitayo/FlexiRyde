@@ -111,8 +111,10 @@ export const BookingInput = ({ submitType }) => {
         destination_id: destination_id,
         date: travel_date,
       });
-      
-      const response = await authFetch(`/trips/search/?${queryParams.toString()}`);
+
+      const response = await authFetch(
+        `/trips/search/?${queryParams.toString()}`
+      );
 
       const tripResults = await response.json();
 
