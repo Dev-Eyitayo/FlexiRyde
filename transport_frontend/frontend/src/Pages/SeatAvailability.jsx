@@ -162,7 +162,7 @@ function formatTime(datetimeStr) {
           >
             {trips.map((t) => (
               <option key={t.id} value={t.id}>
-                {formatTime(t.departure_time)} — ₦{t.seat_price?.toLocaleString()}
+                {formatTime(t.departure_datetime)} — ₦{t.seat_price?.toLocaleString()}
               </option>
             ))}
           </select>
