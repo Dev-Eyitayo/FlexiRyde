@@ -17,14 +17,14 @@ export default function App() {
   return (
     <>
       <ToastContainer
-        position="top-right" // Position of the toast
-        autoClose={5000}  // Auto-close after 5 seconds
+        position='top-right' // Position of the toast
+        autoClose={5000} // Auto-close after 5 seconds
         hideProgressBar={false} // Show progress bar
         newestOnTop={true} // New toasts appear on top
         closeOnClick // Allow closing by clicking
         pauseOnHover // Pause timer on hover
         draggable // Allow dragging the toast
-        toastClassName="rounded-lg shadow-md" // Custom styling
+        toastClassName='rounded-lg shadow-md' // Custom styling
       />
       <NavBar />
       <Routes>

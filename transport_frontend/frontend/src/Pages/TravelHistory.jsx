@@ -290,14 +290,12 @@ import { toast } from "react-toastify";
 import authFetch from "../utils/authFetch";
 import { useNavigate } from "react-router-dom";
 
-
 export default function TravelHistory() {
   const [trips, setTrips] = useState([]);
   const [filter, setFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [cancelTrip, setCancelTrip] = useState(null);
   const navigate = useNavigate();
-
 
   // --------------------
   // Fetch bookings
@@ -312,7 +310,7 @@ export default function TravelHistory() {
           const trip = booking.trip || {};
           const route = trip.route || {};
           const datetime = new Date(trip.departure_datetime);
-        
+
           return {
             id: booking.id,
             from: route.origin_park?.name || "—",
@@ -337,10 +335,8 @@ export default function TravelHistory() {
             originalBooking: booking,
           };
         });
-        
 
         console.log("Raw bookings response:", data);
-        
 
         setTrips(formatted);
       } catch (err) {
@@ -396,17 +392,15 @@ export default function TravelHistory() {
     <div className='min-h-screen bg-gradient-to-br from-white via-blue-50 to-purple-50 px-4 py-10'>
       <div className='max-w-5xl mx-auto'>
         {/* Title */}
-        <h1 className='text-4xl md:text-5xl font-extrabold text-center text-gray-700 mb-8 tracking-tight'>
-          Travel History
-        </h1>
+        <h1 className='text-2xl md:text-3xl font-bold mb-6'>Travel History</h1>
 
         {/* Filter Buttons */}
-        <div className='flex flex-wrap justify-center gap-3 mb-8'>
+        <div className='flex flex-wrap gap-3 mb-8'>
           {["all", "confirmed", "completed", "cancelled"].map((type) => (
             <button
               key={type}
               onClick={() => setFilter(type)}
-              className={`px-5 py-2 rounded-full text-sm font-medium shadow 
+              className={`px-3 py-1 rounded-full text-sm font-medium shadow 
                 transition-transform transform hover:scale-105 focus:outline-none
                 ${
                   filter === type
@@ -445,27 +439,29 @@ export default function TravelHistory() {
                   className='relative bg-white shadow-md hover:shadow-lg transition-shadow rounded-xl p-6'
                 >
                   {/* Status Badge */}
-                  <span className={`absolute top-3 right-3 ${badgeClasses}`}>
+                  <span
+                    className={`absolute top-3 text-sm right-3 ${badgeClasses}`}
+                  >
                     {trip.status}
                   </span>
 
                   {/* Route + Reference */}
                   <div className='sm:flex sm:justify-between sm:items-start'>
-                    <div className='mb-4 sm:mb-0'>
-                      <h2 className='text-xl font-bold text-gray-800 mb-1'>
+                    <div className='mb-4 mt-4 sm:mb-0'>
+                      <h2 className='md:text-lg sm:mt-3 text-base font-bold text-gray-800 mb-1'>
                         {trip.from}{" "}
-                        {trip.fromCity && (
+                        {/* {trip.fromCity && (
                           <span className='text-sm text-gray-500'>
                             ({trip.fromCity})
                           </span>
-                        )}
+                        )} */}
                         <span className='mx-2 text-gray-400'>→</span>
                         {trip.to}{" "}
-                        {trip.toCity && (
+                        {/* {trip.toCity && (
                           <span className='text-sm text-gray-500'>
                             ({trip.toCity})
                           </span>
-                        )}
+                        )} */}
                       </h2>
                       <p className='text-xs text-gray-500'>
                         Ref:{" "}
@@ -496,25 +492,29 @@ export default function TravelHistory() {
                       {trip.price}
                     </span>
 
-                    {trip.status === "confirmed" && (
-                      <button
-                        onClick={() => handleCancelClick(trip)}
-                        className='px-4 py-2 rounded-md text-sm font-medium
-                          border border-red-600 text-red-600
-                          hover:bg-red-50 transition-colors
+                    <div className='flex flex-row '>
+                      {trip.status === "confirmed" && (
+                        <button
+                          onClick={() => handleCancelClick(trip)}
+                          className='px-4 py-2 rounded-md text-sm font-medium
+                          border bg-red-500 text-white
+                          hover:bg-red-600 transition-colors
                           focus:outline-none'
+                        >
+                          Cancel
+                        </button>
+                      )}
+                      <button
+                        onClick={() =>
+                          navigate("/check-ticket", {
+                            state: { booking: trip.originalBooking },
+                          })
+                        }
+                        className='ml-3 bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition'
                       >
-                        Cancel
+                        View Ticket
                       </button>
-                    )}
-                    <button
-                      onClick={() =>
-                          navigate("/check-ticket", { state: { booking: trip.originalBooking } })
-                      }
-                      className='ml-3 bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition'
-                    >
-                      View Ticket
-                    </button>
+                    </div>
                   </div>
                 </div>
               );
