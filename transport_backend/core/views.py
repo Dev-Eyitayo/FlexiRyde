@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 from rest_framework import status
+from django.utils import timezone
 
 from .models import *
 from .serializers import (
@@ -46,7 +47,20 @@ class BookingViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Booking.objects.filter(user=self.request.user)
+        bookings = Booking.objects.filter(user=self.request.user)
+
+        # Auto-update expired bookings to "completed"
+        now = timezone.now()
+        for booking in bookings:
+            if (
+                booking.status in ["confirmed", "pending"] and 
+                booking.trip and 
+                booking.trip.departure_datetime < now
+            ):
+                booking.status = "completed"
+                booking.save(update_fields=["status"])
+
+        return bookings
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, status='confirmed')

@@ -197,7 +197,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'price', 'payment_reference',
             'status', 'created_at'
         ]
-        read_only_fields = ['user', 'status', 'created_at']
+        read_only_fields = ['user', 'created_at']
 
     def create(self, validated_data):
         user = self.context['request'].user
@@ -242,14 +242,16 @@ class TripTicketSerializer(serializers.ModelSerializer):
         }
 
 class BookingDetailSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)  # <-- Add this line!
     trip = TripTicketSerializer()
     user = serializers.SerializerMethodField()
     ref_number = serializers.CharField(source="payment_reference")
     seats = serializers.IntegerField(source="seat_count")
+    status = serializers.CharField() 
 
     class Meta:
         model = Booking
-        fields = ["ref_number", "price", "trip", "user", "seats"]
+        fields = ["id", "ref_number", "price", "trip", "user", "seats", "status"]
 
     def get_user(self, obj):
         return {

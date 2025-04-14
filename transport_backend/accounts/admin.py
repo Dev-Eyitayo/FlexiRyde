@@ -15,7 +15,7 @@ class CustomUserAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
         (None, {'fields': ('nin', 'role')}),
     )
-    search_fields = ('email', 'username', 'nin')
+    search_fields = ('email', 'username', 'nin', "first_name", "last_name")
     ordering = ('email',)
 
     def role_display(self, obj):
