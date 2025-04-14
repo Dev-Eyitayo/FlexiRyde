@@ -26,9 +26,7 @@ export default function NavBar() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  // const [isActive] = useState(false); // Note: This is unused and could be removed
 
-  // Debug authentication state
   useEffect(() => {
     console.log("NavBar - isAuthenticated:", isAuthenticated);
     console.log("NavBar - user:", user);
@@ -96,7 +94,6 @@ export default function NavBar() {
           <img src={logo} alt='Brand Logo' className='md:h-12 h-8' />
         </button>
         <div className='hidden md:flex gap-4 items-center space-x-6'>
-          {/* NavLink without underline */}
           <NavLink
             to='/#bookhero'
             className={({ isActive }) =>
@@ -136,13 +133,13 @@ export default function NavBar() {
             <button
               ref={desktopToggleRef}
               onClick={toggleDesktopDropdown}
-              className='flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus:outline-none'
+              className='flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 focus:bg-gray-200 hover:bg-gray-200 transition-all focus:outline-none'
               aria-expanded={isDesktopDropdownOpen}
               aria-haspopup='true'
             >
               <FaUser size={18} className='text-gray-700' />
               <IoMdArrowDropdown
-                className={`ml-1 text-gray-700 transition-transform ${
+                className={`ml-1 text-gray-700 transition-transform duration-200 ${
                   isDesktopDropdownOpen ? "rotate-180" : ""
                 }`}
               />
@@ -150,11 +147,14 @@ export default function NavBar() {
             {isDesktopDropdownOpen && (
               <div
                 ref={desktopDropdownRef}
-                className='absolute right-0 pb-1 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg'
+                className='absolute right-0 pb-1 mt-3 w-50 bg-white shadow-xl rounded-none border-t-4 border-blue-500 animate-dropdown-open origin-top-right'
               >
                 {isAuthenticated && (
-                  <div className='px-4 py-2 text-lg font-semibold text-gray-600'>
-                    Hi, {user?.first_name || user?.email?.split("@")[0]} 👋
+                  <div className='px-4 py-2 text-base font-medium text-gray-900 border-b border-gray-100'>
+                    Hi,{" "}
+                    <span className='capitalize'>
+                      {user?.first_name || user?.email?.split("@")[0]} 👋
+                    </span>
                   </div>
                 )}
                 {isAuthenticated && user?.role === "park_admin" && (
@@ -164,11 +164,11 @@ export default function NavBar() {
                         navigate("/trip-dashboard");
                         setIsDesktopDropdownOpen(false);
                       }}
-                      className='block px-4 text-start w-full py-2 text-gray-700 hover:bg-gray-100 transition hover:cursor-pointer'
+                      className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                     >
                       Manage Trips
                     </button>
-                    <hr className='my-1 border-gray-200' />
+                    <hr className='border-gray-100' />
                   </>
                 )}
                 <button
@@ -176,39 +176,39 @@ export default function NavBar() {
                     navigate("/modify-bookings");
                     setIsDesktopDropdownOpen(false);
                   }}
-                  className='block px-4 text-start w-full py-2 text-gray-700 hover:bg-gray-100 transition hover:cursor-pointer'
+                  className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                 >
                   Change Travel Date
                 </button>
-                <hr className='my-1 border-gray-200' />
+                <hr className='border-gray-100' />
                 <button
                   onClick={() => {
                     navigate("/check-ticket");
                     setIsDesktopDropdownOpen(false);
                   }}
-                  className='block px-4 py-2 w-full text-start text-gray-700 hover:bg-gray-100 transition hover:cursor-pointer'
+                  className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                 >
                   Show My Ticket
                 </button>
-                <hr className='my-1 border-gray-200' />
+                <hr className='border-gray-100' />
                 <button
                   onClick={() => navigate("/travel-history")}
-                  className='block px-4 py-2 w-full text-start text-gray-700 hover:bg-gray-100 transition hover:cursor-pointer'
+                  className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                 >
                   Travel History
                 </button>
-                <hr className='my-1 border-gray-200' />
+                <hr className='border-gray-100' />
                 {isAuthenticated ? (
                   <button
                     onClick={() => setShowLogoutModal(true)}
-                    className='block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition hover:cursor-pointer'
+                    className='block w-full text-left px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150'
                   >
                     Logout
                   </button>
                 ) : (
                   <button
                     onClick={() => navigate("/auth")}
-                    className='block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition'
+                    className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                   >
                     Sign Up/Log In
                   </button>
@@ -222,7 +222,7 @@ export default function NavBar() {
             <button
               ref={mobileToggleRef}
               onClick={toggleMobileDropdown}
-              className='flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus:outline-none'
+              className='flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 focus:bg-gray-200 transition-all focus:outline-none'
               aria-expanded={isMobileDropdownOpen}
               aria-haspopup='true'
             >
@@ -231,7 +231,7 @@ export default function NavBar() {
             {isMobileDropdownOpen && (
               <div
                 ref={mobileDropdownRef}
-                className='absolute right-0 py-2 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg'
+                className='absolute right-0 mt-2 w-56 bg-white shadow-xl rounded-none border-t-4 border-blue-600 animate-dropdown-open origin-top-right'
               >
                 {isAuthenticated && user?.role === "park_admin" && (
                   <>
@@ -240,11 +240,11 @@ export default function NavBar() {
                         navigate("/trip-dashboard");
                         setIsMobileDropdownOpen(false);
                       }}
-                      className='block w-full text-start px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
+                      className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                     >
                       Manage Trips
                     </button>
-                    <hr className='my-1 border-gray-200' />
+                    <hr className='border-gray-100' />
                   </>
                 )}
                 <button
@@ -252,39 +252,39 @@ export default function NavBar() {
                     navigate("/modify-bookings");
                     setIsMobileDropdownOpen(false);
                   }}
-                  className='block w-full text-start px-4 py-2 text-gray-700 hover:bg-gray-100 transition'
+                  className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                 >
                   Change Travel Date
                 </button>
-                <hr className='my-1 border-gray-200' />
+                <hr className='border-gray-100' />
                 <button
                   onClick={() => {
                     navigate("/check-ticket");
                     setIsMobileDropdownOpen(false);
                   }}
-                  className='block px-4 py-2 w-full text-start text-gray-700 hover:bg-gray-100 transition'
+                  className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                 >
                   Show My Ticket
                 </button>
-                <hr className='my-1 border-gray-200' />
+                <hr className='border-gray-100' />
                 <button
                   onClick={() => navigate("/travel-history")}
-                  className='block px-4 py-2 w-full text-start text-gray-700 hover:bg-gray-100 transition'
+                  className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                 >
                   Travel History
                 </button>
-                <hr className='my-1 border-gray-200' />
+                <hr className='border-gray-100' />
                 {isAuthenticated ? (
                   <button
                     onClick={() => setShowLogoutModal(true)}
-                    className='block px-4 py-2 text-start w-full text-red-600 hover:bg-red-100 transition hover:cursor-pointer'
+                    className='block w-full text-left px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150'
                   >
                     Logout
                   </button>
                 ) : (
                   <button
                     onClick={() => navigate("/auth")}
-                    className='block px-4 py-2 text-start w-full text-gray-700 hover:bg-gray-100 transition'
+                    className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                   >
                     Sign Up/Log In
                   </button>
