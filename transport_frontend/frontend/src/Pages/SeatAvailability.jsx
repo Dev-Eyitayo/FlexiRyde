@@ -29,7 +29,7 @@ export default function SeatAvailability() {
 
   // Whenever user changes trip selection, update `trip`
   useEffect(() => {
-    console.log("Selected trip ID:", JSON.stringify(trips, null, 2));
+    // console.log("Selected trip ID:", JSON.stringify(trips, null, 2));
     const selected = trips.find((t) => t.id === Number(selectedTripId));
     setTrip(selected || null);
   }, [selectedTripId, trips]);
