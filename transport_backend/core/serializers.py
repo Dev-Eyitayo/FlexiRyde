@@ -197,7 +197,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'price', 'payment_reference',
             'status', 'created_at'
         ]
-        read_only_fields = ['user', 'status', 'created_at']
+        read_only_fields = ['user', 'created_at']
 
     def create(self, validated_data):
         user = self.context['request'].user
