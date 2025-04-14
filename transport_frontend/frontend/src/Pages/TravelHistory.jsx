@@ -80,7 +80,7 @@ export default function TravelHistory() {
   };
 
   const confirmCancel = async () => {
-    console.log("Cancel Trip Object:", cancelTrip); 
+    console.log("Cancel Trip Object:", JSON.stringify(cancelTrip, null, 2)); 
     try {
       const response = await authFetch(`/bookings/${cancelTrip.id}/`, {
         method: "PATCH",
