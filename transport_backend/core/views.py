@@ -46,6 +46,18 @@ class BookingViewSet(viewsets.ModelViewSet):
         return BookingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @action(detail=False, methods=["get"], url_path=r"ref/(?P<ref>[A-Za-z0-9\-]+)")
+    def get_by_reference(self, request, ref=None):
+        try:
+            booking = Booking.objects.get(payment_reference=ref, user=request.user)
+            serializer = BookingDetailSerializer(booking)
+            return Response(serializer.data)
+        except Booking.DoesNotExist:
+            return Response(
+                {"detail": "Booking not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
     def get_queryset(self):
         bookings = Booking.objects.filter(user=self.request.user)
 
