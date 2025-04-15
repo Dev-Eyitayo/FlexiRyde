@@ -359,6 +359,18 @@ export default function ChangeBooking() {
     }
   };
 
+  function formatTime(datetimeString) {
+    const date = new Date(datetimeString);
+    return date
+      .toLocaleTimeString("en-NG", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .replace("am", "AM")
+      .replace("pm", "PM");
+  }
+
   // Fetch new times when date changes
   useEffect(() => {
     const fetchTimes = async () => {
@@ -474,13 +486,7 @@ export default function ChangeBooking() {
               </div>
               <div>
                 <strong>Time:</strong>{" "}
-                {new Date(booking.trip.departure_datetime).toLocaleTimeString(
-                  [],
-                  {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }
-                )}
+                {formatTime(booking.trip.departure_datetime)}
               </div>
               <div>
                 <strong>Route:</strong> {booking.trip.route.origin_city.name} →{" "}
@@ -529,24 +535,15 @@ export default function ChangeBooking() {
                   onChange={(e) => {
                     const id = e.target.value;
                     setSelectedTripId(id);
-                    const trip = availableTrips.find(
-                      (t) => t.id === parseInt(id)
-                    );
+                    const trip = availableTrips.find((t) => t.id === parseInt(id));
                     setPrice(trip?.seat_price || 0);
                   }}
-                  className='w-full px-4 py-3 border rounded-lg shadow-sm'
+                  className="w-full px-4 py-3 border rounded-lg shadow-sm"
                 >
-                  <option value=''>Select a time</option>
+                  <option value="">Select a time</option>
                   {availableTrips.map((trip) => (
                     <option key={trip.id} value={trip.id}>
-                      {new Date(trip.departure_datetime).toLocaleTimeString(
-                        [],
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )}{" "}
-                      — ₦{trip.seat_price.toLocaleString()}
+                      {formatTime(trip.departure_datetime)} — ₦{trip.seat_price.toLocaleString()}
                     </option>
                   ))}
                 </select>
