@@ -239,7 +239,7 @@ export default function TravelHistory() {
 
         {/* Cancel Modal */}
         {showModal && cancelTrip && (
-          <div className='fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50'>
+          <div className='fixed inset-0 bg-black/50 backdrop-blur-lg bg-opacity-40 flex items-center justify-center z-50'>
             <div
               className='bg-white p-6 rounded-xl shadow-lg w-full max-w-md
                          transform transition-all duration-300 scale-100'
