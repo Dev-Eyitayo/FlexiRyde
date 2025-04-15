@@ -2,9 +2,12 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+// Import React Datepicker and styles
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+// Dummy data
 const dummyRoutes = [
   { id: 1, name: "Lagos to Abuja", from: "Lagos", to: "Abuja" },
   { id: 2, name: "Lagos to Port Harcourt", from: "Lagos", to: "Port Harcourt" },
@@ -19,119 +22,50 @@ const dummyBuses = [
   { id: 4, plateNumber: "GHI789", capacity: 16, status: "available" },
 ];
 
-const dummyScheduledTrips = [
-  {
-    id: 1,
-    route: dummyRoutes[0], // Lagos to Abuja
-    price: 5000,
-    date: new Date("2025-04-20"),
-    departureTime: "08:00",
-    bus: dummyBuses[0], // ABC123
-    bookings: 5,
-  },
-  {
-    id: 2,
-    route: dummyRoutes[1], // Lagos to Port Harcourt
-    price: 6000,
-    date: new Date("2025-04-21"),
-    departureTime: "10:00",
-    bus: dummyBuses[1], // XYZ789
-    bookings: 0,
-  },
-  {
-    id: 3,
-    route: dummyRoutes[2], // Abuja to Kano
-    price: 4500,
-    date: new Date("2025-04-22"),
-    departureTime: "12:00",
-    bus: dummyBuses[3], // GHI789
-    bookings: 0,
-  },
-  {
-    id: 4,
-    route: dummyRoutes[3], // Port Harcourt to Enugu
-    price: 3000,
-    date: new Date("2025-04-20"),
-    departureTime: "09:00",
-    bus: dummyBuses[0], // ABC123
-    bookings: 0,
-  },
-  {
-    id: 5,
-    route: dummyRoutes[0], // Lagos to Abuja
-    price: 5500,
-    date: new Date("2025-04-19"),
-    departureTime: "14:00",
-    bus: dummyBuses[1], // XYZ789
-    bookings: 0,
-  },
-];
-
 const ParkAdminDashboard = () => {
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [price, setPrice] = useState("");
+  // Change date state to Date object for react-datepicker
   const [date, setDate] = useState(null);
   const [departureTimes, setDepartureTimes] = useState([]);
-  const [scheduledTrips, setScheduledTrips] = useState(dummyScheduledTrips);
+  const [scheduledTrips, setScheduledTrips] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingTripId, setEditingTripId] = useState(null);
 
+  // Reset form after successful submission
   const resetForm = () => {
     setSelectedRoute(null);
     setPrice("");
     setDate(null);
     setDepartureTimes([]);
-    setEditingTripId(null);
   };
 
+  // Add a new departure time
   const addDepartureTime = () => {
     setDepartureTimes([...departureTimes, { time: "", bus: null }]);
   };
 
+  // Update a departure time
   const updateDepartureTime = (index, field, value) => {
     const updatedTimes = [...departureTimes];
     updatedTimes[index][field] = value;
     setDepartureTimes(updatedTimes);
   };
 
+  // Remove a departure time
   const removeDepartureTime = (index) => {
     const updatedTimes = departureTimes.filter((_, i) => i !== index);
     setDepartureTimes(updatedTimes);
   };
 
-  const editTrip = (trip) => {
-    if (trip.bookings > 0) {
-      toast.warn(
-        "This trip has bookings. Route, date, and existing departure time changes are restricted."
-      );
-    }
-    setEditingTripId(trip.id);
-    setSelectedRoute(trip.route);
-    setPrice(trip.price.toString());
-    setDate(new Date(trip.date));
-    setDepartureTimes([{ time: trip.departureTime, bus: trip.bus }]);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const deleteTrip = (tripId) => {
-    const trip = scheduledTrips.find((t) => t.id === tripId);
-    if (trip.bookings > 0) {
-      toast.error("Cannot delete a trip with bookings.", { autoClose: 3000 });
-      return;
-    }
-    if (window.confirm("Are you sure you want to delete this trip?")) {
-      setScheduledTrips(scheduledTrips.filter((trip) => trip.id !== tripId));
-      toast.success("Trip deleted successfully!", { autoClose: 2000 });
-    }
-  };
-
+  // Submit the scheduled trips - now only validates and shows confirm modal
   const submitTrips = () => {
     if (!selectedRoute || !price || !date || departureTimes.length === 0) {
       toast.error("Please fill all required fields");
       return;
     }
 
+    // Validate all departure times have time and bus selected
     const incompleteTimes = departureTimes.some((dt) => !dt.time || !dt.bus);
     if (incompleteTimes) {
       toast.error("Please complete all departure time fields", {
@@ -140,123 +74,41 @@ const ParkAdminDashboard = () => {
       return;
     }
 
-    const normalizedDate = new Date(date);
-    normalizedDate.setHours(0, 0, 0, 0);
-
-    // Check for duplicate trips
-    for (const dt of departureTimes) {
-      const existingTrip = scheduledTrips.find((trip) => {
-        if (editingTripId && trip.id === editingTripId) return false;
-        const tripDate = new Date(trip.date);
-        tripDate.setHours(0, 0, 0, 0);
-        return (
-          trip.route.id === selectedRoute.id &&
-          tripDate.getTime() === normalizedDate.getTime() &&
-          trip.departureTime === dt.time &&
-          trip.bus.id === dt.bus?.id
-        );
-      });
-
-      if (existingTrip) {
-        toast.error(
-          `A trip with route ${selectedRoute.name}, date ${formatDate(
-            date
-          )}, time ${dt.time}, and bus ${dt.bus.plateNumber} already exists.`,
-          { autoClose: 3000 }
-        );
-        return;
-      }
-    }
-
-    // Check for bus scheduling conflicts (within 2 hours)
-    for (const dt of departureTimes) {
-      const conflictingTrip = scheduledTrips.find((trip) => {
-        if (editingTripId && trip.id === editingTripId) return false;
-        const tripDate = new Date(trip.date);
-        tripDate.setHours(0, 0, 0, 0);
-        const tripTime = parseInt(trip.departureTime.split(":")[0]);
-        const newTime = parseInt(dt.time.split(":")[0]);
-        return (
-          trip.bus.id === dt.bus?.id &&
-          tripDate.getTime() === normalizedDate.getTime() &&
-          Math.abs(tripTime - newTime) < 2
-        );
-      });
-
-      if (conflictingTrip) {
-        toast.error(
-          `Bus ${dt.bus.plateNumber} is already scheduled for ${conflictingTrip.route.name} at ${conflictingTrip.departureTime} on ${formatDate(date)}.`,
-          { autoClose: 3000 }
-        );
-        return;
-      }
-    }
-
     setShowConfirmModal(true);
   };
 
+  // Confirm and schedule trips
   const confirmScheduleTrips = async () => {
     setIsSubmitting(true);
     try {
-      if (editingTripId) {
-        let updatedTrips = [...scheduledTrips];
-        updatedTrips = updatedTrips.map((trip) =>
-          trip.id === editingTripId
-            ? {
-                ...trip,
-                route: selectedRoute,
-                price: parseFloat(price),
-                date,
-                departureTime: departureTimes[0].time,
-                bus: departureTimes[0].bus,
-                bookings: trip.bookings,
-              }
-            : trip
-        );
+      // In a real app, this would be an API call
+      const newTrips = departureTimes.map((dt) => ({
+        id: Date.now() + Math.random(),
+        route: selectedRoute,
+        price: parseFloat(price),
+        date,
+        departureTime: dt.time,
+        bus: dt.bus,
+        status: "scheduled",
+      }));
 
-        const newTrips = departureTimes.slice(1).map((dt) => ({
-          id: Date.now() + Math.random(),
-          route: selectedRoute,
-          price: parseFloat(price),
-          date,
-          departureTime: dt.time,
-          bus: dt.bus,
-          bookings: 0,
-        }));
-
-        setScheduledTrips([...updatedTrips, ...newTrips]);
-        toast.success(
-          `Trip updated successfully! ${
-            newTrips.length > 0 ? `${newTrips.length} new trip(s) added.` : ""
-          }`,
-          { autoClose: 2000 }
-        );
-      } else {
-        const newTrips = departureTimes.map((dt) => ({
-          id: Date.now() + Math.random(),
-          route: selectedRoute,
-          price: parseFloat(price),
-          date,
-          departureTime: dt.time,
-          bus: dt.bus,
-          bookings: 0,
-        }));
-        setScheduledTrips([...scheduledTrips, ...newTrips]);
-        toast.success("Trips scheduled successfully!", { autoClose: 2000 });
-      }
+      setScheduledTrips([...scheduledTrips, ...newTrips]);
+      toast.success("Trips scheduled successfully!", {
+        autoClose: 2000,
+      });
       resetForm();
       setShowConfirmModal(false);
     } catch (error) {
-      toast.error(
-        editingTripId ? "Failed to update trip." : "Failed to schedule trips.",
-        { autoClose: 2000 }
-      );
-      console.error("Error:", error);
+      toast.error("Failed to schedule trips. Please try again.", {
+        autoClose: 2000,
+      });
+      console.error("Error scheduling trips:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Format date for display
   const formatDate = (dateString) => {
     const options = {
       weekday: "short",
@@ -275,11 +127,14 @@ const ParkAdminDashboard = () => {
         </h1>
 
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
+          {/* Trip Scheduling Form */}
           <div className='lg:col-span-2 bg-white rounded-lg shadow-md p-6'>
             <h2 className='text-xl font-semibold text-gray-700 mb-4'>
-              {editingTripId ? "Edit Trip" : "Schedule New Trips"}
+              Schedule New Trips
             </h2>
+
             <div className='space-y-4'>
+              {/* Route Selection */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Route
@@ -294,11 +149,6 @@ const ParkAdminDashboard = () => {
                     );
                     setSelectedRoute(route || null);
                   }}
-                  disabled={
-                    editingTripId &&
-                    scheduledTrips.find((t) => t.id === editingTripId)
-                      ?.bookings > 0
-                  }
                 >
                   <option value=''>Select a route</option>
                   {dummyRoutes.map((route) => (
@@ -307,15 +157,9 @@ const ParkAdminDashboard = () => {
                     </option>
                   ))}
                 </select>
-                {editingTripId &&
-                  scheduledTrips.find((t) => t.id === editingTripId)?.bookings >
-                    0 && (
-                    <p className='text-sm text-red-600 mt-1'>
-                      Route cannot be changed due to existing bookings.
-                    </p>
-                  )}
               </div>
 
+              {/* Price Input */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Price per Seat (₦)
@@ -330,6 +174,7 @@ const ParkAdminDashboard = () => {
                 />
               </div>
 
+              {/* Date Picker */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Trip Date
@@ -342,22 +187,11 @@ const ParkAdminDashboard = () => {
                     className='w-full p-2 border border-gray-300 rounded-md focus:border-2 focus:ring-2 focus:ring-blue-500'
                     placeholderText='Select date'
                     dateFormat='MMMM d, yyyy'
-                    disabled={
-                      editingTripId &&
-                      scheduledTrips.find((t) => t.id === editingTripId)
-                        ?.bookings > 0
-                    }
                   />
                 </div>
-                {editingTripId &&
-                  scheduledTrips.find((t) => t.id === editingTripId)?.bookings >
-                    0 && (
-                    <p className='text-sm text-red-600 mt-1'>
-                      Date cannot be changed due to existing bookings.
-                    </p>
-                  )}
               </div>
 
+              {/* Departure Times */}
               <div>
                 <div className='flex justify-between items-center mb-1'>
                   <label className='block text-sm font-medium text-gray-700'>
@@ -371,11 +205,7 @@ const ParkAdminDashboard = () => {
                     + Add Time
                   </button>
                 </div>
-                {editingTripId && departureTimes.length > 1 && (
-                  <p className='text-sm text-gray-600 italic mb-2'>
-                    Additional departure times will create new trips.
-                  </p>
-                )}
+
                 {departureTimes.length === 0 ? (
                   <div className='text-sm text-gray-500 italic py-2'>
                     No departure times added yet
@@ -388,55 +218,28 @@ const ParkAdminDashboard = () => {
                         className='grid grid-cols-12 gap-2 items-center'
                       >
                         <div className='col-span-4'>
-                          {index === 0 &&
-                          editingTripId &&
-                          scheduledTrips.find((t) => t.id === editingTripId)
-                            ?.bookings > 0 ? (
-                            <input
-                              type='text'
-                              className='w-full p-2 border border-gray-300 rounded-md bg-gray-100'
-                              value={dt.time}
-                              readOnly
-                            />
-                          ) : (
-                            <select
-                              className='w-full p-2 border border-gray-300 rounded-md'
-                              value={dt.time}
-                              onChange={(e) =>
-                                updateDepartureTime(
-                                  index,
-                                  "time",
-                                  e.target.value
-                                )
-                              }
-                            >
-                              <option value=''>Select time</option>
-                              {Array.from({ length: 18 }, (_, i) => {
-                                const hour = i + 6;
-                                const ampm = hour >= 12 ? "PM" : "AM";
-                                const displayHour =
-                                  hour % 12 === 0 ? 12 : hour % 12;
-                                const timeString = `${displayHour}:00 ${ampm}`;
-                                const valueString = `${hour
-                                  .toString()
-                                  .padStart(2, "0")}:00`;
-                                return (
-                                  <option key={valueString} value={valueString}>
-                                    {timeString}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          )}
-                          {index === 0 &&
-                            editingTripId &&
-                            scheduledTrips.find((t) => t.id === editingTripId)
-                              ?.bookings > 0 && (
-                              <p className='text-sm text-red-600 mt-1'>
-                                Existing departure time cannot be changed due to
-                                bookings.
-                              </p>
-                            )}
+                          <select
+                            className='w-full p-2 border border-gray-300 rounded-md'
+                            value={dt.time}
+                            onChange={(e) =>
+                              updateDepartureTime(index, "time", e.target.value)
+                            }
+                          >
+                            <option value=''>Select time</option>
+                            {Array.from({ length: 18 }, (_, i) => {
+                              const hour = i + 6;
+                              const ampm = hour >= 12 ? "PM" : "AM";
+                              const displayHour =
+                                hour % 12 === 0 ? 12 : hour % 12;
+                              const timeString = `${displayHour}:00 ${ampm}`;
+                              const valueString = `${hour.toString().padStart(2, "0")}:00`;
+                              return (
+                                <option key={valueString} value={valueString}>
+                                  {timeString}
+                                </option>
+                              );
+                            })}
+                          </select>
                         </div>
                         <div className='col-span-6'>
                           <select
@@ -465,7 +268,6 @@ const ParkAdminDashboard = () => {
                             type='button'
                             className='w-full p-2 text-red-600 hover:text-red-800'
                             onClick={() => removeDepartureTime(index)}
-                            disabled={index === 0}
                           >
                             Remove
                           </button>
@@ -476,6 +278,7 @@ const ParkAdminDashboard = () => {
                 )}
               </div>
 
+              {/* Submit Button */}
               <div className='pt-4'>
                 <button
                   type='button'
@@ -483,31 +286,18 @@ const ParkAdminDashboard = () => {
                   onClick={submitTrips}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting
-                    ? editingTripId
-                      ? "Updating..."
-                      : "Scheduling..."
-                    : editingTripId
-                      ? "Update Trip"
-                      : "Schedule Trips"}
+                  {isSubmitting ? "Scheduling..." : "Schedule Trips"}
                 </button>
-                {editingTripId && (
-                  <button
-                    type='button'
-                    className='w-full mt-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out'
-                    onClick={resetForm}
-                  >
-                    Cancel Edit
-                  </button>
-                )}
               </div>
             </div>
           </div>
 
+          {/* Preview Panel - Visible on desktop */}
           <div className='hidden lg:block bg-white rounded-lg shadow-md p-6'>
             <h2 className='text-xl font-semibold text-gray-700 mb-4'>
               Preview
             </h2>
+
             {!selectedRoute && !date && departureTimes.length === 0 ? (
               <div className='text-sm text-gray-500 italic'>
                 Complete the form to see a preview of scheduled trips
@@ -524,12 +314,14 @@ const ParkAdminDashboard = () => {
                     </p>
                   </div>
                 )}
+
                 {date && (
                   <div>
                     <p className='text-sm font-medium text-gray-700'>Date:</p>
                     <p className='text-sm text-gray-600'>{formatDate(date)}</p>
                   </div>
                 )}
+
                 {price && (
                   <div>
                     <p className='text-sm font-medium text-gray-700'>Price:</p>
@@ -538,6 +330,7 @@ const ParkAdminDashboard = () => {
                     </p>
                   </div>
                 )}
+
                 {departureTimes.length > 0 && (
                   <div>
                     <p className='text-sm font-medium text-gray-700 mb-1'>
@@ -570,10 +363,12 @@ const ParkAdminDashboard = () => {
           </div>
         </div>
 
+        {/* Scheduled Trips List */}
         <div className='mt-8 bg-white rounded-lg shadow-md p-6'>
           <h2 className='text-xl font-semibold text-gray-700 mb-4'>
             Scheduled Trips
           </h2>
+
           {scheduledTrips.length === 0 ? (
             <div className='text-sm text-gray-500 italic'>
               No trips scheduled yet
@@ -599,10 +394,7 @@ const ParkAdminDashboard = () => {
                       Price
                     </th>
                     <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Bookings
-                    </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Actions
+                      Status
                     </th>
                   </tr>
                 </thead>
@@ -624,22 +416,10 @@ const ParkAdminDashboard = () => {
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                         ₦{trip.price.toLocaleString()}
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {trip.bookings}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        <button
-                          onClick={() => editTrip(trip)}
-                          className='text-blue-600 hover:text-blue-800 mr-3'
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => deleteTrip(trip.id)}
-                          className='text-red-600 hover:text-red-800'
-                        >
-                          Delete
-                        </button>
+                      <td className='px-6 py-4 whitespace-nowrap'>
+                        <span className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800'>
+                          {trip.status}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -650,6 +430,7 @@ const ParkAdminDashboard = () => {
         </div>
       </div>
 
+      {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirmModal && (
           <motion.div
@@ -667,7 +448,7 @@ const ParkAdminDashboard = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className='text-lg font-medium text-gray-900 mb-4'>
-                Confirm {editingTripId ? "Update" : "Schedule"} Trip
+                Confirm Schedule Trips
               </h3>
               <div className='text-sm text-gray-700 mb-4'>
                 <p>
@@ -707,13 +488,7 @@ const ParkAdminDashboard = () => {
                   onClick={confirmScheduleTrips}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting
-                    ? editingTripId
-                      ? "Updating..."
-                      : "Scheduling..."
-                    : editingTripId
-                      ? "Update"
-                      : "Confirm"}
+                  {isSubmitting ? "Scheduling..." : "Confirm"}
                 </button>
               </div>
             </motion.div>

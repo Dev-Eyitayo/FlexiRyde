@@ -19,7 +19,7 @@ export default function App() {
     <>
       <ToastContainer
         position='top-right' // Position of the toast
-        autoClose={5000} // Auto-close after 5 seconds
+        autoClose={2000} // Auto-close after 5 seconds
         hideProgressBar={false} // Show progress bar
         newestOnTop={true} // New toasts appear on top
         closeOnClick // Allow closing by clicking
