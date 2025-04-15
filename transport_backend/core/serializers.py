@@ -217,7 +217,7 @@ class TripTicketSerializer(serializers.ModelSerializer):
         model = Trip
         fields = ["departure_datetime", "seat_price", "route", "bus"]
 
-def get_route(self, obj):
+    def get_route(self, obj):
         origin_park = obj.route.origin_park
         destination_park = obj.route.destination_park
 
