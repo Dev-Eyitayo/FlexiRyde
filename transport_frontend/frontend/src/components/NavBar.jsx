@@ -180,7 +180,7 @@ export default function NavBar() {
                 >
                   Change Travel Date
                 </button>
-                <hr className='border-gray-100' />
+                {/* <hr className='border-gray-100' />
                 <button
                   onClick={() => {
                     navigate("/check-ticket");
@@ -189,7 +189,7 @@ export default function NavBar() {
                   className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                 >
                   Show My Ticket
-                </button>
+                </button> */}
                 <hr className='border-gray-100' />
                 <button
                   onClick={() => navigate("/travel-history")}
@@ -256,7 +256,7 @@ export default function NavBar() {
                 >
                   Change Travel Date
                 </button>
-                <hr className='border-gray-100' />
+                {/* <hr className='border-gray-100' />
                 <button
                   onClick={() => {
                     navigate("/check-ticket");
@@ -265,7 +265,7 @@ export default function NavBar() {
                   className='block w-full text-left px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150'
                 >
                   Show My Ticket
-                </button>
+                </button> */}
                 <hr className='border-gray-100' />
                 <button
                   onClick={() => navigate("/travel-history")}

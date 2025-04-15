@@ -76,7 +76,7 @@ export default function TravelHistory() {
   };
 
   const confirmCancel = async () => {
-    console.log("Cancel Trip Object:", JSON.stringify(cancelTrip, null, 2)); 
+    console.log("Cancel Trip Object:", JSON.stringify(cancelTrip, null, 2));
     try {
       const response = await authFetch(`/bookings/${cancelTrip.id}/`, {
         method: "PATCH",
@@ -104,7 +104,7 @@ export default function TravelHistory() {
   // UI
   // --------------------
   return (
-    <div className='min-h-screen bg-gradient-to-br from-white via-blue-50 to-purple-50 px-4 py-10'>
+    <div className='min-h-screen bg-gray-200/30 px-4 py-10'>
       <div className='max-w-5xl mx-auto'>
         {/* Title */}
         <h1 className='text-2xl md:text-3xl font-bold mb-6'>Travel History</h1>
