@@ -13,6 +13,7 @@ import Ticket from "./Pages/Ticket";
 import TravelHistory from "./Pages/TravelHistory";
 import TripDashboard from "./components/admin/TripDashboard";
 import AboutUs from "./Pages/AboutUs";
+import ParkAdminDashboard from "./Pages/ParkAdminDashboard";
 export default function App() {
   return (
     <>
@@ -41,7 +42,7 @@ export default function App() {
         <Route path='/check-ticket' element={<Ticket />} />
         <Route path='/contact-support' element={<ContactSupport />} />
         <Route path='/travel-history' element={<TravelHistory />} />
-        <Route path='/trip-dashboard' element={<TripDashboard />} />
+        <Route path='/trip-dashboard' element={<ParkAdminDashboard />} />
       </Routes>
       <Footer />
     </>
