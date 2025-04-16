@@ -1,7 +1,10 @@
 import { useLocation } from "react-router-dom";
+import { useState } from "react";
+
 
 const Ticket = () => {
   const location = useLocation();
+  const [copied, setCopied] = useState(false);
   const booking = location.state?.booking;
 
   if (!booking) {
@@ -43,6 +46,13 @@ const Ticket = () => {
     ? [origin_park.name, ...intermediate_stops, destination_park.name]
     : [origin_park.name, destination_park.name];
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(ticketRef).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 sec
+    });
+  };
+    
   // Format datetime
   const departureDateObj = new Date(departure_datetime);
   const formattedDepartureTime = departureDateObj.toLocaleString("en-NG", {
@@ -73,11 +83,17 @@ const Ticket = () => {
             </div>
             <div>
               <p className='text-xs text-gray-500'>TICKET NO</p>
-              <p className='font-bold'>{ticketRef}</p>
+              <div className='flex items-center space-x-2'>
+                <p className='font-bold'>{ticketRef}</p>
+                <button
+                  onClick={handleCopy}
+                  className='text-sm text-blue-600 hover:underline focus:outline-none'
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
             </div>
-          </div>
-
-          <div className='border-t-2 border-b-2 border-dashed border-gray-300 py-3 my-3'>
+          </div>          <div className='border-t-2 border-b-2 border-dashed border-gray-300 py-3 my-3'>
             <p className='text-xs text-gray-500 mb-1'>ROUTE</p>
             <p className='font-semibold text-gray-800'>
               {routePath.join(" → ")}
