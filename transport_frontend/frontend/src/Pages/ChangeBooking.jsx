@@ -102,9 +102,13 @@ export default function ChangeBooking() {
         method: "PATCH",
         body: JSON.stringify({ trip_id: selectedTripId }),
       });
-
+      
       const data = await response.json();
+      
+      const ref = data.ref_number || data.payment_reference;
 
+      const fetchFullBooking = await authFetch(`/bookings/ref/${ref}/`);
+      const fullBooking = await fetchFullBooking.json();
       console.log("Redirecting with booking:", JSON.stringify(data, null, 2));
       if (response.ok) {
         toast.success("Booking updated successfully!", {
@@ -118,7 +122,16 @@ export default function ChangeBooking() {
           theme: "colored",              // colored | light | dark
         });
         setTimeout(() => {
-          navigate("/check-ticket", { state: { booking: data } });
+          if (ref) {
+            if (fetchFullBooking.ok) {
+              sessionStorage.setItem("recentBooking", JSON.stringify(fullBooking));
+              navigate("/check-ticket", { state: { booking: fullBooking } });
+            } else {
+              toast.error("Booking updated but failed to load ticket.");
+            }
+          } else {
+            toast.error("Booking updated but no reference found.");
+          }
         }, 1000);        
       } else {
         toast.error(data.message || "Failed to update booking.");
@@ -180,7 +193,7 @@ export default function ChangeBooking() {
           {/* Booking Info */}
           <div className='bg-white shadow-md rounded-lg p-6 mb-8'>
             <h3 className='text-lg font-bold text-gray-800 mb-4'>
-              Current Booking Detailss
+              Current Booking Details
             </h3>
             <div className='grid grid-cols-2 gap-4 text-sm text-gray-700'>
               <div>
