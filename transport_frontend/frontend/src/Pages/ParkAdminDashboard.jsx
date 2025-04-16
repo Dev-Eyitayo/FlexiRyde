@@ -117,7 +117,7 @@ const ParkAdminDashboard = () => {
   const deleteTrip = (tripId) => {
     const trip = scheduledTrips.find((t) => t.id === tripId);
     if (trip.bookings > 0) {
-      toast.error("Cannot delete a trip with bookings.", { autoClose: 3000 });
+      toast.error("Cannot delete a trip with bookings.", { autoClose: 2000 });
       return;
     }
     if (window.confirm("Are you sure you want to delete this trip?")) {

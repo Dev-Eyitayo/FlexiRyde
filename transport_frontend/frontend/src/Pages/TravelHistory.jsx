@@ -162,7 +162,7 @@ export default function TravelHistory() {
 
                   {/* Route + Reference */}
                   <div className='sm:flex sm:justify-between sm:items-start'>
-                    <div className='mb-4 mt-4 sm:mb-0'>
+                    <div className='mb-4 md:mt-0 mt-4 sm:mb-0'>
                       <h2 className='md:text-lg sm:mt-3 text-base font-bold text-gray-800 mb-1'>
                         {trip.from}{" "}
                         {/* {trip.fromCity && (

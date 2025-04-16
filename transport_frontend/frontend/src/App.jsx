@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Footer from "./components/Footer";
 // import AuthModal from "./components/AuthModal"; // Import the modal component
 import AuthPage from "./components/AuthPage";
-import ChangeBooking from "./sections/ChangeBooking";
+import ChangeBooking from "./Pages/ChangeBooking";
 import Home from "./Pages/Home";
 import NavBar from "./components/NavBar";
 import SeatAvailability from "./Pages/SeatAvailability";
