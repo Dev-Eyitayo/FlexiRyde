@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import authFetch from "../utils/authFetch";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 export default function ChangeBooking() {
@@ -12,6 +13,8 @@ export default function ChangeBooking() {
   const [availableTrips, setAvailableTrips] = useState([]);
   const [selectedTripId, setSelectedTripId] = useState("");
   const [price, setPrice] = useState(0);
+  const navigate = useNavigate();
+
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -114,8 +117,9 @@ export default function ChangeBooking() {
           theme: "colored",              // colored | light | dark
         });
         setTimeout(() => {
-          window.location.href = "/check-ticket"; // or use navigate()
-        }, 2000);
+          console.log("Redirecting with booking:", JSON.stringify(data, null, 2));
+          navigate("/check-ticket", { state: { booking: data } });
+        }, 1000);        
       } else {
         toast.error(data.message || "Failed to update booking.");
       }
