@@ -184,7 +184,7 @@ export default function ChangeBooking() {
           <div className='bg-blue-50 border-l-4 border-blue-400 p-4 rounded mb-6'>
             <p className='text-sm text-blue-800 font-medium'>
               <strong>Important Note:</strong> <br />
-              To change the nummmber of seats or travel destination, please cancel
+              To change the number of seats or travel destination, please cancel
               this booking and request a refund on the Travel History page, then
               create a new booking.
             </p>
