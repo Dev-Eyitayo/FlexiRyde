@@ -5,7 +5,10 @@ import { FiCopy, FiCheck } from "react-icons/fi"; // Icon imports
 const Ticket = () => {
   const location = useLocation();
   const [copied, setCopied] = useState(false);
-  const booking = location.state?.booking;
+  const booking =
+  location.state?.booking ||
+  JSON.parse(sessionStorage.getItem("recentBooking")) || null;
+
 
   if (!booking) {
     return <div className='text-center mt-10 mb-95'>No ticket data found.</div>;

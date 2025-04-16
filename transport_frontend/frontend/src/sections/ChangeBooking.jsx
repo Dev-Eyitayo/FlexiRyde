@@ -105,6 +105,7 @@ export default function ChangeBooking() {
 
       const data = await response.json();
 
+      console.log("Redirecting with booking:", JSON.stringify(data, null, 2));
       if (response.ok) {
         toast.success("Booking updated successfully!", {
           position: "top-right",         // top-right, top-center, top-left, bottom-right, etc.
@@ -117,7 +118,6 @@ export default function ChangeBooking() {
           theme: "colored",              // colored | light | dark
         });
         setTimeout(() => {
-          console.log("Redirecting with booking:", JSON.stringify(data, null, 2));
           navigate("/check-ticket", { state: { booking: data } });
         }, 1000);        
       } else {
@@ -148,7 +148,7 @@ export default function ChangeBooking() {
               className='w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 mb-3'
             />
             <p className='text-xs text-gray-500 mb-4'>
-              Find your booking reference in the travel history page
+              Find your booking reference inn the travel history page
             </p>
             <button
               type='submit'
