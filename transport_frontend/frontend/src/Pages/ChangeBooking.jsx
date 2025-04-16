@@ -15,7 +15,6 @@ export default function ChangeBooking() {
   const [price, setPrice] = useState(0);
   const navigate = useNavigate();
 
-
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -27,7 +26,9 @@ export default function ChangeBooking() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.detail || "Booking not found.");
+        const errorMessage = data.detail || "Booking not found.";
+        setError(errorMessage);
+        toast.error(errorMessage, { autoClose: 2000 });
         return;
       }
 
@@ -36,16 +37,22 @@ export default function ChangeBooking() {
       const depDate = new Date(data.trip.departure_datetime);
 
       if (status === "cancelled") {
-        setError("This booking was canceled and cannot be modified.");
+        const errorMessage =
+          "This booking was canceled and cannot be modified.";
+        setError(errorMessage);
+        toast.error(errorMessage, { autoClose: 2000 });
       } else if (depDate < now) {
-        setError(
-          "This booking has already expired. Please create a new booking."
-        );
+        const errorMessage =
+          "This booking has already expired. Please create a new booking.";
+        setError(errorMessage);
+        toast.error(errorMessage, { autoClose: 2000 });
       } else {
         setBooking(data);
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      const errorMessage = "An error occurred. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage, { autoClose: 2000 });
     } finally {
       setLoading(false);
     }
@@ -84,7 +91,9 @@ export default function ChangeBooking() {
         setAvailableTrips(validTrips);
         setSelectedTripId("");
       } catch (err) {
-        toast.error("Failed to load available departure times.");
+        toast.error("Failed to load available departure times.", {
+          autoClose: 2000,
+        });
       }
     };
 
@@ -93,7 +102,7 @@ export default function ChangeBooking() {
 
   const handleSubmit = async () => {
     if (!selectedTripId) {
-      toast.warning("Please select a new travel time.");
+      toast.warning("Please select a new travel time.", { autoClose: 2000 });
       return;
     }
 
@@ -102,9 +111,9 @@ export default function ChangeBooking() {
         method: "PATCH",
         body: JSON.stringify({ trip_id: selectedTripId }),
       });
-      
+
       const data = await response.json();
-      
+
       const ref = data.ref_number || data.payment_reference;
 
       const fetchFullBooking = await authFetch(`/bookings/ref/${ref}/`);
@@ -112,32 +121,41 @@ export default function ChangeBooking() {
       console.log("Redirecting with booking:", JSON.stringify(data, null, 2));
       if (response.ok) {
         toast.success("Booking updated successfully!", {
-          position: "top-right",         // top-right, top-center, top-left, bottom-right, etc.
-          autoClose: 2000,               // delay in milliseconds (0 = stays until manually closed)
-          hideProgressBar: false,        // show/hide progress bar
-          closeOnClick: true,            // allow toast to be closed on click
-          pauseOnHover: true,            // pause timer on hover
-          draggable: true,               // allow dragging the toast
-          progress: undefined,           // you can control progress manually if needed
-          theme: "colored",              // colored | light | dark
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
         });
         setTimeout(() => {
           if (ref) {
             if (fetchFullBooking.ok) {
-              sessionStorage.setItem("recentBooking", JSON.stringify(fullBooking));
+              sessionStorage.setItem(
+                "recentBooking",
+                JSON.stringify(fullBooking)
+              );
               navigate("/check-ticket", { state: { booking: fullBooking } });
             } else {
-              toast.error("Booking updated but failed to load ticket.");
+              toast.error("Booking updated but failed to load ticket.", {
+                autoClose: 2000,
+              });
             }
           } else {
-            toast.error("Booking updated but no reference found.");
+            toast.error("Booking updated but no reference found.", {
+              autoClose: 2000,
+            });
           }
-        }, 1000);        
+        }, 1000);
       } else {
-        toast.error(data.message || "Failed to update booking.");
+        toast.error(data.message || "Failed to update booking.", {
+          autoClose: 2000,
+        });
       }
     } catch (err) {
-      toast.error("Something went wrong.");
+      toast.error("Something went wrong.", { autoClose: 2000 });
     }
   };
 
@@ -161,7 +179,7 @@ export default function ChangeBooking() {
               className='w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 mb-3'
             />
             <p className='text-xs text-gray-500 mb-4'>
-              Find your booking reference innn the travel history page
+              Find your booking reference in the travel history page
             </p>
             <button
               type='submit'
@@ -184,7 +202,7 @@ export default function ChangeBooking() {
           <div className='bg-blue-50 border-l-4 border-blue-400 p-4 rounded mb-6'>
             <p className='text-sm text-blue-800 font-medium'>
               <strong>Important Note:</strong> <br />
-              To change the nummmber of seats or travel destination, please cancel
+              To change the number of seats or travel destination, please cancel
               this booking and request a refund on the Travel History page, then
               create a new booking.
             </p>
@@ -250,15 +268,18 @@ export default function ChangeBooking() {
                   onChange={(e) => {
                     const id = e.target.value;
                     setSelectedTripId(id);
-                    const trip = availableTrips.find((t) => t.id === parseInt(id));
+                    const trip = availableTrips.find(
+                      (t) => t.id === parseInt(id)
+                    );
                     setPrice(trip?.seat_price || 0);
                   }}
-                  className="w-full px-4 py-3 border rounded-lg shadow-sm"
+                  className='w-full px-4 py-3 border rounded-lg shadow-sm'
                 >
-                  <option value="">Select a time</option>
+                  <option value=''>Select a time</option>
                   {availableTrips.map((trip) => (
                     <option key={trip.id} value={trip.id}>
-                      {formatTime(trip.departure_datetime)} — ₦{trip.seat_price.toLocaleString()}
+                      {formatTime(trip.departure_datetime)} — ₦
+                      {trip.seat_price.toLocaleString()}
                     </option>
                   ))}
                 </select>
