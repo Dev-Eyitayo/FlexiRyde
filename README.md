@@ -1,6 +1,6 @@
 # 🚐 FlexiRyde
 
-**FlexiRyde** is a modern web-based ride booking platform tailored for seamless **interstate and intracity travel** across Nigeria. Our goal is to bridge the gap between travelers and transport providers by offering a centralized, intuitive, and transparent system for booking bus rides.
+**FlexiRyde** is a modern web-based ride booking platform tailored for seamless **interstate and intercity travel** across Nigeria. Our goal is to bridge the gap between travelers and transport providers by offering a centralized, intuitive, and transparent system for booking bus rides.
 
 ---
 
