@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import authFetch from "../utils/authFetch";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -14,6 +14,9 @@ export default function ChangeBooking() {
   const [selectedTripId, setSelectedTripId] = useState("");
   const [price, setPrice] = useState(0);
   const navigate = useNavigate();
+
+  // Add ref for date input
+  const dateInputRef = useRef(null);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -255,6 +258,16 @@ export default function ChangeBooking() {
                   className='w-full px-4 py-3 border rounded-lg shadow-sm'
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
+                  ref={dateInputRef}
+                  onClick={() => {
+                    if (dateInputRef.current) {
+                      if (dateInputRef.current.showPicker) {
+                        dateInputRef.current.showPicker();
+                      } else {
+                        dateInputRef.current.focus();
+                      }
+                    }
+                  }}
                 />
               </div>
 
