@@ -18,6 +18,9 @@ export default function ChangeBooking() {
   // Add ref for date input
   const dateInputRef = useRef(null);
 
+  // Compute today's date in YYYY-MM-DD format for min attribute
+  const today = new Date().toISOString().split("T")[0];
+
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -259,6 +262,7 @@ export default function ChangeBooking() {
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
                   ref={dateInputRef}
+                  min={today}
                   onClick={() => {
                     if (dateInputRef.current) {
                       if (dateInputRef.current.showPicker) {
