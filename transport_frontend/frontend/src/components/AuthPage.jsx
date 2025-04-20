@@ -24,6 +24,47 @@ export default function AuthPage({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const { login: loginToContext } = useAuth();
 
+  // Function to map backend errors to user-friendly messages
+  const getFriendlyErrorMessage = (error) => {
+    const errorMessage =
+      error.response?.data?.error || error.message || "Unknown error";
+    console.error("Technical error:", errorMessage, error); // Log technical details
+
+    // Map common backend errors to friendly messages
+    if (
+      errorMessage.includes("UNIQUE constraint failed: accounts_user.email")
+    ) {
+      return "This email is already registered. Please use a different email.";
+    }
+    if (errorMessage.includes("UNIQUE constraint failed: accounts_user.nin")) {
+      return "This NIN is already in use. Please contact support.";
+    }
+    if (errorMessage.includes("A user with that email already exists")) {
+      return "This email is already registered. Please log in or use a different email.";
+    }
+    if (errorMessage.includes("First name is required")) {
+      return "Please enter your first name.";
+    }
+    if (errorMessage.includes("Email is required")) {
+      return "Please enter your email address.";
+    }
+    if (errorMessage.includes("Password is required")) {
+      return "Please enter a password.";
+    }
+    if (errorMessage.includes("Invalid email")) {
+      return "Please enter a valid email address.";
+    }
+    if (errorMessage.includes("Cannot login with provided credentials")) {
+      return "Incorrect email or password. Please try again.";
+    }
+    if (errorMessage.includes("No active account found")) {
+      return "No account found with this email. Please sign up.";
+    }
+
+    // Fallback for unknown errors
+    return "Something went wrong. Please try again or contact support.";
+  };
+
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
     setLoginForm({ ...loginForm, [name]: value });
@@ -34,10 +75,10 @@ export default function AuthPage({ isOpen, onClose }) {
     setSignupForm({ ...signupForm, [name]: value });
   };
 
-  const handleCheckBoxChange = (e) => {
-    const { name, checked } = e.target;
-    setLoginForm({ ...loginForm, [name]: checked });
-  };
+  // const handleCheckBoxChange = (e) => {
+  //   const { name, checked } = e.target;
+  //   setLoginForm({ ...loginForm, [name]: checked });
+  // };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -45,19 +86,20 @@ export default function AuthPage({ isOpen, onClose }) {
     setLoading(true);
 
     try {
-      // Trim email and password before sending
-      const trimmedLoginForm = {
-        ...loginForm,
-        email: loginForm.email.trim(),
-        password: loginForm.password.trim(),
-      };
-      const data = await login(trimmedLoginForm);
+      if (!loginForm.email.trim()) {
+        throw new Error("Email is required");
+      }
+      if (!loginForm.password.trim()) {
+        throw new Error("Password is required");
+      }
+      const data = await login(loginForm);
       loginToContext(data, true);
       toast.success("Login successful! 🎉", { autoClose: 1000 });
       onClose();
     } catch (err) {
-      setError(err.message);
-      toast.error("Login failed! " + err.message, { autoClose: 1000 });
+      const friendlyMessage = getFriendlyErrorMessage(err);
+      setError(friendlyMessage);
+      toast.error("Login failed! " + friendlyMessage, { autoClose: 1000 });
     } finally {
       setLoading(false);
     }
@@ -71,25 +113,27 @@ export default function AuthPage({ isOpen, onClose }) {
       if (!signupForm.first_name.trim()) {
         throw new Error("First name is required");
       }
+      if (!signupForm.email.trim()) {
+        throw new Error("Email is required");
+      }
+      if (!signupForm.password.trim()) {
+        throw new Error("Password is required");
+      }
       const signupData = {
-        ...signupForm,
         first_name: signupForm.first_name.trim(),
         last_name: signupForm.last_name.trim(),
         email: signupForm.email.trim(),
-        password: signupForm.password.trim(),
-        username: signupForm.first_name.trim(),
+        password: signupForm.password,
       };
+      console.log("Signup payload:", signupData); // Debug payload
       const data = await signup(signupData);
       loginToContext(data, true);
       onClose();
       toast.success("Signup successful! 🎉", { autoClose: 1500 });
     } catch (err) {
-      setError(err.message || "Signup failed. Username may already be taken.");
-      toast.error(
-        "Signup failed! ❌ " +
-          (err.message || "Username may already be taken."),
-        { autoClose: 1500 }
-      );
+      const friendlyMessage = getFriendlyErrorMessage(err);
+      setError(friendlyMessage);
+      toast.error("Signup failed! " + friendlyMessage, { autoClose: 1500 });
     } finally {
       setLoading(false);
     }
@@ -117,11 +161,11 @@ export default function AuthPage({ isOpen, onClose }) {
             </button>
           </div>
 
-          <div className='flex space-x-8 mb-6 border-b border-gray-200'>
+          <div className='flex space-x-8 mb-6 '>
             <button
-              className={`pb-3 text-xl font-semibold ${
+              className={`pb-2 text-xl font-semibold ${
                 activeTab === "login"
-                  ? "text-blue-600 border-b-4 border-blue-600"
+                  ? "text-blue-600 border-b-3 border-blue-600"
                   : "text-gray-500"
               }`}
               onClick={() => {
@@ -139,9 +183,9 @@ export default function AuthPage({ isOpen, onClose }) {
               Login
             </button>
             <button
-              className={`pb-3 text-xl font-semibold ${
+              className={`pb-2 text-xl font-semibold ${
                 activeTab === "signup"
-                  ? "text-blue-600 border-b-4 border-blue-600"
+                  ? "text-blue-600 border-b-3 border-blue-600"
                   : "text-gray-500"
               }`}
               onClick={() => {
@@ -178,7 +222,7 @@ export default function AuthPage({ isOpen, onClose }) {
                     value={loginForm.email}
                     onChange={handleLoginChange}
                     placeholder='johndoe@gmail.com'
-                    className='w-full border px-4 py-3 mt-2 mb-4 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
+                    className='w-full border px-4 py-2 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
                   />
                   <label className='text-base font-semibold text-gray-700 mt-8'>
                     Password
@@ -190,12 +234,12 @@ export default function AuthPage({ isOpen, onClose }) {
                       value={loginForm.password}
                       onChange={handleLoginChange}
                       placeholder='Enter your Password'
-                      className='w-full border px-4 py-3 mt-2 mb-4 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
+                      className='w-full border px-4 py-2 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 pr-12'
                     />
                     <button
                       type='button'
                       onClick={() => setPasswordVisible(!passwordVisible)}
-                      className='absolute right-4 -mt-1 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700'
+                      className='absolute right-0 top-0 -mt-1 h-full flex items-center justify-center px-4 text-gray-500 hover:text-gray-700'
                       aria-label={
                         passwordVisible ? "Hide password" : "Show password"
                       }
@@ -203,8 +247,8 @@ export default function AuthPage({ isOpen, onClose }) {
                       {passwordVisible ? <FaEyeSlash /> : <FaEye />}
                     </button>
                   </div>
-                  <div className='flex justify-between items-center mb-4'>
-                    <label className='flex items-center text-sm text-gray-600'>
+                  <div className='flex justify-between items-center mb-3'>
+                    {/* <label className='flex items-center text-sm text-gray-600'>
                       <input
                         type='checkbox'
                         name='remember'
@@ -213,7 +257,7 @@ export default function AuthPage({ isOpen, onClose }) {
                         className='mr-2'
                       />
                       Remember me
-                    </label>
+                    </label> */}
                     <span className='text-blue-500 text-sm cursor-pointer hover:underline'>
                       Forgot Password?{" "}
                       <span className='font-semibold'>Reset</span>
@@ -225,7 +269,7 @@ export default function AuthPage({ isOpen, onClose }) {
 
                   <button
                     type='submit'
-                    className='mt-4 w-full font-bold bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center'
+                    className='mt-3 w-full font-bold bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center'
                   >
                     {loading ? (
                       <FaSpinner className='animate-spin mr-2' />
@@ -244,7 +288,7 @@ export default function AuthPage({ isOpen, onClose }) {
                   </p>
                 </form>
 
-                <div className='mt-6'>
+                <div className='mt-4'>
                   <div className='flex items-center justify-between'>
                     <hr className='flex-grow border-gray-300' />
                     <p className='w-auto text-center text-gray-500 text-sm mx-4'>
@@ -253,7 +297,7 @@ export default function AuthPage({ isOpen, onClose }) {
                     <hr className='flex-grow border-gray-300' />
                   </div>
 
-                  <button className='mt-6 w-full flex items-center justify-center border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition'>
+                  <button className='mt-4 w-full flex items-center justify-center border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition'>
                     <img
                       src={googleIcon}
                       alt='Google icon'
@@ -280,7 +324,7 @@ export default function AuthPage({ isOpen, onClose }) {
                       value={signupForm.first_name}
                       onChange={handleSignupChange}
                       placeholder='Enter your first name'
-                      className='w-full border px-4 py-3 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
+                      className='w-full border px-4 py-2 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
                     />
                     <label className='text-base font-semibold text-gray-700'>
                       Last Name
@@ -304,7 +348,7 @@ export default function AuthPage({ isOpen, onClose }) {
                     value={signupForm.email}
                     onChange={handleSignupChange}
                     placeholder='Enter your Email address'
-                    className='w-full border px-4 py-3 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
+                    className='w-full border px-4 py-2 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
                   />
 
                   <label className='text-base font-semibold text-gray-700'>
@@ -317,12 +361,12 @@ export default function AuthPage({ isOpen, onClose }) {
                       value={signupForm.password}
                       onChange={handleSignupChange}
                       placeholder='Enter your password'
-                      className='w-full border px-4 py-3 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300'
+                      className='w-full border px-4 py-2 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 pr-12'
                     />
                     <button
                       type='button'
                       onClick={() => setPasswordVisible(!passwordVisible)}
-                      className='absolute right-4 -mt-1 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700'
+                      className='absolute right-0 -mt-1 top-0 h-full flex items-center justify-center px-4 text-gray-500 hover:text-gray-700'
                       aria-label={
                         passwordVisible ? "Hide password" : "Show password"
                       }
@@ -337,7 +381,7 @@ export default function AuthPage({ isOpen, onClose }) {
 
                   <button
                     type='submit'
-                    className='mt-4 w-full font-bold bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center'
+                    className='mt-4 w-full font-bold bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center'
                   >
                     {loading ? (
                       <FaSpinner className='animate-spin mr-2' />
@@ -347,7 +391,7 @@ export default function AuthPage({ isOpen, onClose }) {
                   </button>
                 </form>
 
-                <div className='mt-6'>
+                <div className='mt-4'>
                   <div className='flex items-center justify-between'>
                     <hr className='flex-grow border-gray-300' />
                     <p className='w-auto text-center text-gray-500 text-sm mx-4'>
@@ -356,7 +400,7 @@ export default function AuthPage({ isOpen, onClose }) {
                     <hr className='flex-grow border-gray-300' />
                   </div>
 
-                  <button className='mt-6 w-full md:text-base text-sm flex items-center justify-center border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition'>
+                  <button className='mt-4 w-full md:text-base text-sm flex items-center justify-center border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition'>
                     <img
                       src={googleIcon}
                       alt='Google icon'
@@ -377,7 +421,7 @@ export default function AuthPage({ isOpen, onClose }) {
             Welcome to your{" "}
             <span className='text-blue-300'>one-stop travel mate</span>
           </h2>
-          <p className='mt-4 text-xl self-start max-w-xs'>
+          <p className='mt-3 text-xl self-start max-w-xs'>
             Book your ride with ease and enjoy seamless travel experiences.
           </p>
         </div>
