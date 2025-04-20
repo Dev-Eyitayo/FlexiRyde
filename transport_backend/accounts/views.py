@@ -23,7 +23,7 @@ def signup(request):
     data = request.data
     try:
         user = User.objects.create_user(
-            username=data['username'],
+            # username=data['username'],
             email=data['email'],
             password=data['password'],
             first_name=data.get('first_name', ''),
@@ -37,7 +37,7 @@ def signup(request):
             'access': str(refresh.access_token),
             'user': {
                 'email': user.email,
-                'username': user.username,
+                # 'username': user.username,
                 'role': user.role,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
@@ -51,7 +51,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         data['user'] = {
             'email': self.user.email,
-            'username': self.user.username,
+            # 'username': self.user.username,
             'role': self.user.role,
             'first_name': self.user.first_name,
             'last_name': self.user.last_name,
