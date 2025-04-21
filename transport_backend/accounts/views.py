@@ -72,59 +72,6 @@ class UserProfileView(APIView):
     
     
 
-# import requests
-# from .serializers import UserSerializer
-# from .views import generate_temp_nin
-
-
-# @api_view(['POST'])
-# def google_auth(request):
-#     try:
-#         id_token_str = request.data.get('access_token')
-#         if not id_token_str:
-#             return Response({'error': 'ID token is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-#         print("Received ID token:", id_token_str)  # Debug
-
-#         client_id = '711592095519-6l061c4j4e5b5rqlpm1isk4l2qsd80f0.apps.googleusercontent.com'
-#         user_info = id_token.verify_oauth2_token(
-#             id_token_str,
-#             google_requests.Request(),
-#             client_id
-#         )
-
-#         print("Google user info:", user_info)  # Debug
-
-#         email = user_info.get('email')
-#         if not email:
-#             return Response({'error': 'Email not provided by Google'}, status=status.HTTP_400_BAD_REQUEST)
-
-#         user, created = User.objects.get_or_create(
-#             email=email,
-#             defaults={
-#                 'first_name': user_info.get('given_name', ''),
-#                 'last_name': user_info.get('family_name', ''),
-#                 'nin': generate_temp_nin(),
-#                 'role': 'passenger',
-#             }
-#         )
-
-#         refresh = RefreshToken.for_user(user)
-#         serializer = UserSerializer(user)
-
-#         return Response({
-#             'refresh': str(refresh),
-#             'access': str(refresh.access_token),
-#             'user': serializer.data,
-#         }, status=status.HTTP_200_OK)
-#     except ValueError as e:
-#         print("Token verification error:", str(e))  # Debug
-#         return Response({'error': 'Invalid Google token'}, status=status.HTTP_400_BAD_REQUEST)
-#     except Exception as e:
-#         print("General error:", str(e))  # Debug
-#         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
 @api_view(['POST'])
 def google_auth(request):
     try:

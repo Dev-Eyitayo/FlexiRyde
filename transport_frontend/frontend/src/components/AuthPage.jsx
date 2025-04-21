@@ -60,7 +60,7 @@ export default function AuthPage({ isOpen, onClose }) {
       return "Incorrect email or password. Please try again.";
     }
     if (errorMessage.includes("No active account found")) {
-      return "No account found with this email. Please sign up.";
+      return "Invalid Login credentials";
     }
     if (errorMessage.includes("Invalid Google token")) {
       return "Google authentication failed. Please try again.";
@@ -70,7 +70,7 @@ export default function AuthPage({ isOpen, onClose }) {
     }
 
     // Fallback for unknown errors
-    return "Something went wrong. Please try again or contact support.";
+    return "Something went wrong. Please try again.";
   };
 
   const handleLoginChange = (e) => {
@@ -132,7 +132,7 @@ export default function AuthPage({ isOpen, onClose }) {
       const data = await signup(signupData);
       loginToContext(data, true);
       onClose();
-      toast.success("Signup successful! 🎉", { autoClose: 1500 });
+      toast.success("Signup successful! 🎉", { autoClose: 1000 });
     } catch (err) {
       const friendlyMessage = getFriendlyErrorMessage(err);
       setError(friendlyMessage);
@@ -157,12 +157,12 @@ export default function AuthPage({ isOpen, onClose }) {
       );
 
       loginToContext(response.data, true);
-      toast.success("Google login successful! 🎉", { autoClose: 1000 });
+      toast.success("Login successful! 🎉", { autoClose: 1000 });
       onClose();
     } catch (err) {
       const friendlyMessage = getFriendlyErrorMessage(err);
       setError(friendlyMessage);
-      toast.error("Google login failed! " + friendlyMessage, {
+      toast.error("Login failed! " + friendlyMessage, {
         autoClose: 1000,
       });
     } finally {
@@ -173,7 +173,7 @@ export default function AuthPage({ isOpen, onClose }) {
   const handleGoogleError = () => {
     const friendlyMessage = "Google authentication failed. Please try again.";
     setError(friendlyMessage);
-    toast.error("Google login failed! " + friendlyMessage, { autoClose: 1000 });
+    toast.error("Login failed! " + friendlyMessage, { autoClose: 1000 });
   };
 
   if (!isOpen) return null;
@@ -329,23 +329,23 @@ export default function AuthPage({ isOpen, onClose }) {
                     <GoogleLogin
                       onSuccess={handleGoogleSuccess}
                       onError={handleGoogleError}
-                      useOneTap
-                      render={(renderProps) => (
-                        <button
-                          onClick={renderProps.onClick}
-                          disabled={renderProps.disabled || loading}
-                          className='mt-4 w-full flex items-center justify-center border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition'
-                        >
-                          <img
-                            src={googleIcon}
-                            alt='Google icon'
-                            className='mr-3 w-6 h-6'
-                          />
-                          <span className='text-gray-700 font-semibold text-base'>
-                            Login with Google
-                          </span>
-                        </button>
-                      )}
+                      // useOneTap
+                      // render={(renderProps) => (
+                      //   <button
+                      //     onClick={renderProps.onClick}
+                      //     disabled={renderProps.disabled || loading}
+                      //     className='mt-4 w-full flex items-center justify-center border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition'
+                      //   >
+                      //     <img
+                      //       src={googleIcon}
+                      //       alt='Google icon'
+                      //       className='mr-3 w-6 h-6'
+                      //     />
+                      //     <span className='text-gray-900 font-bold text-base'>
+                      //       Login with Google
+                      //     </span>
+                      //   </button>
+                      // )}
                     />
                   </div>
                 </>
@@ -444,23 +444,23 @@ export default function AuthPage({ isOpen, onClose }) {
                     <GoogleLogin
                       onSuccess={handleGoogleSuccess}
                       onError={handleGoogleError}
-                      useOneTap
-                      render={(renderProps) => (
-                        <button
-                          onClick={renderProps.onClick}
-                          disabled={renderProps.disabled || loading}
-                          className='mt-4 w-full md:text-base text-sm flex items-center justify-center border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition'
-                        >
-                          <img
-                            src={googleIcon}
-                            alt='Google icon'
-                            className='mr-3 w-6 h-6'
-                          />
-                          <span className='text-gray-700 font-semibold text-base'>
-                            Sign up with Google
-                          </span>
-                        </button>
-                      )}
+                      // useOneTap
+                      // render={(renderProps) => (
+                      //   <button
+                      //     onClick={renderProps.onClick}
+                      //     disabled={renderProps.disabled || loading}
+                      //     className='mt-4 w-full md:text-base text-sm flex items-center justify-center border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition'
+                      //   >
+                      //     <img
+                      //       src={googleIcon}
+                      //       alt='Google icon'
+                      //       className='mr-3 w-6 h-6'
+                      //     />
+                      //     <span className='text-gray-700 font-semibold text-base'>
+                      //       Sign up with Google
+                      //     </span>
+                      //   </button>
+                      // )}
                     />
                   </div>
                 </>

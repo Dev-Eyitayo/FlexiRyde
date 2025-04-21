@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'core',
     'accounts',
     'rest_framework_simplejwt',
-    'social_django',  # Already included
+    'social_django', 
 ]
 
 MIDDLEWARE = [
