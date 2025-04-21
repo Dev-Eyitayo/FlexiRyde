@@ -233,6 +233,14 @@ export default function NavBar() {
                 ref={mobileDropdownRef}
                 className='absolute right-0 mt-2 w-56 bg-white shadow-xl rounded-none border-t-4 border-blue-600 animate-dropdown-open origin-top-right'
               >
+                {isAuthenticated && (
+                  <div className='px-4 py-2 text-base font-medium text-gray-900 border-b border-gray-100'>
+                    Hi,{" "}
+                    <span className='capitalize'>
+                      {user?.first_name || user?.email?.split("@")[0]} 👋
+                    </span>
+                  </div>
+                )}
                 {isAuthenticated && user?.role === "park_admin" && (
                   <>
                     <button

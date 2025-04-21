@@ -9,7 +9,9 @@ from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .serializers import UserSerializer
-
+import requests
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 User = get_user_model()
 
 def generate_temp_nin():
@@ -67,3 +69,107 @@ class UserProfileView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+    
+    
+
+# import requests
+# from .serializers import UserSerializer
+# from .views import generate_temp_nin
+
+
+# @api_view(['POST'])
+# def google_auth(request):
+#     try:
+#         id_token_str = request.data.get('access_token')
+#         if not id_token_str:
+#             return Response({'error': 'ID token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         print("Received ID token:", id_token_str)  # Debug
+
+#         client_id = '711592095519-6l061c4j4e5b5rqlpm1isk4l2qsd80f0.apps.googleusercontent.com'
+#         user_info = id_token.verify_oauth2_token(
+#             id_token_str,
+#             google_requests.Request(),
+#             client_id
+#         )
+
+#         print("Google user info:", user_info)  # Debug
+
+#         email = user_info.get('email')
+#         if not email:
+#             return Response({'error': 'Email not provided by Google'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         user, created = User.objects.get_or_create(
+#             email=email,
+#             defaults={
+#                 'first_name': user_info.get('given_name', ''),
+#                 'last_name': user_info.get('family_name', ''),
+#                 'nin': generate_temp_nin(),
+#                 'role': 'passenger',
+#             }
+#         )
+
+#         refresh = RefreshToken.for_user(user)
+#         serializer = UserSerializer(user)
+
+#         return Response({
+#             'refresh': str(refresh),
+#             'access': str(refresh.access_token),
+#             'user': serializer.data,
+#         }, status=status.HTTP_200_OK)
+#     except ValueError as e:
+#         print("Token verification error:", str(e))  # Debug
+#         return Response({'error': 'Invalid Google token'}, status=status.HTTP_400_BAD_REQUEST)
+#     except Exception as e:
+#         print("General error:", str(e))  # Debug
+#         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def google_auth(request):
+    try:
+        id_token_str = request.data.get('access_token')
+        if not id_token_str:
+            return Response({'error': 'ID token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        print("Received ID token:", id_token_str)
+
+        client_id = '711592095519-6l061c4j4e5b5rqlpm1isk4l2qsd80f0.apps.googleusercontent.com'
+        user_info = id_token.verify_oauth2_token(
+            id_token_str,
+            google_requests.Request(),
+            client_id,
+            clock_skew_in_seconds=60  # Allow 60 seconds of clock skew
+        )
+
+        print("Google user info:", user_info)
+
+        email = user_info.get('email')
+        if not email:
+            return Response({'error': 'Email not provided by Google'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                'first_name': user_info.get('given_name', ''),
+                'last_name': user_info.get('family_name', ''),
+                'nin': generate_temp_nin(),
+                'role': 'passenger',
+            }
+        )
+
+        refresh = RefreshToken.for_user(user)
+        serializer = UserSerializer(user)
+
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': serializer.data,
+        }, status=status.HTTP_200_OK)
+    except ValueError as e:
+        print("Token verification error:", str(e))
+        return Response({'error': 'Invalid Google token'}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        print("General error:", str(e))
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
