@@ -1,4 +1,5 @@
 import random
+import requests
 from rest_framework.decorators import api_view # type: ignore
 from rest_framework.response import Response # type: ignore
 from rest_framework_simplejwt.views import TokenObtainPairView # type: ignore
@@ -9,7 +10,6 @@ from django.contrib.auth import get_user_model # type: ignore
 from rest_framework.views import APIView # type: ignore
 from rest_framework.permissions import IsAuthenticated # type: ignore
 from .serializers import UserSerializer
-import requests
 from google.oauth2 import id_token # type: ignore
 from google.auth.transport import requests as google_requests # type: ignore
 from django.conf import settings # type: ignore
