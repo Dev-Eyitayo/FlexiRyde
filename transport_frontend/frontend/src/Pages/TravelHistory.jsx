@@ -125,11 +125,21 @@ export default function TravelHistory() {
   };
 
   const confirmCancel = async () => {
+    if (!cancelTrip?.id) {
+      toast.error("Invalid trip selected for cancellation.");
+      setShowModal(false);
+      return;
+    }
+
     console.log("Cancel Trip Object:", JSON.stringify(cancelTrip, null, 2));
+
     try {
       const response = await authFetch(`/bookings/${cancelTrip.id}/`, {
         method: "PATCH",
         body: JSON.stringify({ status: "cancelled" }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
@@ -140,10 +150,15 @@ export default function TravelHistory() {
         );
         toast.success(`Trip to ${cancelTrip.to} cancelled successfully!`);
       } else {
-        toast.error("Failed to cancel trip.");
+        const errorData = await response.json().catch(() => ({}));
+        console.log("Backend error:", errorData);
+        toast.error(
+          `Failed to cancel trip: ${errorData.message || "Unknown error"}`
+        );
       }
     } catch (err) {
-      toast.error("Error occurred during cancellation.");
+      console.error("Cancellation error:", err);
+      toast.error(`Error occurred during cancellation: ${err.message}`);
     } finally {
       setShowModal(false);
     }
