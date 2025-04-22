@@ -346,7 +346,7 @@ class PaymentCallbackView(APIView):
                 booking.payment_status = 'successful'
                 booking.status = 'confirmed'
                 booking.save()
-                frontend_url = f'http://localhost:5173/check-ticket'
+                frontend_url = f'http://localhost:5173/travel-history'
                 return HttpResponseRedirect(frontend_url)
                 # return Response({
                 #     'message': 'Payment successful',

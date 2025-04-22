@@ -290,7 +290,7 @@ export default function TravelHistory() {
         {showModal && cancelTrip && (
           <div className='fixed inset-0 bg-black/50 backdrop-blur-lg bg-opacity-40 flex items-center justify-center z-50'>
             <div
-              className='bg-white p-6 rounded-xl shadow-lg w-full max-w-md
+              className='bg-white mx-4 p-6 rounded-xl shadow-lg w-full max-w-md
                          transform transition-all duration-300 scale-100'
             >
               <h2 className='text-2xl font-bold text-red-600 mb-3'>
