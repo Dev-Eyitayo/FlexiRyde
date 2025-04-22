@@ -139,7 +139,8 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             seat_count=seat_count,
             price=validated_data["price"],
             payment_reference=payment_reference,  
-            status="confirmed"
+            status="pending",  #set status to pending until payement is confirmed
+            payment_status = "pending", #set payment status
         )
         return booking
     
@@ -194,7 +195,7 @@ class BookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = [
             'id', 'user', 'trip', 'trip_id',
-            'price', 'payment_reference',
+            'price', 'payment_reference', 'payment_status'
             'status', 'created_at'
         ]
         read_only_fields = ['user', 'created_at']
@@ -249,11 +250,12 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     ref_number = serializers.CharField(source="payment_reference")
     seats = serializers.IntegerField(source="seat_count")
-    status = serializers.CharField() 
+    status = serializers.CharField()
+    payment_status = serializers.CharField()  # Add payment_status
 
     class Meta:
         model = Booking
-        fields = ["id", "ref_number", "price", "trip", "user", "seats", "status"]
+        fields = ["id", "ref_number", "price", "trip", "user", "seats", "status", "payment_status"]
 
     def get_user(self, obj):
         return {
@@ -261,3 +263,6 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             "last_name": obj.user.last_name
         }
 
+class PaymentInitializationSerializer(serializers.Serializer):
+    booking_id = serializers.IntegerField()
+    authorization_url = serializers.URLField(read_only=True)
