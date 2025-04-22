@@ -1,17 +1,20 @@
 import random
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view # type: ignore
+from rest_framework.response import Response # type: ignore
+from rest_framework_simplejwt.views import TokenObtainPairView # type: ignore
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer # type: ignore
+from rest_framework import status # type: ignore
+from rest_framework_simplejwt.tokens import RefreshToken # type: ignore
+from django.contrib.auth import get_user_model # type: ignore
+from rest_framework.views import APIView # type: ignore
+from rest_framework.permissions import IsAuthenticated # type: ignore
 from .serializers import UserSerializer
 import requests
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token # type: ignore
+from google.auth.transport import requests as google_requests # type: ignore
+from django.conf import settings # type: ignore
+
+
 User = get_user_model()
 
 def generate_temp_nin():
@@ -81,7 +84,7 @@ def google_auth(request):
 
         print("Received ID token:", id_token_str)
 
-        client_id = '711592095519-6l061c4j4e5b5rqlpm1isk4l2qsd80f0.apps.googleusercontent.com'
+        client_id = settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
         user_info = id_token.verify_oauth2_token(
             id_token_str,
             google_requests.Request(),

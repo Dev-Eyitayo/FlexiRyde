@@ -6,6 +6,7 @@ import { login, signup } from "../api";
 import { toast } from "react-toastify";
 import googleIcon from "../assets/google-icon.svg";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import.meta.env;
 import axios from "axios";
 
 export default function AuthPage({ isOpen, onClose }) {
@@ -150,7 +151,7 @@ export default function AuthPage({ isOpen, onClose }) {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/auth/google-auth/",
+        `${import.meta.env.VITE_API_URL}/auth/google-auth/`,
         {
           access_token: credentialResponse.credential,
         }
@@ -179,7 +180,8 @@ export default function AuthPage({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <GoogleOAuthProvider clientId='711592095519-6l061c4j4e5b5rqlpm1isk4l2qsd80f0.apps.googleusercontent.com'>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      {console.log(import.meta.env.GOOGLE_OAUTH_CLIENT_ID)}
       <div className='fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50'>
         <motion.div
           initial={{ opacity: 0, y: -50 }}
