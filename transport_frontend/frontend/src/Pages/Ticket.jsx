@@ -6,9 +6,9 @@ const Ticket = () => {
   const location = useLocation();
   const [copied, setCopied] = useState(false);
   const booking =
-  location.state?.booking ||
-  JSON.parse(sessionStorage.getItem("recentBooking")) || null;
-
+    location.state?.booking ||
+    JSON.parse(sessionStorage.getItem("recentBooking")) ||
+    null;
 
   if (!booking) {
     return <div className='text-center mt-10 mb-95'>No ticket data found.</div>;
@@ -23,11 +23,7 @@ const Ticket = () => {
     user = {},
   } = booking;
 
-  const {
-    departure_datetime,
-    route = {},
-    bus = {},
-  } = trip;
+  const { departure_datetime, route = {}, bus = {} } = trip;
 
   const {
     origin_park = {},
@@ -89,7 +85,11 @@ const Ticket = () => {
                   className='text-blue-600 hover:text-blue-800 focus:outline-none'
                   title='Copy Reference'
                 >
-                  {copied ? <FiCheck className='w-5 h-5' /> : <FiCopy className='w-5 h-5' />}
+                  {copied ? (
+                    <FiCheck className='w-5 h-5' />
+                  ) : (
+                    <FiCopy className='w-5 h-5' />
+                  )}
                 </button>
               </div>
             </div>
@@ -139,7 +139,8 @@ const Ticket = () => {
             <button
               onClick={() => {
                 const originalContent = document.body.innerHTML;
-                const printContent = document.getElementById("ticket-content").outerHTML;
+                const printContent =
+                  document.getElementById("ticket-content").outerHTML;
                 document.body.innerHTML = `
                   <!DOCTYPE html>
                   <html>

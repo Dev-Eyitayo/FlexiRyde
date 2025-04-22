@@ -114,9 +114,17 @@ class Booking(models.Model):
         ('pending', 'Pending'),
         ('completed', 'Completed'),
     )
+    
+    PAYMENT_STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('successful', 'Successful'),
+        ('failed', 'Failed')
+    )
+    
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookings')
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='bookings', null=True)
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     price = models.FloatField()
     payment_reference = models.CharField(max_length=100, unique=True)  #Take note of this 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
