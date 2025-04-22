@@ -18,7 +18,7 @@ router.register('buses', BusViewSet)
 
 urlpatterns = [
     path('trips/search/', TripSearchAPIView.as_view(), name='trip-search'),
-    path("api/bookings/create/", BookingCreateAPIView.as_view(), name="booking-create"),
+    path("bookings/create/", BookingCreateAPIView.as_view(), name="booking-create"),
     path('parks/<int:park_id>/buses/', ParkBusesView.as_view(), name='park_buses'),
     path('parks/<int:park_id>/routes/', ParkRoutesView.as_view(), name='park_routes'),
     path('parks/<int:park_id>/trips/create/', TripCreateView.as_view(), name='trip_create'),

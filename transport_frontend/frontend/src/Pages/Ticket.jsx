@@ -83,7 +83,7 @@ const Ticket = () => {
               opacity: 0.2, // Semi-transparent
               zIndex: 10,
               color: status === "cancelled" ? "red" : "gray", // Red for cancelled, gray for completed
-              fontSize: "3rem", // Large text
+              fontSize: "5rem", // Large text
               fontWeight: "bold",
               textTransform: "uppercase",
               whiteSpace: "nowrap",

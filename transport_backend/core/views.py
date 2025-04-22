@@ -46,7 +46,7 @@ class RouteViewSet(viewsets.ModelViewSet):
         return Route.objects.all()
 
 
-# views.py
+
 class BookingViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 

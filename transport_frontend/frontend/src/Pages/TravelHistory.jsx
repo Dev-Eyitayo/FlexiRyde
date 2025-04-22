@@ -14,52 +14,6 @@ export default function TravelHistory() {
   // --------------------
   // Fetch bookings
   // --------------------
-  // useEffect(() => {
-  //   const fetchTrips = async () => {
-  //     try {
-  //       const response = await authFetch("/bookings/");
-  //       const data = await response.json();
-
-  //       const formatted = data.map((booking) => {
-  //         const trip = booking.trip || {};
-  //         const route = trip.route || {};
-  //         const datetime = new Date(trip.departure_datetime);
-
-  //         return {
-  //           id: booking.id,
-  //           from: route.origin_park?.name || "—",
-  //           fromCity: route.origin_city?.name || "",
-  //           to: route.destination_park?.name || "—",
-  //           toCity: route.destination_city?.name || "",
-  //           date: datetime.toLocaleDateString("en-NG", {
-  //             weekday: "short",
-  //             month: "short",
-  //             day: "numeric",
-  //             year: "numeric",
-  //           }),
-  //           time: datetime.toLocaleTimeString("en-NG", {
-  //             hour: "2-digit",
-  //             minute: "2-digit",
-  //             hour12: true,
-  //           }),
-  //           seats: booking.seats ?? booking.seat_count ?? "—",
-  //           price: `₦${Number(booking.price).toLocaleString()}`,
-  //           bookingRef: booking.ref_number ?? booking.payment_reference,
-  //           status: booking.status?.toLowerCase() || "confirmed",
-  //           originalBooking: booking,
-  //         };
-  //       });
-
-  //       console.log("Raw bookings response:", data);
-
-  //       setTrips(formatted);
-  //     } catch (err) {
-  //       console.error("Failed to fetch bookings:", err);
-  //     }
-  //   };
-
-  //   fetchTrips();
-  // }, []);
   useEffect(() => {
     const fetchTrips = async () => {
       try {
@@ -70,6 +24,7 @@ export default function TravelHistory() {
           const trip = booking.trip || {};
           const route = trip.route || {};
           const datetime = new Date(trip.departure_datetime);
+          const createdAt = new Date(booking.created_at); // Store created_at
 
           return {
             id: booking.id,
@@ -93,14 +48,27 @@ export default function TravelHistory() {
             bookingRef: booking.ref_number ?? booking.payment_reference,
             status: booking.status?.toLowerCase() || "confirmed",
             originalBooking: booking,
-            datetime, // Store the raw datetime for sorting
+            datetime, // Store departure datetime for sorting non-confirmed
+            createdAt, // Store created_at for sorting confirmed
           };
         });
 
         console.log("Raw bookings response:", data);
 
-        // Sort trips by datetime, newest first
-        formatted.sort((a, b) => b.datetime - a.datetime);
+        // Sort trips: confirmed first (by created_at, newest first), then others (by departure_datetime, newest first)
+        formatted.sort((a, b) => {
+          // Prioritize confirmed bookings
+          if (a.status === "confirmed" && b.status !== "confirmed") return -1;
+          if (a.status !== "confirmed" && b.status === "confirmed") return 1;
+
+          // For confirmed bookings, sort by created_at (newest first)
+          if (a.status === "confirmed" && b.status === "confirmed") {
+            return b.createdAt - a.createdAt;
+          }
+
+          // For non-confirmed bookings, sort by departure_datetime (newest first)
+          return b.datetime - a.datetime;
+        });
 
         setTrips(formatted);
       } catch (err) {
@@ -110,6 +78,17 @@ export default function TravelHistory() {
 
     fetchTrips();
   }, []);
+
+  // --------------------
+  // Helper to check if cancellation is allowed (more than 4 hours until departure)
+  // --------------------
+  const canCancel = (trip) => {
+    const now = new Date();
+    const departure = new Date(trip.datetime);
+    const hoursUntilDeparture = (departure - now) / (1000 * 60 * 60); // Convert ms to hours
+    return hoursUntilDeparture > 4;
+  };
+
   // --------------------
   // Filtering
   // --------------------
@@ -120,6 +99,10 @@ export default function TravelHistory() {
   // Cancel logic
   // --------------------
   const handleCancelClick = (trip) => {
+    if (!canCancel(trip)) {
+      toast.error("Cannot cancel bookings within 4 hours of departure.");
+      return;
+    }
     setCancelTrip(trip);
     setShowModal(true);
   };
@@ -152,9 +135,12 @@ export default function TravelHistory() {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.log("Backend error:", errorData);
-        toast.error(
-          `Failed to cancel trip: ${errorData.message || "Unknown error"}`
-        );
+        const errorMessage =
+          errorData.non_field_errors?.[0] ||
+          errorData.detail ||
+          errorData.message ||
+          "Unknown error";
+        toast.error(`Failed to cancel trip: ${errorMessage}`);
       }
     } catch (err) {
       console.error("Cancellation error:", err);
@@ -229,18 +215,7 @@ export default function TravelHistory() {
                     <div className='mb-4 md:mt-0 mt-4 sm:mb-0'>
                       <h2 className='md:text-lg sm:mt-3 text-base font-bold text-gray-800 mb-1'>
                         {trip.from}{" "}
-                        {/* {trip.fromCity && (
-                          <span className='text-sm text-gray-500'>
-                            ({trip.fromCity})
-                          </span>
-                        )} */}
-                        <span className='mx-2 text-gray-400'>→</span>
-                        {trip.to}{" "}
-                        {/* {trip.fromCity && (
-                          <span className='text-sm text-gray-500'>
-                            ({trip.toCity})
-                          </span>
-                        )} */}
+                        <span className='mx-2 text-gray-400'>→</span> {trip.to}
                       </h2>
                       <p className='text-xs text-gray-500'>
                         Ref:{" "}
@@ -271,14 +246,11 @@ export default function TravelHistory() {
                       {trip.price}
                     </span>
 
-                    <div className='flex flex-row '>
-                      {trip.status === "confirmed" && (
+                    <div className='flex flex-row'>
+                      {trip.status === "confirmed" && canCancel(trip) && (
                         <button
                           onClick={() => handleCancelClick(trip)}
-                          className='px-4 py-2 rounded-md text-sm font-medium
-                          border bg-red-500 text-white
-                          hover:bg-red-600 transition-colors
-                          focus:outline-none'
+                          className='px-4 py-2 rounded-md text-sm font-medium border bg-red-500 text-white hover:bg-red-600 transition-colors focus:outline-none'
                         >
                           Cancel
                         </button>
@@ -304,10 +276,7 @@ export default function TravelHistory() {
         {/* Cancel Modal */}
         {showModal && cancelTrip && (
           <div className='fixed inset-0 bg-black/50 backdrop-blur-lg bg-opacity-40 flex items-center justify-center z-50'>
-            <div
-              className='bg-white mx-4 p-6 rounded-xl shadow-lg w-full max-w-md
-                         transform transition-all duration-300 scale-100'
-            >
+            <div className='bg-white mx-4 p-6 rounded-xl shadow-lg w-full max-w-md transform transition-all duration-300 scale-100'>
               <h2 className='text-2xl font-bold text-red-600 mb-3'>
                 Cancel Trip
               </h2>
@@ -319,17 +288,13 @@ export default function TravelHistory() {
               <div className='flex justify-end space-x-3'>
                 <button
                   onClick={() => setShowModal(false)}
-                  className='px-4 py-2 rounded-md text-sm bg-gray-200 text-gray-700
-                             hover:bg-gray-300 transition-colors
-                             focus:outline-none'
+                  className='px-4 py-2 rounded-md text-sm bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors focus:outline-none'
                 >
                   Close
                 </button>
                 <button
                   onClick={confirmCancel}
-                  className='px-4 py-2 rounded-md text-sm bg-red-600 text-white
-                             hover:bg-red-700 transition-colors
-                             focus:outline-none'
+                  className='px-4 py-2 rounded-md text-sm bg-red-600 text-white hover:bg-red-700 transition-colors focus:outline-none'
                 >
                   Confirm Cancel
                 </button>
