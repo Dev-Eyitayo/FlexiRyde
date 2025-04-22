@@ -14,6 +14,52 @@ export default function TravelHistory() {
   // --------------------
   // Fetch bookings
   // --------------------
+  // useEffect(() => {
+  //   const fetchTrips = async () => {
+  //     try {
+  //       const response = await authFetch("/bookings/");
+  //       const data = await response.json();
+
+  //       const formatted = data.map((booking) => {
+  //         const trip = booking.trip || {};
+  //         const route = trip.route || {};
+  //         const datetime = new Date(trip.departure_datetime);
+
+  //         return {
+  //           id: booking.id,
+  //           from: route.origin_park?.name || "—",
+  //           fromCity: route.origin_city?.name || "",
+  //           to: route.destination_park?.name || "—",
+  //           toCity: route.destination_city?.name || "",
+  //           date: datetime.toLocaleDateString("en-NG", {
+  //             weekday: "short",
+  //             month: "short",
+  //             day: "numeric",
+  //             year: "numeric",
+  //           }),
+  //           time: datetime.toLocaleTimeString("en-NG", {
+  //             hour: "2-digit",
+  //             minute: "2-digit",
+  //             hour12: true,
+  //           }),
+  //           seats: booking.seats ?? booking.seat_count ?? "—",
+  //           price: `₦${Number(booking.price).toLocaleString()}`,
+  //           bookingRef: booking.ref_number ?? booking.payment_reference,
+  //           status: booking.status?.toLowerCase() || "confirmed",
+  //           originalBooking: booking,
+  //         };
+  //       });
+
+  //       console.log("Raw bookings response:", data);
+
+  //       setTrips(formatted);
+  //     } catch (err) {
+  //       console.error("Failed to fetch bookings:", err);
+  //     }
+  //   };
+
+  //   fetchTrips();
+  // }, []);
   useEffect(() => {
     const fetchTrips = async () => {
       try {
@@ -47,10 +93,14 @@ export default function TravelHistory() {
             bookingRef: booking.ref_number ?? booking.payment_reference,
             status: booking.status?.toLowerCase() || "confirmed",
             originalBooking: booking,
+            datetime, // Store the raw datetime for sorting
           };
         });
 
         console.log("Raw bookings response:", data);
+
+        // Sort trips by datetime, newest first
+        formatted.sort((a, b) => b.datetime - a.datetime);
 
         setTrips(formatted);
       } catch (err) {
@@ -60,7 +110,6 @@ export default function TravelHistory() {
 
     fetchTrips();
   }, []);
-
   // --------------------
   // Filtering
   // --------------------
@@ -141,11 +190,11 @@ export default function TravelHistory() {
               let badgeClasses =
                 "px-3 py-1 text-xs rounded-full font-semibold ";
               if (trip.status === "confirmed") {
-                badgeClasses += "bg-green-100 text-green-700";
+                badgeClasses += "bg-blue-100 text-blue-800";
               } else if (trip.status === "completed") {
-                badgeClasses += "bg-gray-200 text-gray-700";
+                badgeClasses += "bg-green-100 text-green-800";
               } else {
-                badgeClasses += "bg-red-100 text-red-700";
+                badgeClasses += "bg-red-100 text-red-800";
               }
 
               return (
@@ -172,7 +221,7 @@ export default function TravelHistory() {
                         )} */}
                         <span className='mx-2 text-gray-400'>→</span>
                         {trip.to}{" "}
-                        {/* {trip.toCity && (
+                        {/* {trip.fromCity && (
                           <span className='text-sm text-gray-500'>
                             ({trip.toCity})
                           </span>

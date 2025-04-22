@@ -11,10 +11,14 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+# Load .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -27,9 +31,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-# 
+# Custom user model
 AUTH_USER_MODEL = 'accounts.User'
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -44,6 +47,7 @@ INSTALLED_APPS = [
     'core',
     'accounts',
     'rest_framework_simplejwt',
+    'social_django', 
 ]
 
 MIDDLEWARE = [
@@ -62,24 +66,59 @@ ROOT_URLCONF = 'transport_backend.urls'
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vite dev server
-    "https://w1nxrvdv-5173.uks1.devtunnels.ms", 
+    "https://w1nxrvdv-5173.uks1.devtunnels.ms",
 ]
 
 # JWT Authentication Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # Added for social auth compatibility
     ),
 }
-
-from datetime import timedelta
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
+# Social Auth settings for Google OAuth2
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
+# Google OAuth2 credentials
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY') 
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET') 
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
+
+# Redirect URI (must match Google Console)
+SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'http://127.0.0.1:8000/auth/complete/google-oauth2/'
+
+# Social Auth pipeline for user creation
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'accounts.pipeline.create_google_user',  # Custom pipeline in accounts/pipeline.py
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+)
+
+# Google OAuth2 scopes
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+#     'https://www.googleapis.com/auth/userinfo.email',
+#     'https://www.googleapis.com/auth/userinfo.profile',
+# ]
+
+# Extra arguments for Google OAuth
+SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
+    'access_type': 'offline',
+}
 
 TEMPLATES = [
     {
@@ -92,13 +131,14 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',  # Added for social auth
+                'social_django.context_processors.login_redirect',  # Added for social auth
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'transport_backend.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -109,7 +149,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -129,7 +168,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -140,7 +178,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

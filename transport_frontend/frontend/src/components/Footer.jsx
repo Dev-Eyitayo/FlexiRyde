@@ -13,10 +13,26 @@ export default function Footer() {
         <div>
           <h3 className='font-semibold mb-3 text-black'>Plan Your Trip</h3>
           <ul className='space-y-2'>
-            <li>Products & Services</li>
-            <li>Travel Guide</li>
-            <li>Destinations</li>
-            <li>Blog</li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Products & Services
+              </a>
+            </li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Travel Guide
+              </a>
+            </li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Destinations
+              </a>
+            </li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Blog
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -24,8 +40,16 @@ export default function Footer() {
         <div>
           <h3 className='font-semibold mb-3 text-black'>Partners</h3>
           <ul className='space-y-2'>
-            <li>Become an Affiliate</li>
-            <li>Become a Partner</li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Become an Affiliate
+              </a>
+            </li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Become a Partner
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -33,8 +57,16 @@ export default function Footer() {
         <div>
           <h3 className='font-semibold mb-3 text-black'>Support</h3>
           <ul className='space-y-2'>
-            <li>Contact Us</li>
-            <li>FAQ</li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Contact Us
+              </a>
+            </li>
+            <li>
+              <a href='#' className='hover:underline'>
+                FAQ
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -42,10 +74,26 @@ export default function Footer() {
         <div>
           <h3 className='font-semibold mb-3 text-black'>Company</h3>
           <ul className='space-y-2'>
-            <li>About Us</li>
-            <li>Careers</li>
-            <li>Privacy Policy</li>
-            <li>Terms & Conditions</li>
+            <li>
+              <a href='#' className='hover:underline'>
+                About Us
+              </a>
+            </li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Careers
+              </a>
+            </li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Privacy Policy
+              </a>
+            </li>
+            <li>
+              <a href='#' className='hover:underline'>
+                Terms & Conditions
+              </a>
+            </li>
           </ul>
         </div>
       </div>

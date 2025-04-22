@@ -61,8 +61,8 @@ export default function SeatAvailability() {
       localStorage.getItem("access") || sessionStorage.getItem("access");
     if (!token) {
       toast.warning("🔐 Please log in to proceed with booking.", {
-        position: "top-center",
-        autoClose: 4000,
+        position: "top-right",
+        autoClose: 3000,
       });
       setTimeout(() => {
         window.location.href = "/auth"; // or navigate("/auth")
@@ -72,10 +72,13 @@ export default function SeatAvailability() {
 
     const available = currentSeats.totalSeats - currentSeats.takenSeats;
     if (available < bookedSeats) {
-      toast.error(`Only ${available} seat(s) available. Please choose fewer seats.`, {
-        position: "top-center",
-        autoClose: 5000,
-      });
+      toast.error(
+        `Only ${available} seat(s) available. Please choose fewer seats.`,
+        {
+          position: "top-right",
+          autoClose: 3000,
+        }
+      );
       return;
     }
 
@@ -96,13 +99,13 @@ export default function SeatAvailability() {
 
       if (response.ok) {
         toast.success("🎉 Booking successful!", {
-          position: "top-center",
+          position: "top-right",
           autoClose: 3000,
         });
         setTimeout(() => {
           // Navigate to ticket or confirmation page
           navigate("/check-ticket", { state: { booking: data } });
-        }, 2000);
+        }, 1000);
       } else {
         toast.error(`Booking failed: ${data?.message || "Please try again."}`);
       }
@@ -115,26 +118,28 @@ export default function SeatAvailability() {
   };
 
   // Time display helper
-function formatTime(datetimeStr) {
-  if (!datetimeStr) return "—";
-  const date = new Date(datetimeStr);
-  const hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const suffix = hours >= 12 ? "PM" : "AM";
-  const hour12 = hours % 12 || 12;
-  return `${hour12}:${minutes} ${suffix}`;
-}
+  function formatTime(datetimeStr) {
+    if (!datetimeStr) return "—";
+    const date = new Date(datetimeStr);
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const suffix = hours >= 12 ? "PM" : "AM";
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes} ${suffix}`;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 lg:px-8">
-      <ToastContainer position="top-center" autoClose={5000} />
+    <div className='min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 lg:px-8'>
+      <ToastContainer position='top-center' autoClose={5000} />
 
       {/* Title */}
-      <div className="w-full max-w-6xl text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+      <div className='w-full max-w-6xl text-center mb-8'>
+        <h1 className='text-3xl font-bold text-gray-800 mb-2'>
           Seat Availability
         </h1>
-        <p className="text-gray-600">Select departure time to view seat availability</p>
+        <p className='text-gray-600'>
+          Select departure time to view seat availability
+        </p>
       </div>
 
       {/* Optional route visualization (if you have a component for it) */}
@@ -149,30 +154,34 @@ function formatTime(datetimeStr) {
       />
 
       {/* Trip selection */}
-      <div className="w-full max-w-4xl mb-6">
-        <label htmlFor="time" className="block text-lg text-gray-700 mb-2 font-medium">
+      <div className='w-full max-w-4xl mb-6'>
+        <label
+          htmlFor='time'
+          className='block text-lg text-gray-700 mb-2 font-medium'
+        >
           Select Departure Time
         </label>
-        <div className="relative">
+        <div className='relative'>
           <select
-            id="time"
+            id='time'
             value={selectedTripId}
             onChange={(e) => setSelectedTripId(e.target.value)}
-            className="w-full appearance-none border border-gray-300 bg-white rounded-lg pl-4 pr-10 py-3 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:bg-gray-50"
+            className='w-full appearance-none border border-gray-300 bg-white rounded-lg pl-4 pr-10 py-3 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:bg-gray-50'
           >
             {trips.map((t) => (
               <option key={t.id} value={t.id}>
-                {formatTime(t.departure_datetime)} — ₦{t.seat_price?.toLocaleString()}
+                {formatTime(t.departure_datetime)} — ₦
+                {t.seat_price?.toLocaleString()}
               </option>
             ))}
           </select>
 
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500">
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500'>
+            <svg className='h-5 w-5' viewBox='0 0 20 20' fill='currentColor'>
               <path
-                fillRule="evenodd"
-                d="M5.23 7.21a.75.75 0 011.06.02L10 11.585l3.71-4.356a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z"
-                clipRule="evenodd"
+                fillRule='evenodd'
+                d='M5.23 7.21a.75.75 0 011.06.02L10 11.585l3.71-4.356a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z'
+                clipRule='evenodd'
               />
             </svg>
           </div>
@@ -180,66 +189,68 @@ function formatTime(datetimeStr) {
       </div>
 
       {/* Travel Summary */}
-      <div className="bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <FaClock className="mr-2 text-blue-500" />
+      <div className='bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100'>
+        <h2 className='text-xl font-semibold text-gray-800 mb-4 flex items-center'>
+          <FaClock className='mr-2 text-blue-500' />
           Travel Details
         </h2>
-        <div className="space-y-4">
-          <div className="flex justify-between">
-            <span className="text-gray-600">From:</span>
-            <span className="font-medium">{from}</span>
+        <div className='space-y-4'>
+          <div className='flex justify-between'>
+            <span className='text-gray-600'>From:</span>
+            <span className='font-medium'>{from}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">To:</span>
-            <span className="font-medium">{to}</span>
+          <div className='flex justify-between'>
+            <span className='text-gray-600'>To:</span>
+            <span className='font-medium'>{to}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Date:</span>
-            <span className="font-medium">{date}</span>
+          <div className='flex justify-between'>
+            <span className='text-gray-600'>Date:</span>
+            <span className='font-medium'>{date}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Departure:</span>
-            <span className="font-medium">{formatTime(trip?.departure_datetime)}</span>
+          <div className='flex justify-between'>
+            <span className='text-gray-600'>Departure:</span>
+            <span className='font-medium'>
+              {formatTime(trip?.departure_datetime)}
+            </span>
           </div>
         </div>
       </div>
 
       {/* Seat Breakdown */}
-      <div className="bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">Seat Availability</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-gray-600">Total Seats</p>
-            <p className="text-2xl font-bold text-gray-800">
+      <div className='bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100'>
+        <h3 className='text-xl font-semibold text-gray-800 mb-4'>
+          Seat Availability
+        </h3>
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
+          <div className='bg-gray-50 p-4 rounded-lg'>
+            <p className='text-gray-600'>Total Seats</p>
+            <p className='text-2xl font-bold text-gray-800'>
               {currentSeats.totalSeats}
             </p>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <p className="text-gray-600">Available Seats</p>
-            <p className="text-2xl font-bold text-green-600">
-              {currentSeats.totalSeats - currentSeats.takenSeats} 
+          <div className='bg-green-50 p-4 rounded-lg'>
+            <p className='text-gray-600'>Available Seats</p>
+            <p className='text-2xl font-bold text-green-600'>
+              {currentSeats.totalSeats - currentSeats.takenSeats}
             </p>
           </div>
-          <div className="bg-red-50 p-4 rounded-lg">
-            <p className="text-gray-600">Booked Seats</p>
-            <p className="text-2xl font-bold text-red-600">
+          <div className='bg-red-50 p-4 rounded-lg'>
+            <p className='text-gray-600'>Booked Seats</p>
+            <p className='text-2xl font-bold text-red-600'>
               {currentSeats.takenSeats}
             </p>
           </div>
         </div>
 
         {!isSeatAvailable && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
-            <div className="flex items-start">
-              <FaExclamationTriangle className="text-yellow-500 mt-1 mr-2" />
+          <div className='bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md'>
+            <div className='flex items-start'>
+              <FaExclamationTriangle className='text-yellow-500 mt-1 mr-2' />
               <div>
-                <p className="font-medium text-yellow-800">
-                  Not Enough Seats
-                </p>
-                <p className="text-sm text-yellow-700">
-                  Only {currentSeats.totalSeats - currentSeats.takenSeats} seat(s) available.
-                  Please reduce number of passengers.
+                <p className='font-medium text-yellow-800'>Not Enough Seats</p>
+                <p className='text-sm text-yellow-700'>
+                  Only {currentSeats.totalSeats - currentSeats.takenSeats}{" "}
+                  seat(s) available. Please reduce number of passengers.
                 </p>
               </div>
             </div>
@@ -248,25 +259,23 @@ function formatTime(datetimeStr) {
       </div>
 
       {/* Payment */}
-      <div className="bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">
+      <div className='bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100'>
+        <h3 className='text-xl font-semibold text-gray-800 mb-4'>
           Payment Summary
         </h3>
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Seats to Book:</span>
-            <span className="font-medium">{bookedSeats}</span>
+        <div className='space-y-3'>
+          <div className='flex justify-between'>
+            <span className='text-gray-600'>Seats to Book:</span>
+            <span className='font-medium'>{bookedSeats}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Price per Seat:</span>
-            <span className="font-medium">
-              ₦{price.toLocaleString()}
-            </span>
+          <div className='flex justify-between'>
+            <span className='text-gray-600'>Price per Seat:</span>
+            <span className='font-medium'>₦{price.toLocaleString()}</span>
           </div>
-          <div className="border-t border-gray-200 pt-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600 font-semibold">Total Amount:</span>
-              <span className="text-gray-800 text-lg font-bold">
+          <div className='border-t border-gray-200 pt-3'>
+            <div className='flex justify-between'>
+              <span className='text-gray-600 font-semibold'>Total Amount:</span>
+              <span className='text-gray-800 text-lg font-bold'>
                 ₦{(price * bookedSeats).toLocaleString()}
               </span>
             </div>
@@ -275,7 +284,7 @@ function formatTime(datetimeStr) {
       </div>
 
       {/* Book Button */}
-      <div className="w-full max-w-4xl">
+      <div className='w-full max-w-4xl'>
         <button
           onClick={handleProceed}
           disabled={!isSeatAvailable || loading}
@@ -288,8 +297,8 @@ function formatTime(datetimeStr) {
           {loading
             ? "Booking..."
             : isSeatAvailable
-            ? `Proceed to Book ${bookedSeats} Seat(s)`
-            : "Not Enough Seats"}
+              ? `Proceed to Book ${bookedSeats} Seat(s)`
+              : "Not Enough Seats"}
         </button>
       </div>
     </div>
