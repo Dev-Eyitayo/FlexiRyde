@@ -11,7 +11,7 @@ const LoginForm = ({
   getFriendlyErrorMessage,
   onClose,
   resetForm,
-  setActiveTab, // New prop to switch to reset form
+  setActiveTab, // Prop to switch to reset form
 }) => {
   const [loginForm, setLoginForm] = useState({
     email: "",
