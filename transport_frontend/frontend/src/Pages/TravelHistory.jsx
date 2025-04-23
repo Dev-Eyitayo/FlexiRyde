@@ -162,10 +162,10 @@ export default function TravelHistory() {
   };
 
   return (
-    <div className='min-h-screen bg-gray-200/30 px-4 py-10'>
-      <div className='max-w-5xl mx-auto'>
+    <div className="min-h-screen bg-gray-200/30 px-4 py-10">
+      <div className="max-w-5xl mx-auto">
         {/* Title */}
-        <h1 className='text-2xl md:text-3xl font-bold mb-6'>Travel History</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-6">Travel History</h1>
 
         {/* Filter Buttons */}
         <FilterButtons
@@ -176,13 +176,18 @@ export default function TravelHistory() {
           }}
         />
 
+        {/* Disclaimer */}
+        <p className="text-xs sm:text-sm text-gray-600 text-center max-w-md mx-auto px-4 mt-4 mb-6">
+          Trip can only be cancelled before 12 hours to departure time.
+        </p>
+
         {/* Trip List */}
         {currentTrips.length === 0 ? (
-          <p className='text-center text-gray-500 mt-10'>
+          <p className="text-center text-gray-500 mt-10">
             No trips found for this status.
           </p>
         ) : (
-          <div className='grid grid-cols-1 gap-6'>
+          <div className="grid grid-cols-1 gap-6">
             {currentTrips.map((trip) => (
               <TripCard
                 key={trip.id}

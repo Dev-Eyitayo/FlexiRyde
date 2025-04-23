@@ -72,7 +72,7 @@ const Ticket = () => {
         : null;
 
   return (
-    <div className='max-w-xl mx-auto my-8 p-6' id='ticket-content'>
+    <div className='max-w-xl mx-auto my-8 p-4' id='ticket-content'>
       <div className='border-2 border-gray-800 rounded-lg overflow-hidden shadow-xl relative'>
         {/* Watermark */}
         {watermarkText && (
@@ -83,7 +83,7 @@ const Ticket = () => {
               opacity: 0.2, // Semi-transparent
               zIndex: 10,
               color: status === "cancelled" ? "red" : "gray", // Red for cancelled, gray for completed
-              fontSize: "5rem", // Large text
+              fontSize: "4.2rem", // Large text
               fontWeight: "bold",
               textTransform: "uppercase",
               whiteSpace: "nowrap",
