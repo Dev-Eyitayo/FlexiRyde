@@ -15,6 +15,9 @@ import TravelHistory from "./Pages/TravelHistory";
 import TripDashboard from "./components/admin/TripDashboard";
 import AboutUs from "./Pages/AboutUs";
 import ParkAdminDashboard from "./Pages/ParkAdminDashboard";
+import ModalWrapper from "./components/Authentication/Modalwrapper";
+import PasswordResetConfirmForm from "./components/Authentication/PasswordResetConfirmForm";
+
 export default function App() {
   return (
     <>
@@ -44,6 +47,14 @@ export default function App() {
         <Route path='/contact-support' element={<ContactSupport />} />
         <Route path='/travel-history' element={<TravelHistory />} />
         <Route path='/trip-dashboard' element={<ParkAdminDashboard />} />
+        <Route
+          path='/reset-password/:uid/:token'
+          element={
+            <ModalWrapper isOpen={true} onClose={() => window.history.back()}>
+              <PasswordResetConfirmForm onClose={() => window.history.back()} />
+            </ModalWrapper>
+          }
+        />
       </Routes>
       <Footer />
     </>

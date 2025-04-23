@@ -8,11 +8,17 @@ from rest_framework_simplejwt.tokens import RefreshToken # type: ignore
 from django.contrib.auth import get_user_model # type: ignore
 from rest_framework.views import APIView # type: ignore
 from rest_framework.permissions import IsAuthenticated # type: ignore
-from .serializers import UserSerializer
+from .serializers import UserSerializer, PasswordResetConfirmSerializer, PasswordResetSerializer
 import requests
 from google.oauth2 import id_token # type: ignore
 from google.auth.transport import requests as google_requests # type: ignore
 from django.conf import settings # type: ignore
+
+from rest_framework.throttling import AnonRateThrottle
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 
 User = get_user_model()
@@ -123,3 +129,51 @@ def google_auth(request):
         print("General error:", str(e))
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+
+class PasswordResetRequestView(APIView):
+    throttle_classes = [AnonRateThrottle]  # Apply DRF throttling
+
+    def post(self, request):
+        serializer = PasswordResetSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        user = User.objects.get(email=email)
+
+        # Generate reset token
+        token_generator = PasswordResetTokenGenerator()
+        token = token_generator.make_token(user)
+        uid = user.pk
+
+        # Build reset URL
+        reset_url = f"{settings.SITE_PROTOCOL}://{settings.SITE_DOMAIN}/reset-password/{uid}/{token}/"
+
+        # Render HTML email
+        html_message = render_to_string('account/email/password_reset_email.html', {
+            'user': user,
+            'reset_url': reset_url,
+        })
+        plain_message = strip_tags(html_message)
+
+        # Send email
+        send_mail(
+            subject='Password Reset Request',
+            message=plain_message,
+            html_message=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+        )
+
+        return Response({"detail": "Password reset link sent."}, status=status.HTTP_200_OK)   
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.get(pk=serializer.validated_data['uid'])
+        
+        # Update password
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+
+        return Response({"detail": "Password reset successful."}, status=status.HTTP_200_OK)

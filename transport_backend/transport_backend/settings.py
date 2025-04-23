@@ -71,10 +71,16 @@ CORS_ALLOWED_ORIGINS = [
 
 # JWT Authentication Settings
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',  # Added for social auth compatibility
-    ),
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/hour',  # 10 requests per hour for anonymous users
+    },
 }
 
 SIMPLE_JWT = {
@@ -96,6 +102,20 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
 
 PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY') 
 PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY')
+
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ezekielstephen191@gmail.com'
+EMAIL_HOST_PASSWORD = 'your-app-password'  # Use an App Password for Gmail
+DEFAULT_FROM_EMAIL = 'ezekielstephen191@gmail.com'
+
+SITE_DOMAIN = 'localhost:5173'  # Your frontend URL
+SITE_PROTOCOL = 'http'  # Use 'https' in production
+
 
 # Redirect URI (must match Google Console)
 SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'http://127.0.0.1:8000/auth/complete/google-oauth2/'
@@ -127,7 +147,7 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
