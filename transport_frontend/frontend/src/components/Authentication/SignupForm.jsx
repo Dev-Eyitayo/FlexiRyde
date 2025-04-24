@@ -4,6 +4,7 @@ import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { signup } from "../../api";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const SignupForm = ({
   setError,
@@ -20,6 +21,7 @@ const SignupForm = ({
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login: loginToContext } = useAuth();
+  const navigate = useNavigate();
 
   // Expose reset functionality via the resetForm prop
   useEffect(() => {
@@ -66,6 +68,7 @@ const SignupForm = ({
       toast.success("Signup successful! 🎉", { autoClose: 1000 });
       // Reset form on success
       setSignupForm({ first_name: "", last_name: "", email: "", password: "" });
+      navigate("/", { replace: true }); // Navigate to home, replace history
       onClose();
     } catch (err) {
       const friendlyMessage = getFriendlyErrorMessage(err);

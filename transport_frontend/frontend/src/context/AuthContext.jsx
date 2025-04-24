@@ -11,13 +11,19 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(() =>
-    JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null")
+    JSON.parse(
+      localStorage.getItem("user") || sessionStorage.getItem("user") || "null"
+    )
   );
-  const [access, setAccess] = useState(() =>
-    localStorage.getItem("access") || sessionStorage.getItem("access") || null
+  const [access, setAccess] = useState(
+    () =>
+      localStorage.getItem("access") || sessionStorage.getItem("access") || null
   );
-  const [refresh, setRefresh] = useState(() =>
-    localStorage.getItem("refresh") || sessionStorage.getItem("refresh") || null
+  const [refresh, setRefresh] = useState(
+    () =>
+      localStorage.getItem("refresh") ||
+      sessionStorage.getItem("refresh") ||
+      null
   );
   const [lastUserFetch, setLastUserFetch] = useState(null); // Track the last fetch time
 
@@ -33,7 +39,9 @@ export const AuthProvider = ({ children }) => {
         .then((data) => {
           if (data.access) {
             setAccess(data.access);
-            const storage = localStorage.getItem("access") ? localStorage : sessionStorage;
+            const storage = localStorage.getItem("access")
+              ? localStorage
+              : sessionStorage;
             storage.setItem("access", data.access);
           } else {
             console.warn("Token refresh failed. Please log in again.");
@@ -66,7 +74,9 @@ export const AuthProvider = ({ children }) => {
             // Only update user if the data has changed to avoid infinite loop
             if (JSON.stringify(userData) !== JSON.stringify(user)) {
               setUser(userData);
-              const storage = localStorage.getItem("access") ? localStorage : sessionStorage;
+              const storage = localStorage.getItem("access")
+                ? localStorage
+                : sessionStorage;
               storage.setItem("user", JSON.stringify(userData));
             }
             setLastUserFetch(Date.now()); // Update the last fetch time

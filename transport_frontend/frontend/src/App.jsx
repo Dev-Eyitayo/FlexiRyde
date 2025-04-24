@@ -17,8 +17,10 @@ import AboutUs from "./Pages/AboutUs";
 import ParkAdminDashboard from "./Pages/ParkAdminDashboard";
 import ModalWrapper from "./components/Authentication/Modalwrapper";
 import PasswordResetConfirmForm from "./components/Authentication/PasswordResetConfirmForm";
+import { useNavigate } from "react-router-dom";
 
 export default function App() {
+  const navigate = useNavigate();
   return (
     <>
       <ToastContainer
@@ -50,7 +52,7 @@ export default function App() {
         <Route
           path='/reset-password/:uid/:token'
           element={
-            <ModalWrapper isOpen={true} onClose={() => window.history.back()}>
+            <ModalWrapper isOpen={true} onClose={() => navigate("/auth")}>
               <PasswordResetConfirmForm onClose={() => window.history.back()} />
             </ModalWrapper>
           }

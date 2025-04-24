@@ -1,4 +1,3 @@
-// src/components/Authentication/PasswordResetConfirmForm.jsx
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FaSpinner, FaEye, FaEyeSlash } from "react-icons/fa";
@@ -12,15 +11,29 @@ const PasswordResetConfirmForm = ({ onClose }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { uid, token } = useParams(); // Get UID and token from URL
+  const { uid, token } = useParams();
   const navigate = useNavigate();
 
   const getFriendlyErrorMessage = (error) => {
-    const errorMessage =
-      error.response?.data?.error || error.message || "Unknown error";
-    console.error("Technical error:", errorMessage, error);
+    const status = error.response?.status;
+    const errorData = error.response?.data;
+    let errorMessage =
+      errorData?.detail || errorData?.error || error.message || "Unknown error";
 
-    if (errorMessage.includes("Invalid token")) {
+    if (errorData?.new_password) {
+      const passwordError = Array.isArray(errorData.new_password)
+        ? errorData.new_password[0]
+        : errorData.new_password;
+      return passwordError;
+    }
+
+    if (status === 429 || errorMessage.includes("Request was throttled")) {
+      return "Too many requests. Please try again later.";
+    }
+    if (
+      errorMessage.includes("Invalid token") ||
+      errorMessage.includes("Invalid or expired token")
+    ) {
       return "The reset link is invalid or has expired. Please request a new one.";
     }
     if (errorMessage.includes("Passwords do not match")) {
@@ -29,7 +42,10 @@ const PasswordResetConfirmForm = ({ onClose }) => {
     if (errorMessage.includes("Password is required")) {
       return "Please enter a password.";
     }
-    return "Something went wrong. Please try again.";
+    if (error.message.includes("Network Error")) {
+      return "Unable to connect to the server. Please check your internet connection.";
+    }
+    return "An unexpected error occurred. Please try again.";
   };
 
   const handlePasswordResetConfirm = async (e) => {
@@ -44,22 +60,28 @@ const PasswordResetConfirmForm = ({ onClose }) => {
       if (newPassword !== confirmPassword) {
         throw new Error("Passwords do not match");
       }
-      await axios.post(
+      const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/password/reset/confirm/`,
         {
-          uid,
+          uid: parseInt(uid),
           token,
           new_password: newPassword,
         }
       );
+      console.log("Reset confirm response:", response.data);
       toast.success("Password reset successful! Please log in.", {
         autoClose: 2000,
       });
       setNewPassword("");
       setConfirmPassword("");
       onClose();
-      navigate("/login"); // Redirect to login page
+      navigate("/auth", { replace: true });
     } catch (err) {
+      console.error("Password reset confirm error:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
       const friendlyMessage = getFriendlyErrorMessage(err);
       setError(friendlyMessage);
       toast.error("Password reset failed! " + friendlyMessage, {
@@ -83,46 +105,48 @@ const PasswordResetConfirmForm = ({ onClose }) => {
         </h3>
         {error && <p className='text-sm text-red-500 mb-2'>{error}</p>}
         <form onSubmit={handlePasswordResetConfirm}>
-          <label className='text-base font-semibold text-gray-700'>
-            New Password
-          </label>
-          <div className='relative'>
-            <input
-              type={passwordVisible ? "text" : "password"}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder='Enter new password'
-              className='w-full border px-4 py-2 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 pr-12'
-            />
-            <button
-              type='button'
-              onClick={() => setPasswordVisible(!passwordVisible)}
-              className='absolute right-0 top-0 -mt-1 h-full flex items-center justify-center px-4 text-gray-500 hover:text-gray-700'
-              aria-label={passwordVisible ? "Hide password" : "Show password"}
-            >
-              {passwordVisible ? <FaEyeSlash /> : <FaEye />}
-            </button>
-          </div>
+          <div className='text-left'>
+            <label className='text-base font-semibold text-gray-700'>
+              New Password
+            </label>
+            <div className='relative'>
+              <input
+                type={passwordVisible ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder='Enter new password'
+                className='w-full border px-4 py-2 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 pr-12'
+              />
+              <button
+                type='button'
+                onClick={() => setPasswordVisible(!passwordVisible)}
+                className='absolute right-0 top-0 -mt-1 h-full flex items-center justify-center px-4 text-gray-500 hover:text-gray-700'
+                aria-label={passwordVisible ? "Hide password" : "Show password"}
+              >
+                {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
 
-          <label className='text-base font-semibold text-gray-700'>
-            Confirm Password
-          </label>
-          <div className='relative'>
-            <input
-              type={passwordVisible ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder='Confirm new password'
-              className='w-full border px-4 py-2 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 pr-12'
-            />
-            <button
-              type='button'
-              onClick={() => setPasswordVisible(!passwordVisible)}
-              className='absolute right-0 top-0 -mt-1 h-full flex items-center justify-center px-4 text-gray-500 hover:text-gray-700'
-              aria-label={passwordVisible ? "Hide password" : "Show password"}
-            >
-              {passwordVisible ? <FaEyeSlash /> : <FaEye />}
-            </button>
+            <label className='text-base font-semibold text-gray-700'>
+              Confirm Password
+            </label>
+            <div className='relative'>
+              <input
+                type={passwordVisible ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder='Confirm new password'
+                className='w-full border px-4 py-2 mt-2 mb-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 pr-12'
+              />
+              <button
+                type='button'
+                onClick={() => setPasswordVisible(!passwordVisible)}
+                className='absolute right-0 top-0 -mt-1 h-full flex items-center justify-center px-4 text-gray-500 hover:text-gray-700'
+                aria-label={passwordVisible ? "Hide password" : "Show password"}
+              >
+                {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
           </div>
 
           <button

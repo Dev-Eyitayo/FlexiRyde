@@ -495,6 +495,7 @@ import SignupForm from "../components/Authentication/SignUpForm";
 import GoogleAuthButton from "../components/Authentication/GoogleAuthButton";
 import PasswordResetForm from "../components/Authentication/PasswordResetForm"; // New import
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthPage({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState("login");
@@ -503,13 +504,56 @@ export default function AuthPage({ isOpen, onClose }) {
   const { login: loginToContext } = useAuth();
   const loginFormResetRef = useRef(null);
   const signupFormResetRef = useRef(null);
+  const navigate = useNavigate();
 
   // Function to map backend errors to user-friendly messages
   const getFriendlyErrorMessage = (error) => {
-    const errorMessage =
-      error.response?.data?.error || error.message || "Unknown error";
-    console.error("Technical error:", errorMessage, error);
+    const status = error.response?.status;
+    const errorData = error.response?.data;
+    let errorMessage =
+      errorData?.detail || errorData?.error || error.message || "Unknown error";
 
+    // Handle serializer errors (e.g., {'email': ['No user found with this email.']})
+    if (errorData?.email) {
+      const emailError = Array.isArray(errorData.email)
+        ? errorData.email[0]
+        : errorData.email;
+      if (emailError.includes("No user found with this email")) {
+        return "No account found with this email. Please check and try again.";
+      }
+      if (emailError.includes("Enter a valid email address")) {
+        return "Please enter a valid email address.";
+      }
+      return emailError; // Fallback for other email errors
+    }
+
+    console.error("Technical error:", {
+      status,
+      errorMessage,
+      errorData,
+      error,
+    });
+
+    // Throttling error (HTTP 429)
+    if (status === 429 || errorMessage.includes("Request was throttled")) {
+      return "Too many requests. Please try again later.";
+    }
+
+    // Password reset errors
+    if (errorMessage.includes("Multiple users found with this email")) {
+      return "Multiple accounts found with this email. Please contact support.";
+    }
+    if (errorMessage.includes("Failed to render email template")) {
+      return "Unable to process your request. Please try again later.";
+    }
+    if (errorMessage.includes("Failed to send email")) {
+      return "Failed to send reset email. Please try again later.";
+    }
+    if (errorMessage.includes("Invalid or expired token")) {
+      return "The reset link is invalid or has expired. Please request a new one.";
+    }
+
+    // Signup and login errors
     if (
       errorMessage.includes("UNIQUE constraint failed: accounts_user.email")
     ) {
@@ -537,7 +581,7 @@ export default function AuthPage({ isOpen, onClose }) {
       return "Incorrect email or password. Please try again.";
     }
     if (errorMessage.includes("No active account found")) {
-      return "Invalid Login credentials";
+      return "Invalid login credentials.";
     }
     if (errorMessage.includes("Invalid Google token")) {
       return "Google authentication failed. Please try again.";
@@ -545,10 +589,14 @@ export default function AuthPage({ isOpen, onClose }) {
     if (errorMessage.includes("Access token is required")) {
       return "Google authentication failed. Missing access token.";
     }
-    if (errorMessage.includes("No user found with this email")) {
-      return "No account found with this email. Please check and try again.";
+
+    // Network or unexpected errors
+    if (error.message.includes("Network Error")) {
+      return "Unable to connect to the server. Please check your internet connection.";
     }
-    return "Something went wrong. Please try again.";
+
+    // Fallback for unknown errors
+    return "An unexpected error occurred. Please try again.";
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -563,6 +611,7 @@ export default function AuthPage({ isOpen, onClose }) {
         }
       );
       loginToContext(response.data, true);
+      navigate("/", { replace: true }); // Navigate to home, replace history
       toast.success("Login successful! 🎉", { autoClose: 1000 });
       onClose();
     } catch (err) {
