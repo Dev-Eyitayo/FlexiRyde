@@ -32,7 +32,14 @@ export default function TripCard({
             {trip.from} <span className='mx-2 text-gray-400'>→</span> {trip.to}
           </h2>
           <p className='text-xs text-gray-500'>
-            Ref: <span className='font-mono'>{trip.bookingRef}</span>
+            Ref:{" "}
+            {trip.status === "pending" ? (
+              <span className='font-mono'>
+                Please Re-book and make payment to get a ref number
+              </span>
+            ) : (
+              <span className='font-mono'>{trip.bookingRef}</span>
+            )}
           </p>
         </div>
       </div>
@@ -66,12 +73,15 @@ export default function TripCard({
               Cancel
             </button>
           )}
-          <button
-            onClick={() => onViewTicket(trip.originalBooking)}
-            className='ml-3 bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition'
-          >
-            View Ticket
-          </button>
+
+          {["confirmed", "completed", "cancelled"].includes(trip.status) && (
+            <button
+              onClick={() => onViewTicket(trip.originalBooking)}
+              className='ml-3 bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition'
+            >
+              View Ticket
+            </button>
+          )}
         </div>
       </div>
     </div>

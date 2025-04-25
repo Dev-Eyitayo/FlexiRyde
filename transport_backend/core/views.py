@@ -344,7 +344,7 @@ class PaymentCallbackView(APIView):
             booking = get_object_or_404(Booking, payment_reference=reference)
             
             if response_data['status'] and response_data['data']['status'] == 'success':
-                booking.payment_status = 'completed'
+                booking.payment_status = 'successful'
                 booking.status = 'confirmed'
                 booking.save()
                 frontend_url = f'http://localhost:5173/travel-history'
@@ -375,8 +375,8 @@ class PaystackWebhookView(APIView):
         if payload['event'] == 'charge.success':
             reference = payload['data']['reference']
             booking = get_object_or_404(Booking, payment_reference=reference)
-            if booking.payment_status != 'completed':  # Idempotency check
-                booking.payment_status = 'completed'
+            if booking.payment_status != 'successful':  # Idempotency check
+                booking.payment_status = 'successful'
                 booking.status = 'confirmed'
                 booking.save()
             return Response({'status': 'success'}, status=status.HTTP_200_OK)

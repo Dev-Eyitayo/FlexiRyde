@@ -146,29 +146,17 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             if status_value == "cancelled" and instance:
                 if instance.trip.departure_datetime < timezone.now():
                     raise serializers.ValidationError("Cannot cancel past bookings.")
-                if instance.payment_status != "completed":
-                    raise serializers.ValidationError("Cannot cancel unpaid bookings.")
                 if instance.status == "cancelled":
                     raise serializers.ValidationError("Booking is already cancelled.")
 
         return attrs
 
     def create(self, validated_data):
-
         trip = validated_data["trip"]
         seat_count = validated_data["seat_count"]
-
-        with transaction.atomic():
-            trip = Trip.objects.select_for_update().get(id=trip.id)
-            if seat_count > trip.available_seats:
-                raise serializers.ValidationError(
-                    f"Only {trip.available_seats} seats are available."
-                )
-            trip.available_seats -= seat_count
-            trip.save()
-
         payment_reference = generate_ref_code(trip)
 
+        # Create booking without reserving seats
         booking = Booking.objects.create(
             user=self.context["request"].user,
             trip=trip,
@@ -179,8 +167,6 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             payment_status="pending",
         )
         return booking
-
-
 
 
 
@@ -224,6 +210,8 @@ class TripSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Departure time must be in the future.")
         return dt
        
+
+
 class BookingSerializer(serializers.ModelSerializer):
     trip = TripSerializer(read_only=True)
     trip_id = serializers.PrimaryKeyRelatedField(
@@ -240,57 +228,71 @@ class BookingSerializer(serializers.ModelSerializer):
         read_only_fields = ['user', 'created_at']
 
     def validate(self, attrs):
-        # Handle partial updates
         if "trip_id" in attrs:
             trip = attrs["trip_id"]
             if not Trip.objects.filter(id=trip.id).exists():
                 raise serializers.ValidationError("Invalid trip.")
 
-        if "status" in attrs:
-            status_value = attrs["status"]
-            instance = self.instance  # Existing booking
-            if status_value == "cancelled" and instance:
-                # Prevent cancelling past bookings
-                if instance.trip.departure_datetime < timezone.now():
-                    raise serializers.ValidationError("Cannot cancel past bookings.")
-                # Prevent cancelling unpaid or already cancelled bookings
-                if instance.payment_status != "completed":
-                    raise serializers.ValidationError("Cannot cancel unpaid bookings.")
-                if instance.status == "cancelled":
-                    raise serializers.ValidationError("Booking is already cancelled.")
-                # Enforce 4-hour cancellation restriction
-                time_until_departure = instance.trip.departure_datetime - timezone.now()
-                if time_until_departure.total_seconds() < 12 * 3600:
-                    raise serializers.ValidationError(
-                        "Cannot cancel bookings within 4 hours of departure."
-                    )
+        if "status" in attrs or "payment_status" in attrs:
+            instance = self.instance
+            if not instance:
+                raise serializers.ValidationError("Instance required for updates.")
+
+            # Validate status
+            if "status" in attrs:
+                status_value = attrs["status"]
+                if status_value == "cancelled":
+                    if instance.trip.departure_datetime < timezone.now():
+                        raise serializers.ValidationError("Cannot cancel past bookings.")
+                    if instance.status == "cancelled":
+                        raise serializers.ValidationError("Booking is already cancelled.")
+                    time_until_departure = instance.trip.departure_datetime - timezone.now()
+                    if time_until_departure.total_seconds() < 12 * 3600:
+                        raise serializers.ValidationError(
+                            "Cannot cancel bookings within 12 hours of departure."
+                        )
+
+            # Validate payment_status
+            if "payment_status" in attrs:
+                payment_status = attrs["payment_status"]
+                if payment_status == "completed" and instance.payment_status != "completed":
+                    if instance.trip.available_seats < instance.seat_count:
+                        raise serializers.ValidationError(
+                            f"Only {instance.trip.available_seats} seats are available."
+                        )
 
         return attrs
 
     def update(self, instance, validated_data):
-        # Handle cancellation logic
-        if validated_data.get('status') == 'cancelled' and instance.status != 'cancelled':
+        # Handle payment completion and seat allocation
+        if validated_data.get("payment_status") == "completed" and instance.payment_status != "completed":
             with transaction.atomic():
-                # Lock the trip to prevent race conditions
                 trip = Trip.objects.select_for_update().get(id=instance.trip.id)
-                # Increment available_seats by the booking's seat_count
-                trip.available_seats += instance.seat_count
+                if trip.available_seats < instance.seat_count:
+                    raise serializers.ValidationError(
+                        f"Only {trip.available_seats} seats are available."
+                    )
+                trip.available_seats -= instance.seat_count
                 trip.save()
-                # Update the booking status
-                instance.status = 'cancelled'
+                instance.payment_status = "completed"
+                instance.status = "confirmed"  # Update status to confirmed
                 instance.save()
+
+        # Handle cancellation
+        elif validated_data.get("status") == "cancelled" and instance.status != "cancelled":
+            with transaction.atomic():
+                trip = Trip.objects.select_for_update().get(id=instance.trip.id)
+                if instance.payment_status == "completed":  # Only increment if seats were reserved
+                    trip.available_seats += instance.seat_count
+                    trip.save()
+                instance.status = "cancelled"
+                instance.save()
+
         else:
-            # Handle other updates (if any)
+            # Handle other updates
             instance = super().update(instance, validated_data)
 
         return instance
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        booking = Booking.objects.create(user=user, **validated_data)
-        return booking  # Return the instance, not serialized data
-
-
 
 
 

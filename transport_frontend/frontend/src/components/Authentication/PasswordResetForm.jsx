@@ -55,7 +55,7 @@ const PasswordResetForm = ({ setError, getFriendlyErrorMessage, onClose }) => {
             Check Your Email
           </h3>
           <p className='text-sm text-gray-500 mb-4'>
-            A password reset link has been sent to <strong>{email}</strong>.
+            A password reset link has been sent to you<strong>{email}</strong>.
             Please check your inbox (and spam/junk folder) to reset your
             password.
           </p>
