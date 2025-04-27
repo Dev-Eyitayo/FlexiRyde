@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import authFetch from "../utils/authFetch";
 
 const dummyRoutes = [
   { id: 1, name: "Lagos to Abuja", from: "Lagos", to: "Abuja" },
@@ -196,62 +197,55 @@ const ParkAdminDashboard = () => {
   };
 
   const confirmScheduleTrips = async () => {
+    if (!selectedRoute || !price || !date || departureTimes.length === 0) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+  
     setIsSubmitting(true);
+  
     try {
-      if (editingTripId) {
-        let updatedTrips = [...scheduledTrips];
-        updatedTrips = updatedTrips.map((trip) =>
-          trip.id === editingTripId
-            ? {
-                ...trip,
-                route: selectedRoute,
-                price: parseFloat(price),
-                date,
-                departureTime: departureTimes[0].time,
-                bus: departureTimes[0].bus,
-                bookings: trip.bookings,
-              }
-            : trip
-        );
-
-        const newTrips = departureTimes.slice(1).map((dt) => ({
-          id: Date.now() + Math.random(),
-          route: selectedRoute,
-          price: parseFloat(price),
-          date,
-          departureTime: dt.time,
-          bus: dt.bus,
-          bookings: 0,
-        }));
-
-        setScheduledTrips([...updatedTrips, ...newTrips]);
-        toast.success(
-          `Trip updated successfully! ${
-            newTrips.length > 0 ? `${newTrips.length} new trip(s) added.` : ""
-          }`,
-          { autoClose: 2000 }
-        );
+      const tripsPayload = departureTimes.map((dt) => ({
+        route_id: selectedRoute.id,
+        bus_id: dt.bus.id,
+        departure_datetime: new Date(
+          `${date.toISOString().split("T")[0]}T${dt.time}:00`
+        ).toISOString(), // Proper ISO format
+        seat_price: parseFloat(price),
+      }));
+  
+      const res = await authFetch(`/parks/${parkId}/trips/create/`, {
+        method: "POST",
+        body: JSON.stringify({ trips: tripsPayload }),
+      });
+  
+      if (res.ok) {
+        const data = await res.json();
+        const { created_trips, errors } = data;
+  
+        if (created_trips && created_trips.length > 0) {
+          toast.success(`${created_trips.length} trip(s) scheduled successfully!`, {
+            autoClose: 2000,
+          });
+          resetForm();
+  
+          // Optionally: Refresh trips list here or add created trips to your scheduledTrips
+        }
+  
+        if (errors && errors.length > 0) {
+          errors.forEach((err) => toast.error(err, { autoClose: 3000 }));
+        }
+  
+        setShowConfirmModal(false);
       } else {
-        const newTrips = departureTimes.map((dt) => ({
-          id: Date.now() + Math.random(),
-          route: selectedRoute,
-          price: parseFloat(price),
-          date,
-          departureTime: dt.time,
-          bus: dt.bus,
-          bookings: 0,
-        }));
-        setScheduledTrips([...scheduledTrips, ...newTrips]);
-        toast.success("Trips scheduled successfully!", { autoClose: 2000 });
+        const errorData = await res.json();
+        toast.error(errorData.error || "Failed to schedule trips.", {
+          autoClose: 3000,
+        });
       }
-      resetForm();
-      setShowConfirmModal(false);
     } catch (error) {
-      toast.error(
-        editingTripId ? "Failed to update trip." : "Failed to schedule trips.",
-        { autoClose: 2000 }
-      );
-      console.error("Error:", error);
+      console.error("Error scheduling trips:", error);
+      toast.error("Something went wrong.", { autoClose: 3000 });
     } finally {
       setIsSubmitting(false);
     }
