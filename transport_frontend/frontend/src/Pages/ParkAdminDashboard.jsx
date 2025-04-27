@@ -83,9 +83,25 @@ const ParkAdminDashboard = () => {
   const [buses, setBuses] = useState([]);
   const [scheduledTrips, setScheduledTrips] = useState([]);
   
+  const loadUserProfile = async () => {
+    try {
+      const res = await authFetch(`/auth/user/`);
+      if (res.ok) {
+        const data = await res.json();
+        const parks = data.managed_parks;
+        if (parks.length > 0) {
+          setParkId(parks[0].id);
+        } else {
+          toast.error("No park assigned to you.");
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Error loading user profile.");
+    }
+  };
 
 
-  
   const loadRoutes = async () => {
   try {
     const res = await authFetch(`/parks/${parkId}/routes/`);
