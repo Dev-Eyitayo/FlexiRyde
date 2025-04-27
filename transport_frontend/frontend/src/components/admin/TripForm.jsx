@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import authFetch from "../utils/authFetch"; // Adjust your import
+import authFetch from "../..//utils/authFetch"; // Adjust your import
 import { toast } from "react-toastify";
 
 const ParkAdminDashboard = () => {

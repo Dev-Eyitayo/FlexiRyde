@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -101,48 +101,64 @@ const ParkAdminDashboard = () => {
     }
   };
 
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+  
+
+  useEffect(() => {
+    if (parkId) {
+      loadRoutes();
+      loadBuses();
+      loadTrips();
+    }
+  }, [parkId]);
+
 
   const loadRoutes = async () => {
-  try {
-    const res = await authFetch(`/parks/${parkId}/routes/`);
-    if (res.ok) {
-      const data = await res.json();
-      setRoutes(data);
-    } else {
-      console.error("Failed to load routes");
+    try {
+      const res = await authFetch(`/parks/${parkId}/routes/`);
+      console.log("Routes response:", res); // Debugging line
+      console.log("Routes response status:", res.status); // Debugging line
+      if (res.ok) {
+        const data = await res.json();
+        setRoutes(data);
+      } else {
+        toast.error("Failed to load routes");
+      }
+    } catch (error) {
+      toast.error("Error loading routes:", error);
     }
-  } catch (error) {
-    console.error("Error loading routes:", error);
-  }
-};
+  };
 
-const loadBuses = async () => {
-  try {
-    const res = await authFetch(`/parks/${parkId}/buses/`);
-    if (res.ok) {
-      const data = await res.json();
-      setBuses(data);
-    } else {
-      console.error("Failed to load buses");
+  const loadBuses = async () => {
+    try {
+      const res = await authFetch(`/parks/${parkId}/buses/`);
+      if (res.ok) {
+        const data = await res.json();
+        setBuses(data);
+      } else {
+        console.error("Failed to load buses");
+      }
+    } catch (error) {
+      console.error("Error loading buses:", error);
     }
-  } catch (error) {
-    console.error("Error loading buses:", error);
-  }
-};
+  };
 
-const loadTrips = async () => {
-  try {
-    const res = await authFetch(`/parks/${parkId}/trips/`);
-    if (res.ok) {
-      const data = await res.json();
-      setScheduledTrips(data);
-    } else {
-      console.error("Failed to load trips");
+  const loadTrips = async () => {
+    try {
+      const res = await authFetch(`/parks/${parkId}/trips/`);
+      if (res.ok) {
+        const data = await res.json();
+        setScheduledTrips(data);
+      } else {
+        console.error("Failed to load trips");
+      }
+    } catch (error) {
+      console.error("Error loading trips:", error);
     }
-  } catch (error) {
-    console.error("Error loading trips:", error);
-  }
-};
+  };
+
   const resetForm = () => {
     setSelectedRoute(null);
     setPrice("");
@@ -348,21 +364,15 @@ const loadTrips = async () => {
                   value={selectedRoute?.id || ""}
                   onChange={(e) => {
                     const routeId = e.target.value;
-                    const route = dummyRoutes.find(
-                      (r) => r.id === parseInt(routeId)
-                    );
+                    const route = routes.find((r) => r.id === parseInt(routeId));
                     setSelectedRoute(route || null);
                   }}
-                  disabled={
-                    editingTripId &&
-                    scheduledTrips.find((t) => t.id === editingTripId)
-                      ?.bookings > 0
-                  }
+                  disabled={editingTripId && scheduledTrips.find((t) => t.id === editingTripId)?.bookings > 0}
                 >
-                  <option value=''>Select a route</option>
-                  {dummyRoutes.map((route) => (
+                  <option value="">Select a route</option>
+                  {routes.map((route) => (
                     <option key={route.id} value={route.id}>
-                      {route.name}
+                      {route.origin_park.name} ➔ {route.destination_park.name}
                     </option>
                   ))}
                 </select>
