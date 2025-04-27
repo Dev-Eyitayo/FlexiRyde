@@ -73,11 +73,60 @@ const ParkAdminDashboard = () => {
   const [price, setPrice] = useState("");
   const [date, setDate] = useState(null);
   const [departureTimes, setDepartureTimes] = useState([]);
-  const [scheduledTrips, setScheduledTrips] = useState(dummyScheduledTrips);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTripId, setEditingTripId] = useState(null);
 
+
+  const [parkId, setParkId] = useState(null); // parkId now dynamic
+  const [routes, setRoutes] = useState([]);
+  const [buses, setBuses] = useState([]);
+  const [scheduledTrips, setScheduledTrips] = useState([]);
+  
+
+
+  
+  const loadRoutes = async () => {
+  try {
+    const res = await authFetch(`/parks/${parkId}/routes/`);
+    if (res.ok) {
+      const data = await res.json();
+      setRoutes(data);
+    } else {
+      console.error("Failed to load routes");
+    }
+  } catch (error) {
+    console.error("Error loading routes:", error);
+  }
+};
+
+const loadBuses = async () => {
+  try {
+    const res = await authFetch(`/parks/${parkId}/buses/`);
+    if (res.ok) {
+      const data = await res.json();
+      setBuses(data);
+    } else {
+      console.error("Failed to load buses");
+    }
+  } catch (error) {
+    console.error("Error loading buses:", error);
+  }
+};
+
+const loadTrips = async () => {
+  try {
+    const res = await authFetch(`/parks/${parkId}/trips/`);
+    if (res.ok) {
+      const data = await res.json();
+      setScheduledTrips(data);
+    } else {
+      console.error("Failed to load trips");
+    }
+  } catch (error) {
+    console.error("Error loading trips:", error);
+  }
+};
   const resetForm = () => {
     setSelectedRoute(null);
     setPrice("");

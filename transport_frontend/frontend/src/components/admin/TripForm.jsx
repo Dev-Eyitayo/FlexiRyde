@@ -1,188 +1,348 @@
-// TripForm.jsx
 import { useState, useEffect } from "react";
-import authFetch from "../../utils/authFetch";
-import { showToast, dismissToast } from "../../utils/toastUtils";
+import authFetch from "../utils/authFetch"; // Adjust your import
 import { toast } from "react-toastify";
-import { format, parseISO } from "date-fns";
 
-export default function TripForm({ parkId, trip, onClear, onTripSaved }) {
+const ParkAdminDashboard = () => {
+  const [parkId, setParkId] = useState(null);
   const [routes, setRoutes] = useState([]);
   const [buses, setBuses] = useState([]);
-  const [formData, setFormData] = useState({
-    route_id: "",
-    bus_id: "",
-    departure_time: "",
-    seat_price: "",
-  });
-  const [loading, setLoading] = useState(false);
+  const [scheduledTrips, setScheduledTrips] = useState([]);
+  const [selectedRoute, setSelectedRoute] = useState(null);
+  const [price, setPrice] = useState("");
+  const [date, setDate] = useState(null);
+  const [departureTimes, setDepartureTimes] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const fetchRoutesAndBuses = async () => {
-      try {
-        const routesRes = await authFetch(`/parks/${parkId}/routes/`);
-        if (!routesRes.ok) throw new Error("Failed to fetch routes");
-        const routesData = await routesRes.json();
-        setRoutes(routesData);
-
-        const busesRes = await authFetch(`/parks/${parkId}/buses`);
-        if (!busesRes.ok) throw new Error("Failed to fetch buses");
-        const busesData = await busesRes.json();
-        setBuses(busesData);
-      } catch (error) {
-        console.error("Error fetching routes and buses:", error);
-        showToast("error", "Failed to load routes and buses.");
+  const loadUserProfile = async () => {
+    try {
+      const res = await authFetch(`/auth/user/`);
+      if (res.ok) {
+        const data = await res.json();
+        const parks = data.managed_parks;
+        if (parks.length > 0) {
+          setParkId(parks[0].id);
+        } else {
+          toast.error("No park assigned to you.");
+        }
       }
-    };
-
-    fetchRoutesAndBuses();
-
-    if (trip) {
-      // Parse the ISO datetime string (e.g., "2025-04-10T13:42:00Z")
-      const departureDateTime = parseISO(trip.departure_datetime);
-      // Format for datetime-local input (YYYY-MM-DDThh:mm)
-      const formattedDateTime = format(departureDateTime, "yyyy-MM-dd'T'HH:mm");
-
-      setFormData({
-        route_id: trip.route.id,
-        bus_id: trip.bus.id || "",
-        departure_time: formattedDateTime,
-        seat_price: trip.seat_price,
-      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Error loading user profile.");
     }
-  }, [parkId, trip]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    const toastId = showToast("loading", "Processing trip...");
+  const loadRoutes = async () => {
+    try {
+      const res = await authFetch(`/parks/${parkId}/routes/`);
+      if (res.ok) {
+        const data = await res.json();
+        setRoutes(data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const loadBuses = async () => {
+    try {
+      const res = await authFetch(`/parks/${parkId}/buses/`);
+      if (res.ok) {
+        const data = await res.json();
+        setBuses(data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const loadTrips = async () => {
+    try {
+      const res = await authFetch(`/parks/${parkId}/trips/`);
+      if (res.ok) {
+        const data = await res.json();
+        setScheduledTrips(data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  useEffect(() => {
+    if (parkId) {
+      loadRoutes();
+      loadBuses();
+      loadTrips();
+    }
+  }, [parkId]);
+
+  const resetForm = () => {
+    setSelectedRoute(null);
+    setPrice("");
+    setDate(null);
+    setDepartureTimes([]);
+  };
+
+  const addDepartureTime = () => {
+    setDepartureTimes([...departureTimes, { time: "", bus: null }]);
+  };
+
+  const updateDepartureTime = (index, field, value) => {
+    const updatedTimes = [...departureTimes];
+    updatedTimes[index][field] = value;
+    setDepartureTimes(updatedTimes);
+  };
+
+  const removeDepartureTime = (index) => {
+    const updatedTimes = departureTimes.filter((_, i) => i !== index);
+    setDepartureTimes(updatedTimes);
+  };
+
+  const submitTrips = async () => {
+    if (!selectedRoute || !price || !date || departureTimes.length === 0) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    const incompleteTimes = departureTimes.some((dt) => !dt.time || !dt.bus);
+    if (incompleteTimes) {
+      toast.error("Please complete all departure time fields");
+      return;
+    }
+
+    const tripsPayload = departureTimes.map((dt) => ({
+      route_id: selectedRoute.id,
+      bus_id: dt.bus.id,
+      departure_datetime: new Date(
+        `${date.toISOString().split("T")[0]}T${dt.time}:00`
+      ).toISOString(),
+      seat_price: parseFloat(price),
+    }));
+
+    setIsSubmitting(true);
 
     try {
-      const isEditing = !!trip;
-      const method = isEditing ? "PUT" : "POST";
-      const payload = {
-        ...(isEditing && { id: trip.id }),
-        route_id: formData.route_id,
-        bus_id: formData.bus_id,
-        departure_datetime: formData.departure_time, // Will be in local time, backend will handle conversion
-        seat_price: formData.seat_price,
-      };
-
       const res = await authFetch(`/parks/${parkId}/trips/create/`, {
-        method,
-        body: JSON.stringify(payload),
+        method: "POST",
+        body: JSON.stringify({ trips: tripsPayload }),
       });
 
-      if (!res.ok) {
+      if (res.ok) {
+        const data = await res.json();
+        const { created_trips, errors } = data;
+
+        if (created_trips && created_trips.length > 0) {
+          toast.success(`${created_trips.length} trip(s) scheduled successfully!`);
+          resetForm();
+          loadTrips(); // Refresh trips
+        }
+
+        if (errors && errors.length > 0) {
+          errors.forEach((err) => toast.error(err));
+        }
+      } else {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to process trip");
+        toast.error(errorData.error || "Failed to schedule trips");
       }
-
-      await res.json();
-      setFormData({ route_id: "", bus_id: "", departure_time: "", seat_price: "" });
-      onClear();
-      toast.success(isEditing ? "Trip updated successfully! 🎉" : "Trip created successfully! 🎉", {
-        autoClose: 1000,
-      });
-      onTripSaved();
     } catch (error) {
-      console.error("Error processing trip:", error);
-      showToast("error", error.message);
+      console.error(error);
+      toast.error("Something went wrong.");
     } finally {
-      setLoading(false);
-      dismissToast(toastId);
+      setIsSubmitting(false);
     }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
-    <div className="border rounded-lg p-4 shadow-md">
-      <h2 className="text-xl font-semibold mb-4">
-        {trip ? "Edit Trip" : "Create Trip"}
-      </h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Route</label>
-          <select
-            name="route_id"
-            value={formData.route_id}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            required
-          >
-            <option value="">Select Route</option>
-            {routes.map((route) => (
-              <option key={route.id} value={route.id}>
-                {route.origin_park.name} to {route.destination_park.name}
-              </option>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Park Admin Dashboard</h1>
+
+      {/* Form Section */}
+      <div className="bg-white rounded-lg p-4 shadow mb-8">
+        <h2 className="text-xl font-semibold mb-4">Schedule New Trips</h2>
+
+        <div className="grid gap-4">
+          {/* Route */}
+          <div>
+            <label className="block mb-1">Route</label>
+            <select
+              className="w-full border rounded p-2"
+              value={selectedRoute?.id || ""}
+              onChange={(e) => {
+                const routeId = parseInt(e.target.value);
+                const route = routes.find((r) => r.id === routeId);
+                setSelectedRoute(route || null);
+              }}
+            >
+              <option value="">Select a route</option>
+              {routes.map((route) => (
+                <option key={route.id} value={route.id}>
+                  {route.origin_park.name} ➔ {route.destination_park.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Price */}
+          <div>
+            <label className="block mb-1">Price per Seat (₦)</label>
+            <input
+              type="number"
+              className="w-full border rounded p-2"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              min="0"
+              step="0.01"
+              placeholder="Enter price"
+            />
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="block mb-1">Trip Date</label>
+            <input
+              type="date"
+              className="w-full border rounded p-2"
+              value={date ? date.toISOString().split("T")[0] : ""}
+              onChange={(e) => setDate(new Date(e.target.value))}
+              min={new Date().toISOString().split("T")[0]}
+            />
+          </div>
+
+          {/* Departure Times */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <label>Departure Times</label>
+              <button
+                type="button"
+                className="text-blue-500"
+                onClick={addDepartureTime}
+              >
+                + Add
+              </button>
+            </div>
+            {departureTimes.map((dt, index) => (
+              <div key={index} className="grid grid-cols-12 gap-2 mb-2">
+                {/* Time */}
+                <div className="col-span-5">
+                  <select
+                    className="w-full border rounded p-2"
+                    value={dt.time}
+                    onChange={(e) =>
+                      updateDepartureTime(index, "time", e.target.value)
+                    }
+                  >
+                    <option value="">Select Time</option>
+                    {Array.from({ length: 18 }, (_, i) => {
+                      const hour = i + 6;
+                      const timeString = `${hour.toString().padStart(2, "0")}:00`;
+                      return (
+                        <option key={timeString} value={timeString}>
+                          {timeString}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Bus */}
+                <div className="col-span-5">
+                  <select
+                    className="w-full border rounded p-2"
+                    value={dt.bus?.id || ""}
+                    onChange={(e) => {
+                      const busId = parseInt(e.target.value);
+                      const bus = buses.find((b) => b.id === busId);
+                      updateDepartureTime(index, "bus", bus || null);
+                    }}
+                  >
+                    <option value="">Select Bus</option>
+                    {buses.map((bus) => (
+                      <option key={bus.id} value={bus.id}>
+                        {bus.number_plate} (Capacity: {bus.total_seats})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Remove Button */}
+                <div className="col-span-2 flex justify-center items-center">
+                  <button
+                    type="button"
+                    className="text-red-500"
+                    onClick={() => removeDepartureTime(index)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
             ))}
-          </select>
-        </div>
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Bus</label>
-          <select
-            name="bus_id"
-            value={formData.bus_id}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            required
-          >
-            <option value="">Select Bus</option>
-            {buses.map((bus) => (
-              <option key={bus.id} value={bus.id}>
-                {bus.number_plate} (Capacity: {bus.total_seats})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Travel Date</label>
-          <input
-            type="datetime-local"
-            name="departure_time"
-            value={formData.departure_time}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Seat Price</label>
-          <input
-            type="number"
-            name="seat_price"
-            value={formData.seat_price}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            min="0"
-            step="0.01"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
-          disabled={loading}
-        >
-          {loading ? "Processing..." : trip ? "Update Trip" : "Create Trip"}
-        </button>
-        {trip && (
+          {/* Submit */}
           <button
             type="button"
-            onClick={onClear}
-            className="w-full mt-2 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
+            className="w-full bg-blue-600 text-white rounded p-2 mt-4"
+            onClick={submitTrips}
+            disabled={isSubmitting}
           >
-            Cancel Edit
+            {isSubmitting ? "Submitting..." : "Schedule Trips"}
           </button>
+        </div>
+      </div>
+
+      {/* Scheduled Trips Section */}
+      <div className="bg-white rounded-lg p-4 shadow">
+        <h2 className="text-xl font-semibold mb-4">Scheduled Trips</h2>
+        {scheduledTrips.length === 0 ? (
+          <p>No trips scheduled yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full table-auto">
+              <thead>
+                <tr>
+                  <th>Route</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Bus</th>
+                  <th>Price</th>
+                  <th>Available Seats</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scheduledTrips.map((trip) => (
+                  <tr key={trip.id}>
+                    <td>{trip.route.origin_park.name} ➔ {trip.route.destination_park.name}</td>
+                    <td>{formatDate(trip.departure_datetime)}</td>
+                    <td>{formatTime(trip.departure_datetime)}</td>
+                    <td>{trip.bus.number_plate} ({trip.bus.total_seats})</td>
+                    <td>₦{trip.seat_price.toLocaleString()}</td>
+                    <td>{trip.available_seats}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </form>
+      </div>
     </div>
   );
-}
+};
+
+export default ParkAdminDashboard;

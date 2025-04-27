@@ -212,7 +212,11 @@ class ParkTripsView(APIView):
     def get(self, request, park_id):
         try:
             park = BusPark.objects.get(id=park_id, admin=request.user)
-            trips = Trip.objects.filter(route__origin_park=park)
+            now = timezone.now()
+            trips = Trip.objects.filter(
+                route__origin_park=park,
+                departure_datetime__gte=now  # Only show trips that are today or in future
+            ).order_by('departure_datetime')
             serializer = TripListSerializer(trips, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except BusPark.DoesNotExist:
