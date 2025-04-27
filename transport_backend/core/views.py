@@ -226,7 +226,6 @@ class TripCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, park_id):
-        print("Incoming request data (POST):", request.data)
         try:
             park = BusPark.objects.get(id=park_id, admin=request.user)
         except BusPark.DoesNotExist:
@@ -235,45 +234,44 @@ class TripCreateView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = TripSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        print("Trip creation errors:", serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        trips_data = request.data.get('trips', [])
+        if not trips_data:
+            return Response({"error": "No trips data provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, park_id):
-        print("Incoming request data (PUT):", request.data)
-        trip_id = request.data.get('id')
-        if not trip_id:
-            return Response(
-                {"error": "Trip ID is required for updating."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        created_trips = []
+        errors = []
 
-        try:
-            park = BusPark.objects.get(id=park_id, admin=request.user)
-            trip = Trip.objects.get(id=trip_id, route__origin_park=park)
-        except BusPark.DoesNotExist:
-            return Response(
-                {"error": "Park not found or you do not have access."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Trip.DoesNotExist:
-            return Response(
-                {"error": "Trip not found or you do not have access."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        for trip_data in trips_data:
+            serializer = TripSerializer(data=trip_data)
+            if serializer.is_valid():
+                # Check for ±2 hour bus conflict
+                departure_datetime = serializer.validated_data['departure_datetime']
+                bus = serializer.validated_data['bus']
 
-        serializer = TripSerializer(trip, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        print("Trip update errors:", serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                bus_conflict = Trip.objects.filter(
+                    bus=bus,
+                    departure_datetime__date=departure_datetime.date()
+                ).filter(
+                    departure_datetime__range=[
+                        departure_datetime - timezone.timedelta(hours=2),
+                        departure_datetime + timezone.timedelta(hours=2)
+                    ]
+                ).exists()
 
+                if bus_conflict:
+                    errors.append(f"Bus {bus.number_plate} already has a trip near {departure_datetime}.")
+                    continue
+
+                created_trip = serializer.save()
+                created_trips.append(created_trip)
+            else:
+                errors.append(serializer.errors)
+
+        if created_trips:
+            response_data = TripListSerializer(created_trips, many=True).data
+            return Response({"created_trips": response_data, "errors": errors}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class TripDeleteView(APIView):
     permission_classes = [IsAuthenticated]
