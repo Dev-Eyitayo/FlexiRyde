@@ -410,7 +410,16 @@ const ParkAdminDashboard = () => {
                   onChange={(e) => {
                     const routeId = e.target.value;
                     const route = routes.find((r) => r.id === parseInt(routeId));
-                    setSelectedRoute(route || null);
+                    if (route) {
+                      setSelectedRoute({
+                        id: route.id,
+                        name: `${route.origin_park.name} ➔ ${route.destination_park.name}`,  // 👈 build name manually
+                        from: route.origin_park.name,
+                        to: route.destination_park.name,
+                      });
+                    } else {
+                      setSelectedRoute(null);
+                    }
                   }}
                   disabled={editingTripId && scheduledTrips.find((t) => t.id === editingTripId)?.bookings > 0}
                 >
