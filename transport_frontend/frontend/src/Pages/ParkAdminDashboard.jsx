@@ -205,18 +205,43 @@ const ParkAdminDashboard = () => {
   };
 
   const editTrip = (trip) => {
-    if (trip.bookings > 0) {
-      toast.warn(
-        "This trip has bookings. Route, date, and existing departure time changes are restricted."
-      );
-    }
     setEditingTripId(trip.id);
-    setSelectedRoute(trip.route);
-    setPrice(trip.price.toString());
-    setDate(new Date(trip.date));
-    setDepartureTimes([{ time: trip.departureTime, bus: trip.bus }]);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  
+    // Set selected route
+    const matchingRoute = routes.find(r => 
+      r.origin_park.name === trip.route.name.split("➔")[0].trim() &&
+      r.destination_park.name === trip.route.name.split("➔")[1].trim()
+    );
+    setSelectedRoute(matchingRoute || null);
+  
+    // Set price
+    setPrice(trip.price);
+  
+    // Set trip date
+    setDate(new Date(trip.date)); // `trip.date` was already mapped from backend
+  
+    // Set departure time
+    setDepartureTimes([
+      {
+        time: trip.departureTime ? formatBackendTime(trip.departureTime) : '',
+        bus: buses.find(b => b.number_plate === trip.bus.plateNumber) || null,
+      },
+    ]);
   };
+  
+  const formatBackendTime = (timeStr) => {
+    // Convert "06:00 AM" format to "06:00"
+    const parts = timeStr.split(' ');
+    let [hour, minute] = parts[0].split(':');
+    if (parts[1] === 'PM' && hour !== '12') {
+      hour = (parseInt(hour) + 12).toString();
+    }
+    if (parts[1] === 'AM' && hour === '12') {
+      hour = '00';
+    }
+    return `${hour.padStart(2, '0')}:${minute}`;
+  };
+  
 
   const deleteTrip = (tripId) => {
     const trip = scheduledTrips.find((t) => t.id === tripId);
