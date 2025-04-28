@@ -168,7 +168,7 @@ const ParkAdminDashboard = () => {
             capacity: trip.bus.total_seats,
           },
           price: trip.seat_price,
-          bookings: 0, // 🔥 You can leave this 0 for now until you load real bookings count later
+          bookings: trip.bookings, 
         }));
   
         setScheduledTrips(mappedTrips);
