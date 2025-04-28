@@ -508,26 +508,25 @@ const ParkAdminDashboard = () => {
                             )}
                         </div>
                         <div className='col-span-6'>
-                          <select
-                            className='w-full p-2 border border-gray-300 rounded-md'
+                        <select
+                            className="w-full p-2 border border-gray-300 rounded-md"
                             value={dt.bus?.id || ""}
                             onChange={(e) => {
                               const busId = e.target.value;
-                              const bus = dummyBuses.find(
-                                (b) => b.id === parseInt(busId)
-                              );
+                              const bus = buses.find((b) => b.id === parseInt(busId));
                               updateDepartureTime(index, "bus", bus || null);
                             }}
                           >
-                            <option value=''>Select a bus</option>
-                            {dummyBuses
+                            <option value="">Select a bus</option>
+                            {buses
                               .filter((bus) => bus.status === "available")
                               .map((bus) => (
                                 <option key={bus.id} value={bus.id}>
-                                  {bus.plateNumber} ({bus.capacity} seats)
+                                  {bus.number_plate} ({bus.total_seats} seats)
                                 </option>
                               ))}
                           </select>
+
                         </div>
                         <div className='col-span-2'>
                           <button
@@ -621,7 +620,7 @@ const ParkAdminDashboard = () => {
                           <span>
                             {dt.time} -{" "}
                             {dt.bus
-                              ? `${dt.bus.plateNumber}`
+                              ? `${dt.bus.number_plate}`
                               : "No bus selected"}
                           </span>
                           {dt.bus && (
@@ -691,7 +690,7 @@ const ParkAdminDashboard = () => {
                         {trip.bus.plateNumber} ({trip.bus.capacity})
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        ₦{trip.price.toLocaleString()}
+                        {/* ₦{trip.price.toLocaleString()} */}
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                         {trip.bookings}
