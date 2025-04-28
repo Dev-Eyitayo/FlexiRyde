@@ -149,30 +149,37 @@ const ParkAdminDashboard = () => {
     try {
       const res = await authFetch(`/parks/${parkId}/trips/`);
       if (res.ok) {
-        const data = await res.json();
+        const tripsData = await res.json();
   
-        // MAP the API trips into frontend expected structure
-        const mappedTrips = data.map((trip) => ({
+        // 🔥 Map backend trips into frontend expected format
+        const mappedTrips = tripsData.map((trip) => ({
           id: trip.id,
           route: {
             name: `${trip.route.origin_park.name} ➔ ${trip.route.destination_park.name}`,
           },
-          date: trip.departure_datetime,
-          departureTime: new Date(trip.departure_datetime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          date: new Date(trip.departure_datetime),
+          departureTime: new Date(trip.departure_datetime).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          }),
           bus: {
             plateNumber: trip.bus.number_plate,
             capacity: trip.bus.total_seats,
           },
           price: trip.seat_price,
-          bookings: trip.available_seats !== undefined ? (trip.bus.total_seats - trip.available_seats) : 0,
+          bookings: 0, // 🔥 You can leave this 0 for now until you load real bookings count later
         }));
   
         setScheduledTrips(mappedTrips);
+      } else {
+        console.error("Failed to load trips");
       }
     } catch (error) {
       console.error("Error loading trips:", error);
     }
   };
+  
   
   const resetForm = () => {
     setSelectedRoute(null);
