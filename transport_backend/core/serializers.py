@@ -68,19 +68,21 @@ class IndirectRouteSerializer(serializers.ModelSerializer):
 class TripListSerializer(serializers.ModelSerializer):
     bus = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
-    departure_datetime = serializers.DateTimeField()  # Use the new field
+    bookings = serializers.SerializerMethodField()  # 👈 NEW
+    departure_datetime = serializers.DateTimeField()
     available_seats = serializers.IntegerField(read_only=True)
 
     class Meta:
-            model = Trip
-            fields = [
-                'id',
-                'departure_datetime',
-                'seat_price',
-                'bus',
-                'route',
-                'available_seats',  # Make sure to include it here
-            ]
+        model = Trip
+        fields = [
+            'id',
+            'departure_datetime',
+            'seat_price',
+            'bus',
+            'route',
+            'available_seats',
+            'bookings',  # 👈 NEW
+        ]
 
     def get_bus(self, obj):
         return {
@@ -103,6 +105,8 @@ class TripListSerializer(serializers.ModelSerializer):
             "distance_km": obj.route.distance_km,
         }
 
+    def get_bookings(self, obj):
+        return obj.bookings.filter(status__in=["confirmed", "pending"]).count()
 
 
 
