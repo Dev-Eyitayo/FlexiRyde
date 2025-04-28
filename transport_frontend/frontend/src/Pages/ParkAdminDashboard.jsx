@@ -168,7 +168,8 @@ const ParkAdminDashboard = () => {
             capacity: trip.bus.total_seats,
           },
           price: trip.seat_price,
-          bookings: trip.bookings, 
+          bookings: trip.bookings,
+          seatsTaken: trip.seats_taken,  
         }));
   
         setScheduledTrips(mappedTrips);
@@ -710,7 +711,7 @@ const ParkAdminDashboard = () => {
                         ₦{trip.price.toLocaleString()}
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {trip.bookings}
+                        {trip.bookings} bookings ({trip.seatsTaken} seats taken)
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                         <button

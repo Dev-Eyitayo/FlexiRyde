@@ -2,6 +2,7 @@ import uuid
 from .utils import generate_ref_code
 from datetime import datetime
 from django.utils import timezone
+from django.db import models
 from rest_framework import serializers
 from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
 from django.db import transaction
