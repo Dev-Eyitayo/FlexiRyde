@@ -1,81 +1,47 @@
-import { useState } from "react";
+import {useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "react-toastify";
+import { toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import authFetch from "../utils/authFetch";
 
-const dummyRoutes = [
-  { id: 1, name: "Lagos to Abuja", from: "Lagos", to: "Abuja" },
-  { id: 2, name: "Lagos to Port Harcourt", from: "Lagos", to: "Port Harcourt" },
-  { id: 3, name: "Abuja to Kano", from: "Abuja", to: "Kano" },
-  { id: 4, name: "Port Harcourt to Enugu", from: "Port Harcourt", to: "Enugu" },
-];
-
-const dummyBuses = [
-  { id: 1, plateNumber: "ABC123", capacity: 18, status: "available" },
-  { id: 2, plateNumber: "XYZ789", capacity: 14, status: "available" },
-  { id: 3, plateNumber: "DEF456", capacity: 22, status: "maintenance" },
-  { id: 4, plateNumber: "GHI789", capacity: 16, status: "available" },
-];
-
-const dummyScheduledTrips = [
-  {
-    id: 1,
-    route: dummyRoutes[0], // Lagos to Abuja
-    price: 5000,
-    date: new Date("2025-04-20"),
-    departureTime: "08:00",
-    bus: dummyBuses[0], // ABC123
-    bookings: 5,
-  },
-  {
-    id: 2,
-    route: dummyRoutes[1], // Lagos to Port Harcourt
-    price: 6000,
-    date: new Date("2025-04-21"),
-    departureTime: "10:00",
-    bus: dummyBuses[1], // XYZ789
-    bookings: 0,
-  },
-  {
-    id: 3,
-    route: dummyRoutes[2], // Abuja to Kano
-    price: 4500,
-    date: new Date("2025-04-22"),
-    departureTime: "12:00",
-    bus: dummyBuses[3], // GHI789
-    bookings: 0,
-  },
-  {
-    id: 4,
-    route: dummyRoutes[3], // Port Harcourt to Enugu
-    price: 3000,
-    date: new Date("2025-04-20"),
-    departureTime: "09:00",
-    bus: dummyBuses[0], // ABC123
-    bookings: 0,
-  },
-  {
-    id: 5,
-    route: dummyRoutes[0], // Lagos to Abuja
-    price: 5500,
-    date: new Date("2025-04-19"),
-    departureTime: "14:00",
-    bus: dummyBuses[1], // XYZ789
-    bookings: 0,
-  },
-];
 
 const ParkAdminDashboard = () => {
+  const [routes, setRoutes] = useState([]);
+  const [buses, setBuses] = useState([]);
+  const [scheduledTrips, setScheduledTrips] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [price, setPrice] = useState("");
   const [date, setDate] = useState(null);
   const [departureTimes, setDepartureTimes] = useState([]);
-  const [scheduledTrips, setScheduledTrips] = useState(dummyScheduledTrips);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTripId, setEditingTripId] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [routesRes, busesRes, tripsRes] = await Promise.all([
+          authFetch("/routes/"),
+          authFetch("/buses/"),
+          authFetch("/trips/park-admin/"), // or your endpoint
+        ]);
+        const routesData = await routesRes.json();
+        const busesData = await busesRes.json();
+        const tripsData = await tripsRes.json();
+
+        setRoutes(routesData);
+        setBuses(busesData);
+        setScheduledTrips(tripsData);
+      } catch (error) {
+        toast.error("Failed to load initial dashboard data");
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const resetForm = () => {
     setSelectedRoute(null);
@@ -199,63 +165,57 @@ const ParkAdminDashboard = () => {
     setIsSubmitting(true);
     try {
       if (editingTripId) {
-        let updatedTrips = [...scheduledTrips];
-        updatedTrips = updatedTrips.map((trip) =>
-          trip.id === editingTripId
-            ? {
-                ...trip,
-                route: selectedRoute,
-                price: parseFloat(price),
-                date,
-                departureTime: departureTimes[0].time,
-                bus: departureTimes[0].bus,
-                bookings: trip.bookings,
-              }
-            : trip
-        );
-
-        const newTrips = departureTimes.slice(1).map((dt) => ({
-          id: Date.now() + Math.random(),
-          route: selectedRoute,
-          price: parseFloat(price),
-          date,
-          departureTime: dt.time,
-          bus: dt.bus,
-          bookings: 0,
-        }));
-
-        setScheduledTrips([...updatedTrips, ...newTrips]);
-        toast.success(
-          `Trip updated successfully! ${
-            newTrips.length > 0 ? `${newTrips.length} new trip(s) added.` : ""
-          }`,
-          { autoClose: 2000 }
-        );
-      } else {
-        const newTrips = departureTimes.map((dt) => ({
-          id: Date.now() + Math.random(),
-          route: selectedRoute,
-          price: parseFloat(price),
-          date,
-          departureTime: dt.time,
-          bus: dt.bus,
-          bookings: 0,
-        }));
-        setScheduledTrips([...scheduledTrips, ...newTrips]);
-        toast.success("Trips scheduled successfully!", { autoClose: 2000 });
+        // PATCH request to update existing trip
+        await authFetch(`/trips/${editingTripId}/`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            price,
+            bus: departureTimes[0].bus.id,
+            departure_time: departureTimes[0].time,
+            departure_date: date.toISOString().split("T")[0],
+          }),
+        });
+  
+        toast.success("Trip updated successfully!");
       }
+  
+      const newTrips = departureTimes
+        .slice(editingTripId ? 1 : 0)
+        .map((dt) => ({
+          route: selectedRoute.id,
+          price,
+          bus: dt.bus.id,
+          departure_time: dt.time,
+          departure_date: date.toISOString().split("T")[0],
+        }));
+  
+      if (newTrips.length > 0) {
+        const res = await authFetch("/trips/bulk-create/", {
+          method: "POST",
+          body: JSON.stringify(newTrips),
+        });
+  
+        if (res.ok) {
+          toast.success("New trips added successfully!");
+        } else {
+          const err = await res.json();
+          toast.error(err.message || "Failed to add new trips.");
+        }
+      }
+  
+      // Refresh dashboard
       resetForm();
       setShowConfirmModal(false);
+      const refreshed = await (await authFetch("/trips/park-admin/")).json();
+      setScheduledTrips(refreshed);
     } catch (error) {
-      toast.error(
-        editingTripId ? "Failed to update trip." : "Failed to schedule trips.",
-        { autoClose: 2000 }
-      );
-      console.error("Error:", error);
+      console.error("Trip submit error", error);
+      toast.error("Trip submission failed.");
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   const formatDate = (dateString) => {
     const options = {
@@ -289,7 +249,7 @@ const ParkAdminDashboard = () => {
                   value={selectedRoute?.id || ""}
                   onChange={(e) => {
                     const routeId = e.target.value;
-                    const route = dummyRoutes.find(
+                    const route = routes.find(
                       (r) => r.id === parseInt(routeId)
                     );
                     setSelectedRoute(route || null);
@@ -301,7 +261,7 @@ const ParkAdminDashboard = () => {
                   }
                 >
                   <option value=''>Select a route</option>
-                  {dummyRoutes.map((route) => (
+                  {routes.map((route) => (
                     <option key={route.id} value={route.id}>
                       {route.name}
                     </option>
@@ -444,14 +404,14 @@ const ParkAdminDashboard = () => {
                             value={dt.bus?.id || ""}
                             onChange={(e) => {
                               const busId = e.target.value;
-                              const bus = dummyBuses.find(
+                              const bus = buses.find(
                                 (b) => b.id === parseInt(busId)
                               );
                               updateDepartureTime(index, "bus", bus || null);
                             }}
                           >
                             <option value=''>Select a bus</option>
-                            {dummyBuses
+                            {buses
                               .filter((bus) => bus.status === "available")
                               .map((bus) => (
                                 <option key={bus.id} value={bus.id}>
