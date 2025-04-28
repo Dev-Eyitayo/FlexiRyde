@@ -682,7 +682,7 @@ const ParkAdminDashboard = () => {
                         {trip.bus.plateNumber} ({trip.bus.capacity})
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {/* ₦{trip.price.toLocaleString()} */}
+                        ₦{trip.price.toLocaleString()}
                       </td>
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                         {trip.bookings}
