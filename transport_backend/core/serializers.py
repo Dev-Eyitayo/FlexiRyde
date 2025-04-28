@@ -113,7 +113,7 @@ class TripListSerializer(serializers.ModelSerializer):
 
     def get_seats_taken(self, obj):
         return obj.bookings.filter(status__in=["pending", "confirmed"]).aggregate(
-            total_seats=models.Sum('seat_count')  # ✅ Corrected here
+            total_seats=models.Sum('seat_count') 
         )['total_seats'] or 0
 
 

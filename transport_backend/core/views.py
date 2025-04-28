@@ -286,7 +286,9 @@ class TripDeleteView(APIView):
         except Trip.DoesNotExist:
             return Response({"error": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        if trip.bookings.exists():
+        active_bookings = trip.bookings.filter(status__in=["pending", "confirmed"])
+
+        if active_bookings.exists():
             return Response({"error": "Cannot delete trip with existing bookings."}, status=status.HTTP_400_BAD_REQUEST)
 
         trip.delete()
