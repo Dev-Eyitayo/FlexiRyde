@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast, ToastContainer} from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -69,9 +69,6 @@ const dummyScheduledTrips = [
 ];
 
 const ParkAdminDashboard = () => {
-  const [routes, setRoutes] = useState([]);
-  const [buses, setBuses] = useState([]);
-  const [scheduledTrips, setScheduledTrips] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [price, setPrice] = useState("");
   const [date, setDate] = useState(null);
@@ -379,7 +376,6 @@ const ParkAdminDashboard = () => {
       setIsSubmitting(false);
     }
   };
-  
 
   const formatDate = (dateString) => {
     const options = {
