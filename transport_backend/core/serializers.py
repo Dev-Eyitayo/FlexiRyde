@@ -2,6 +2,7 @@ import uuid
 from .utils import generate_ref_code
 from datetime import datetime
 from django.utils import timezone
+from django.db import models
 from rest_framework import serializers
 from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
 from django.db import transaction
@@ -68,19 +69,23 @@ class IndirectRouteSerializer(serializers.ModelSerializer):
 class TripListSerializer(serializers.ModelSerializer):
     bus = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
-    departure_datetime = serializers.DateTimeField()  # Use the new field
+    bookings_count = serializers.SerializerMethodField()
+    seats_taken = serializers.SerializerMethodField()
+    departure_datetime = serializers.DateTimeField()
     available_seats = serializers.IntegerField(read_only=True)
 
     class Meta:
-            model = Trip
-            fields = [
-                'id',
-                'departure_datetime',
-                'seat_price',
-                'bus',
-                'route',
-                'available_seats',  # Make sure to include it here
-            ]
+        model = Trip
+        fields = [
+            'id',
+            'departure_datetime',
+            'seat_price',
+            'bus',
+            'route',
+            'available_seats',
+            'bookings_count',
+            'seats_taken',
+        ]
 
     def get_bus(self, obj):
         return {
@@ -103,7 +108,13 @@ class TripListSerializer(serializers.ModelSerializer):
             "distance_km": obj.route.distance_km,
         }
 
+    def get_bookings_count(self, obj):
+        return obj.bookings.filter(status__in=["pending", "confirmed"]).count()
 
+    def get_seats_taken(self, obj):
+        return obj.bookings.filter(status__in=["pending", "confirmed"]).aggregate(
+            total_seats=models.Sum('seat_count') 
+        )['total_seats'] or 0
 
 
 class BookingCreateSerializer(serializers.ModelSerializer):
