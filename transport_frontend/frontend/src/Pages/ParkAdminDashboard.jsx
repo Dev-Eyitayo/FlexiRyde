@@ -244,17 +244,29 @@ const ParkAdminDashboard = () => {
   };
   
 
-  const deleteTrip = (tripId) => {
-    const trip = scheduledTrips.find((t) => t.id === tripId);
-    if (trip.bookings > 0) {
-      toast.error("Cannot delete a trip with bookings.", { autoClose: 2000 });
+  const deleteTrip = async (tripId) => {
+    if (!window.confirm("Are you sure you want to delete this trip?")) {
       return;
     }
-    if (window.confirm("Are you sure you want to delete this trip?")) {
-      setScheduledTrips(scheduledTrips.filter((trip) => trip.id !== tripId));
-      toast.success("Trip deleted successfully!", { autoClose: 2000 });
+  
+    try {
+      const res = await authFetch(`/trips/${tripId}/delete/`, {
+        method: "DELETE",
+      });
+  
+      if (res.ok) {
+        toast.success("Trip deleted successfully!", { autoClose: 2000 });
+        loadTrips(); // Refresh scheduled trips
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to delete trip.", { autoClose: 3000 });
+      }
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+      toast.error("Something went wrong.", { autoClose: 3000 });
     }
   };
+  
 
   const submitTrips = async () => {
     if (!selectedRoute || !price || !date || departureTimes.length === 0) {
