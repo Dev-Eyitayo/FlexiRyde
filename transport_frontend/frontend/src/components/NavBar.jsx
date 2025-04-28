@@ -61,6 +61,7 @@ export default function NavBar() {
 
   useEffect(() => {
     function handleClickOutside(event) {
+      3;
       if (
         desktopToggleRef.current &&
         desktopDropdownRef.current &&

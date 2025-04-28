@@ -1,7 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import Footer from "./components/Footer";
 // import AuthModal from "./components/AuthModal"; // Import the modal component
-import AuthPage from "./components/AuthPage";
+// import AuthPage from "./pages/AuthPage";
+import AuthPage from "./Pages/AuthPage";
 import ChangeBooking from "./Pages/ChangeBooking";
 import Home from "./Pages/Home";
 import NavBar from "./components/NavBar";
@@ -14,7 +15,12 @@ import TravelHistory from "./Pages/TravelHistory";
 import TripDashboard from "./components/admin/TripDashboard";
 import AboutUs from "./Pages/AboutUs";
 import ParkAdminDashboard from "./Pages/ParkAdminDashboard";
+import ModalWrapper from "./components/Authentication/Modalwrapper";
+import PasswordResetConfirmForm from "./components/Authentication/PasswordResetConfirmForm";
+import { useNavigate } from "react-router-dom";
+
 export default function App() {
+  const navigate = useNavigate();
   return (
     <>
       <ToastContainer
@@ -43,6 +49,14 @@ export default function App() {
         <Route path='/contact-support' element={<ContactSupport />} />
         <Route path='/travel-history' element={<TravelHistory />} />
         <Route path='/trip-dashboard' element={<ParkAdminDashboard />} />
+        <Route
+          path='/reset-password/:uid/:token'
+          element={
+            <ModalWrapper isOpen={true} onClose={() => navigate("/auth")}>
+              <PasswordResetConfirmForm onClose={() => window.history.back()} />
+            </ModalWrapper>
+          }
+        />
       </Routes>
       <Footer />
     </>

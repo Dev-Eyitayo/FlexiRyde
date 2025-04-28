@@ -4,7 +4,7 @@ from datetime import datetime
 from django.utils import timezone
 from rest_framework import serializers
 from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
-
+from django.db import transaction
 
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -103,46 +103,72 @@ class TripListSerializer(serializers.ModelSerializer):
             "distance_km": obj.route.distance_km,
         }
 
+
+
+
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ["trip", "seat_count", "price"]
+        fields = ["trip", "seat_count", "price", "status"]  # Added status
 
     def validate(self, attrs):
-        trip = attrs["trip"]
-        seat_count = attrs["seat_count"]
+        # For creation, trip and seat_count are required
+        if not self.partial:  # Full validation for POST
+            if "trip" not in attrs:
+                raise serializers.ValidationError("Trip is required.")
+            if "seat_count" not in attrs:
+                raise serializers.ValidationError("Seat count is required.")
+            if "price" not in attrs:
+                raise serializers.ValidationError("Price is required.")
 
-        if seat_count < 1:
-            raise serializers.ValidationError("Must book at least 1 seat.")
+            trip = attrs["trip"]
+            seat_count = attrs["seat_count"]
 
-        # Ensure the trip has enough seats left
-        if seat_count > trip.available_seats:
-            raise serializers.ValidationError(
-                f"Only {trip.available_seats} seats are available."
-            )
+            if seat_count < 1:
+                raise serializers.ValidationError("Must book at least 1 seat.")
+
+            if seat_count > trip.available_seats:
+                raise serializers.ValidationError(
+                    f"Only {trip.available_seats} seats are available."
+                )
+
+            # Validate price
+            expected_price = trip.seat_price * seat_count
+            if attrs["price"] != expected_price:
+                raise serializers.ValidationError(
+                    f"Price must be {expected_price} for {seat_count} seats."
+                )
+
+        # For partial updates (PATCH), validate status if provided
+        if "status" in attrs:
+            status_value = attrs["status"]
+            instance = self.instance
+            if status_value == "cancelled" and instance:
+                if instance.trip.departure_datetime < timezone.now():
+                    raise serializers.ValidationError("Cannot cancel past bookings.")
+                if instance.status == "cancelled":
+                    raise serializers.ValidationError("Booking is already cancelled.")
 
         return attrs
 
     def create(self, validated_data):
         trip = validated_data["trip"]
         seat_count = validated_data["seat_count"]
-
-        # Deduct seats from the trip
-        trip.available_seats -= seat_count
-        trip.save()
-
         payment_reference = generate_ref_code(trip)
 
+        # Create booking without reserving seats
         booking = Booking.objects.create(
             user=self.context["request"].user,
             trip=trip,
             seat_count=seat_count,
             price=validated_data["price"],
-            payment_reference=payment_reference,  
-            status="confirmed"
+            payment_reference=payment_reference,
+            status="pending",
+            payment_status="pending",
         )
         return booking
-    
+
+
 
 class BusSerializer(serializers.ModelSerializer):
     park = BusParkSerializer(read_only=True)
@@ -184,6 +210,8 @@ class TripSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Departure time must be in the future.")
         return dt
        
+
+
 class BookingSerializer(serializers.ModelSerializer):
     trip = TripSerializer(read_only=True)
     trip_id = serializers.PrimaryKeyRelatedField(
@@ -194,20 +222,79 @@ class BookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = [
             'id', 'user', 'trip', 'trip_id',
-            'price', 'payment_reference',
+            'price', 'payment_reference', 'payment_status',
             'status', 'created_at'
         ]
         read_only_fields = ['user', 'created_at']
 
-    def create(self, validated_data):
-        user = self.context['request'].user
-        booking = Booking.objects.create(user=user, **validated_data)
-        # return the full nested serialized booking
-        return BookingDetailSerializer(booking).data
-    
+    def validate(self, attrs):
+        if "trip_id" in attrs:
+            trip = attrs["trip_id"]
+            if not Trip.objects.filter(id=trip.id).exists():
+                raise serializers.ValidationError("Invalid trip.")
+
+        if "status" in attrs or "payment_status" in attrs:
+            instance = self.instance
+            if not instance:
+                raise serializers.ValidationError("Instance required for updates.")
+
+            # Validate status
+            if "status" in attrs:
+                status_value = attrs["status"]
+                if status_value == "cancelled":
+                    if instance.trip.departure_datetime < timezone.now():
+                        raise serializers.ValidationError("Cannot cancel past bookings.")
+                    if instance.status == "cancelled":
+                        raise serializers.ValidationError("Booking is already cancelled.")
+                    time_until_departure = instance.trip.departure_datetime - timezone.now()
+                    if time_until_departure.total_seconds() < 12 * 3600:
+                        raise serializers.ValidationError(
+                            "Cannot cancel bookings within 12 hours of departure."
+                        )
+
+            # Validate payment_status
+            if "payment_status" in attrs:
+                payment_status = attrs["payment_status"]
+                if payment_status == "completed" and instance.payment_status != "completed":
+                    if instance.trip.available_seats < instance.seat_count:
+                        raise serializers.ValidationError(
+                            f"Only {instance.trip.available_seats} seats are available."
+                        )
+
+        return attrs
+
     def update(self, instance, validated_data):
-        # custom update logic
-        return super().update(instance, validated_data)
+        # Handle payment completion and seat allocation
+        if validated_data.get("payment_status") == "completed" and instance.payment_status != "completed":
+            with transaction.atomic():
+                trip = Trip.objects.select_for_update().get(id=instance.trip.id)
+                if trip.available_seats < instance.seat_count:
+                    raise serializers.ValidationError(
+                        f"Only {trip.available_seats} seats are available."
+                    )
+                trip.available_seats -= instance.seat_count
+                trip.save()
+                instance.payment_status = "completed"
+                instance.status = "confirmed"  # Update status to confirmed
+                instance.save()
+
+        # Handle cancellation
+        elif validated_data.get("status") == "cancelled" and instance.status != "cancelled":
+            with transaction.atomic():
+                trip = Trip.objects.select_for_update().get(id=instance.trip.id)
+                if instance.payment_status == "completed":  # Only increment if seats were reserved
+                    trip.available_seats += instance.seat_count
+                    trip.save()
+                instance.status = "cancelled"
+                instance.save()
+
+        else:
+            # Handle other updates
+            instance = super().update(instance, validated_data)
+
+        return instance
+
+
 
 class TripTicketSerializer(serializers.ModelSerializer):
     route = serializers.SerializerMethodField()
@@ -244,20 +331,27 @@ class TripTicketSerializer(serializers.ModelSerializer):
         }
 
 class BookingDetailSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)  # <-- Add this line!
+    id = serializers.IntegerField(read_only=True)
     trip = TripTicketSerializer()
     user = serializers.SerializerMethodField()
     ref_number = serializers.CharField(source="payment_reference")
     seats = serializers.IntegerField(source="seat_count")
-    status = serializers.CharField() 
+    status = serializers.CharField()
+    payment_status = serializers.CharField()
+    created_at = serializers.DateTimeField(read_only=True)  # Add created_at
 
     class Meta:
         model = Booking
-        fields = ["id", "ref_number", "price", "trip", "user", "seats", "status"]
+        fields = [
+            "id", "ref_number", "price", "trip", "user",
+            "seats", "status", "payment_status", "created_at"  # Include created_at
+        ]
 
     def get_user(self, obj):
         return {
             "first_name": obj.user.first_name,
             "last_name": obj.user.last_name
         }
-
+class PaymentInitializationSerializer(serializers.Serializer):
+    booking_id = serializers.IntegerField()
+    authorization_url = serializers.URLField(read_only=True)

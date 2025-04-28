@@ -9,6 +9,7 @@ import authFetch from "../utils/authFetch";
 export default function SeatAvailability() {
   const location = useLocation();
   const navigate = useNavigate();
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   // 1) Pull from location.state: an array of trips and the user's search data
   const trips = location.state?.trips || [];
@@ -29,20 +30,15 @@ export default function SeatAvailability() {
 
   // Whenever user changes trip selection, update `trip`
   useEffect(() => {
-    // console.log("Selected trip ID:", JSON.stringify(trips, null, 2));
     const selected = trips.find((t) => t.id === Number(selectedTripId));
     setTrip(selected || null);
   }, [selectedTripId, trips]);
 
-  // If you want to rely solely on the trip’s own fields
-  // (trip.available_seats, trip.bus.total_seats, trip.seat_price, etc.),
-  // then do so here:
+  // Update seat and price details based on selected trip
   useEffect(() => {
     if (!trip) return;
 
     const totalSeats = trip.bus?.total_seats ?? 24;
-    // If trip.available_seats is the number of seats left,
-    // then "booked" = totalSeats - trip.available_seats
     const booked = totalSeats - (trip.available_seats ?? 0);
 
     console.log("Trip object =>", JSON.stringify(trip, null, 2));
@@ -55,9 +51,9 @@ export default function SeatAvailability() {
   const isSeatAvailable =
     currentSeats.totalSeats - currentSeats.takenSeats >= bookedSeats;
 
-  // 4) Handle booking
+  // 4) Handle booking and payment
   const handleProceed = async () => {
-    const token =
+    let token =
       localStorage.getItem("access") || sessionStorage.getItem("access");
     if (!token) {
       toast.warning("🔐 Please log in to proceed with booking.", {
@@ -65,7 +61,7 @@ export default function SeatAvailability() {
         autoClose: 3000,
       });
       setTimeout(() => {
-        window.location.href = "/auth"; // or navigate("/auth")
+        navigate("/auth");
       }, 1500);
       return;
     }
@@ -85,33 +81,142 @@ export default function SeatAvailability() {
     setLoading(true);
 
     try {
-      const response = await authFetch("/bookings/create/", {
+      // Step 1: Create the booking
+      console.log("JWT Token:", token);
+      const bookingPayload = {
+        trip: Number(selectedTripId),
+        seat_count: bookedSeats,
+        price: price * bookedSeats,
+      };
+      console.log("Calling /api/bookings/create/ with:", bookingPayload);
+
+      const bookingResponse = await authFetch("/bookings/create/", {
         method: "POST",
-        body: JSON.stringify({
-          trip: Number(selectedTripId),
-          seat_count: bookedSeats,
-          price: price * bookedSeats, // or let the backend recalc
-        }),
+        body: JSON.stringify(bookingPayload),
       });
 
-      const data = await response.json();
-      console.log("Booking response:", data);
+      // Check content type
+      const bookingContentType = bookingResponse.headers.get("content-type");
+      console.log("Booking response status:", bookingResponse.status);
+      console.log("Booking response headers:", {
+        "content-type": bookingContentType,
+        location: bookingResponse.headers.get("location"),
+      });
 
-      if (response.ok) {
-        toast.success("🎉 Booking successful!", {
-          position: "top-right",
-          autoClose: 3000,
+      if (
+        !bookingContentType ||
+        !bookingContentType.includes("application/json")
+      ) {
+        const text = await bookingResponse.text();
+        console.error(
+          "Booking non-JSON response (first 500 chars):",
+          text.slice(0, 500)
+        );
+        throw new Error(
+          `Received non-JSON response from bookings/create (status: ${bookingResponse.status})`
+        );
+      }
+
+      const bookingData = await bookingResponse.json();
+      console.log("Booking response data:", bookingData);
+
+      if (!bookingResponse.ok) {
+        throw new Error(bookingData?.message || "Booking failed");
+      }
+
+      // Step 2: Initialize payment using standard fetch
+      const paymentPayload = { booking_id: bookingData.booking.id };
+      console.log(
+        "Calling http://127.0.0.1:8000/api/payment/initialize/ with:",
+        paymentPayload
+      );
+
+      let paymentResponse = await authFetch("/payment/initialize/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(paymentPayload),
+      });
+
+      // Handle 401 by refreshing token
+      if (paymentResponse.status === 401) {
+        console.log("Payment call returned 401, attempting token refresh...");
+        const refresh =
+          localStorage.getItem("refresh") || sessionStorage.getItem("refresh");
+        if (!refresh) {
+          throw new Error("No refresh token available");
+        }
+
+        const refreshResponse = await authFetch("/auth/token/refresh/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh }),
         });
-        setTimeout(() => {
-          // Navigate to ticket or confirmation page
-          navigate("/check-ticket", { state: { booking: data } });
-        }, 1000);
+
+        if (!refreshResponse.ok) {
+          throw new Error("Failed to refresh token");
+        }
+
+        const refreshData = await refreshResponse.json();
+        token = refreshData.access;
+        const storage = localStorage.getItem("access")
+          ? localStorage
+          : sessionStorage;
+        storage.setItem("access", token);
+
+        // Retry payment call
+        paymentResponse = await authFetch("/payment/initialize/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(paymentPayload),
+        });
+      }
+
+      // Check content type
+      const paymentContentType = paymentResponse.headers.get("content-type");
+      console.log("Payment response status:", paymentResponse.status);
+      console.log("Payment response headers:", {
+        "content-type": paymentContentType,
+        location: paymentResponse.headers.get("location"),
+      });
+
+      if (
+        !paymentContentType ||
+        !paymentContentType.includes("application/json")
+      ) {
+        const text = await paymentResponse.text();
+        console.error(
+          "Payment non-JSON response (first 500 chars):",
+          text.slice(0, 500)
+        );
+        throw new Error(
+          `Received non-JSON response from payment/initialize (status: ${paymentResponse.status})`
+        );
+      }
+
+      const paymentData = await paymentResponse.json();
+      console.log("Payment initialization response:", paymentData);
+
+      if (paymentResponse.ok && paymentData.authorization_url) {
+        toast.success("Redirecting to payment page...", {
+          position: "top-right",
+          autoClose: 2000,
+        });
+        window.location.href = paymentData.authorization_url;
       } else {
-        toast.error(`Booking failed: ${data?.message || "Please try again."}`);
+        throw new Error(paymentData?.error || "Failed to initialize payment");
       }
     } catch (err) {
-      console.error("❌ Booking error:", err);
-      toast.error("Something went wrong while booking.");
+      console.error("❌ Error in handleProceed:", err);
+      toast.error(`Error: ${err.message || "Something went wrong."}`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } finally {
       setLoading(false);
     }
@@ -142,7 +247,7 @@ export default function SeatAvailability() {
         </p>
       </div>
 
-      {/* Optional route visualization (if you have a component for it) */}
+      {/* Optional route visualization */}
       <RouteVisualization
         route={{
           from,
@@ -250,7 +355,8 @@ export default function SeatAvailability() {
                 <p className='font-medium text-yellow-800'>Not Enough Seats</p>
                 <p className='text-sm text-yellow-700'>
                   Only {currentSeats.totalSeats - currentSeats.takenSeats}{" "}
-                  seat(s) available. Please reduce number of passengers.
+                  seat(s) available. Please reduce number of seats or change
+                  your departure time.
                 </p>
               </div>
             </div>
@@ -295,7 +401,7 @@ export default function SeatAvailability() {
           }`}
         >
           {loading
-            ? "Booking..."
+            ? "Processing..."
             : isSeatAvailable
               ? `Proceed to Book ${bookedSeats} Seat(s)`
               : "Not Enough Seats"}

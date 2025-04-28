@@ -32,6 +32,17 @@ export default function ChangeBooking() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          // Handle unauthorized access
+          toast.error("You are not logged in. Please log in to continue.", {
+            autoClose: 2000,
+          });
+          setTimeout(() => {
+            navigate("/auth");
+          }, 2000);
+          return;
+        }
+
         const errorMessage = data.detail || "Booking not found.";
         setError(errorMessage);
         toast.error(errorMessage, { autoClose: 2000 });
@@ -88,6 +99,18 @@ export default function ChangeBooking() {
         const response = await authFetch(
           `/trips/search/?origin_id=${origin}&destination_id=${destination}&date=${newDate}`
         );
+
+        if (response.status === 401) {
+          // Handle unauthorized access
+          toast.error("You are not logged in. Please log in to continue.", {
+            autoClose: 2000,
+          });
+          setTimeout(() => {
+            navigate("/auth");
+          }, 2000);
+          return;
+        }
+
         const data = await response.json();
 
         // Filter trips with enough seats
@@ -104,7 +127,7 @@ export default function ChangeBooking() {
     };
 
     fetchTimes();
-  }, [newDate, booking]);
+  }, [newDate, booking, navigate]);
 
   const handleSubmit = async () => {
     if (!selectedTripId) {
@@ -118,13 +141,24 @@ export default function ChangeBooking() {
         body: JSON.stringify({ trip_id: selectedTripId }),
       });
 
+      if (response.status === 401) {
+        // Handle unauthorized access
+        toast.error("You are not logged in. Please log in to continue.", {
+          autoClose: 2000,
+        });
+        setTimeout(() => {
+          navigate("/auth");
+        }, 2000);
+        return;
+      }
+
       const data = await response.json();
 
       const ref = data.ref_number || data.payment_reference;
 
       const fetchFullBooking = await authFetch(`/bookings/ref/${ref}/`);
       const fullBooking = await fetchFullBooking.json();
-      console.log("Redirecting with booking:", JSON.stringify(data, null, 2));
+
       if (response.ok) {
         toast.success("Booking updated successfully!", {
           position: "top-right",
@@ -134,7 +168,6 @@ export default function ChangeBooking() {
           pauseOnHover: true,
           draggable: true,
           progress: undefined,
-          theme: "colored",
         });
         setTimeout(() => {
           if (ref) {

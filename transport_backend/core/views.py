@@ -1,18 +1,25 @@
+# views.py
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.generics import CreateAPIView
 from rest_framework import status
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+import requests
+import json
+from django.http import HttpResponseRedirect
 
 from .models import *
 from .serializers import (
-    CitySerializer, BusParkSerializer, RouteSerializer, BookingSerializer,
-    TripSerializer, TripListSerializer, IndirectRouteSerializer, BookingCreateSerializer, BusSerializer, 
-    BookingDetailSerializer 
+    CitySerializer, BusParkSerializer, RouteSerializer, BookingCreateSerializer,
+    TripSerializer, TripListSerializer, IndirectRouteSerializer, BookingDetailSerializer,
+    BusSerializer, PaymentInitializationSerializer, BookingSerializer
 )
 
 
@@ -39,12 +46,16 @@ class RouteViewSet(viewsets.ModelViewSet):
         return Route.objects.all()
 
 
+
 class BookingViewSet(viewsets.ModelViewSet):
-    def get_serializer_class(self):
-        if self.action == "list" or self.action == "retrieve":
-            return BookingDetailSerializer
-        return BookingSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action in ["list", "retrieve", "get_by_reference"]:
+            return BookingDetailSerializer
+        elif self.action in ["create"]:
+            return BookingCreateSerializer
+        return BookingSerializer  # Use BookingSerializer for update and partial_update
 
     @action(detail=False, methods=["get"], url_path=r"ref/(?P<ref>[A-Za-z0-9\-]+)")
     def get_by_reference(self, request, ref=None):
@@ -65,8 +76,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         for booking in bookings:
             if (
-                booking.status in ["confirmed", "pending"] and 
-                booking.trip and 
+                booking.status in ["confirmed", "pending"] and
+                booking.trip and
                 booking.trip.departure_datetime < now
             ):
                 booking.status = "completed"
@@ -75,8 +86,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         return bookings
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user, status='confirmed')
-
+        serializer.save(user=self.request.user)
 
 class TripSearchAPIView(ListAPIView):
     serializer_class = TripListSerializer
@@ -103,45 +113,23 @@ class TripSearchAPIView(ListAPIView):
         return queryset
 
 
-# class TripViewSet(viewsets.ModelViewSet):
-#     queryset = Trip.objects.all()
-#     serializer_class = TripSerializer
-#     permission_classes = [permissions.AllowAny]  # or IsAuthenticated
-
-#     @action(detail=True, methods=['get'], url_path='seats')
-#     def seat_availability(self, request, pk=None):
-#         trip = self.get_object()
-
-#         # Mock logic (replace with real seat tracking if needed)
-#         total_seats = trip.bus.total_seats
-#         booked = trip.bookings.count()
-
-#         taken_seat_ids = list(range(1, booked + 1))  # fake seat ids
-#         available_seats = list(range(booked + 1, total_seats + 1))
-
-#         return Response({
-#             "taken_seat_ids": taken_seat_ids,
-#             "available_seats": available_seats
-#         })
-
 class BookingCreateAPIView(CreateAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingCreateSerializer
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         booking = serializer.save()
-
-        # Use the detailed serializer for the response
         response_data = BookingDetailSerializer(booking).data
-        return Response(response_data, status=status.HTTP_201_CREATED)
+        return Response({
+            'message': 'Booking created successfully',
+            'booking': response_data,
+            'payment_url': '/api/payment/initialize/'
+        }, status=status.HTTP_201_CREATED)
 
- 
 
-
-# Add this custom permission class (if not already present)
 class IsParkAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'park_admin'
@@ -171,23 +159,20 @@ class TripViewSet(viewsets.ModelViewSet):
                 raise permissions.PermissionDenied("You can only update trips for your park.")
         serializer.save()
 
-  
-# ViewSet for buses
+
 class BusViewSet(viewsets.ModelViewSet):
     queryset = Bus.objects.all()
     serializer_class = BusSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Filter buses by park for park admins
         if self.request.user.role == 'park_admin':
             return Bus.objects.filter(park__admin=self.request.user)
-        # Optionally, allow filtering by park_id for all users
         park_id = self.request.query_params.get('park', None)
         if park_id:
             return Bus.objects.filter(park_id=park_id)
         return self.queryset
-    
+
 
 class ParkBusesView(APIView):
     permission_classes = [IsAuthenticated]
@@ -203,7 +188,8 @@ class ParkBusesView(APIView):
                 {"error": "Park not found or you do not have access."},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
+
 class ParkRoutesView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -218,7 +204,8 @@ class ParkRoutesView(APIView):
                 {"error": "Park not found or you do not have access."},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
+
 class ParkTripsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -233,8 +220,8 @@ class ParkTripsView(APIView):
                 {"error": "Park not found or you do not have access."},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
-# views.py
+
+
 class TripCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -286,3 +273,117 @@ class TripCreateView(APIView):
         
         print("Trip update errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# New Payment-Related Views
+class InitializePaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = PaymentInitializationSerializer(data=request.data)
+        if serializer.is_valid():
+            booking = get_object_or_404(Booking, id=serializer.validated_data['booking_id'], user=request.user)
+            
+            if booking.payment_status != 'pending':
+                return Response({'error': 'Payment already processed or invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            url = 'https://api.paystack.co/transaction/initialize'
+            headers = {
+                'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+                'Content-Type': 'application/json',
+            }
+            data = {
+                'email': booking.user.email,
+                'amount': int(booking.price * 100),  # Paystack expects amount in kobo (NGN)
+                'reference': booking.payment_reference,
+                'callback_url': request.build_absolute_uri('/api/payment/callback/'),
+                'metadata': {
+                    'booking_id': booking.id,
+                    'user_id': booking.user.id,
+                }
+            }
+            
+            try:
+                response = requests.post(url, headers=headers, json=data)
+                response_data = response.json()
+                
+                if response_data['status'] and response_data['data']['authorization_url']:
+                    return Response({
+                        'authorization_url': response_data['data']['authorization_url'],
+                        'reference': booking.payment_reference
+                    }, status=status.HTTP_200_OK)
+                else:
+                    booking.payment_status = 'failed'
+                    booking.status = 'cancelled'
+                    booking.save()
+                    return Response({'error': 'Failed to initialize payment.'}, status=status.HTTP_400_BAD_REQUEST)
+            except requests.RequestException as e:
+                booking.payment_status = 'failed'
+                booking.status = 'cancelled'
+                booking.save()
+                return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentCallbackView(APIView):
+    def get(self, request):
+        reference = request.query_params.get('reference')
+        if not reference:
+            return Response({'error': 'No reference provided.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        url = f'https://api.paystack.co/transaction/verify/{reference}'
+        headers = {
+            'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+            'Content-Type': 'application/json',
+        }
+        
+        try:
+            response = requests.get(url, headers=headers)
+            response_data = response.json()
+            
+            booking = get_object_or_404(Booking, payment_reference=reference)
+            
+            if response_data['status'] and response_data['data']['status'] == 'success':
+                booking.payment_status = 'successful'
+                booking.status = 'confirmed'
+                booking.save()
+                frontend_url = f'http://localhost:5173/travel-history'
+                return HttpResponseRedirect(frontend_url)
+                # return Response({
+                #     'message': 'Payment successful',
+                #     'booking': BookingDetailSerializer(booking).data
+                # }, status=status.HTTP_200_OK)
+            else:
+                booking.payment_status = 'failed'
+                booking.status = 'cancelled'
+                booking.save()
+                return Response({
+                    'error': 'Payment failed',
+                    'booking': BookingDetailSerializer(booking).data
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except requests.RequestException as e:
+            return Response({'error': f'Verification error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PaystackWebhookView(APIView):
+    def post(self, request):
+        payload = json.loads(request.body)
+        paystack_signature = request.headers.get('x-paystack-signature')
+        
+        # TODO: Implement HMAC signature verification (see Paystack docs)
+        if payload['event'] == 'charge.success':
+            reference = payload['data']['reference']
+            booking = get_object_or_404(Booking, payment_reference=reference)
+            if booking.payment_status != 'successful':  # Idempotency check
+                booking.payment_status = 'successful'
+                booking.status = 'confirmed'
+                booking.save()
+            return Response({'status': 'success'}, status=status.HTTP_200_OK)
+        return Response({'status': 'ignored'}, status=status.HTTP_200_OK)
+    
+    
+    
+    
+    
+    

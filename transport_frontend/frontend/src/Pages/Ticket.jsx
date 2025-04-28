@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
-import { FiCopy, FiCheck } from "react-icons/fi"; // Icon imports
+import { FiCopy, FiCheck } from "react-icons/fi";
 
 const Ticket = () => {
   const location = useLocation();
@@ -21,6 +21,7 @@ const Ticket = () => {
     seats,
     trip = {},
     user = {},
+    status, // Added status
   } = booking;
 
   const { departure_datetime, route = {}, bus = {} } = trip;
@@ -62,15 +63,42 @@ const Ticket = () => {
     });
   };
 
+  // Determine watermark text based on status
+  const watermarkText =
+    status === "cancelled"
+      ? "CANCELLED"
+      : status === "completed"
+        ? "COMPLETED"
+        : null;
+
   return (
-    <div className='max-w-xl mx-auto my-8 p-6' id='ticket-content'>
-      <div className='border-2 border-gray-800 rounded-lg overflow-hidden shadow-xl'>
+    <div className='max-w-xl mx-auto my-8 p-4' id='ticket-content'>
+      <div className='border-2 border-gray-800 rounded-lg overflow-hidden shadow-xl relative'>
+        {/* Watermark */}
+        {watermarkText && (
+          <div
+            className='absolute inset-0 flex items-center justify-center pointer-events-none'
+            style={{
+              transform: "rotate(-45deg)",
+              opacity: 0.2, // Semi-transparent
+              zIndex: 10,
+              color: status === "cancelled" ? "red" : "gray", // Red for cancelled, gray for completed
+              fontSize: "4.2rem", // Large text
+              fontWeight: "bold",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {watermarkText}
+          </div>
+        )}
+
         <div className='bg-blue-600 text-white p-4 text-center'>
           <h1 className='text-2xl font-bold'>Travel Ticket Pass</h1>
           <p className='text-xs'>FlexiRyde Ticket</p>
         </div>
 
-        <div className='p-5 bg-white'>
+        <div className='p-5 bg-white relative'>
           <div className='flex justify-between items-start mb-5'>
             <div>
               <p className='text-xs text-gray-500 mb-1'>PASSENGER</p>
@@ -123,8 +151,24 @@ const Ticket = () => {
               <p className='text-xs text-gray-500 mb-1'>BUS PLATE NUMBER</p>
               <p className='font-bold'>{busCompany}</p>
             </div>
-            <div className='px-2 py-1 rounded bg-green-100 text-green-800 text-sm'>
-              Paid
+            <div
+              className={`px-2 py-1 rounded text-sm ${
+                status === "cancelled"
+                  ? "bg-red-100 text-red-800"
+                  : status === "completed"
+                    ? "bg-gray-100 text-gray-800"
+                    : status === "pending"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-green-100 text-green-800"
+              }`}
+            >
+              {status === "cancelled"
+                ? "Cancelled"
+                : status === "completed"
+                  ? "Completed"
+                  : status === "pending"
+                    ? "Pending"
+                    : "Paid"}
             </div>
           </div>
 
@@ -149,6 +193,19 @@ const Ticket = () => {
                         @media print {
                           @page { size: auto; margin: 0mm; }
                           body { margin: 1.6cm; }
+                          .watermark {
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%) rotate(-45deg);
+                            opacity: 0.2;
+                            z-index: 10;
+                            color: ${status === "cancelled" ? "red" : "gray"};
+                            font-size: 3rem;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            white-space: nowrap;
+                          }
                         }
                       </style>
                     </head>
@@ -157,6 +214,7 @@ const Ticket = () => {
                 `;
                 window.print();
                 document.body.innerHTML = originalContent;
+                window.location.reload(); // Restore event listeners
               }}
               className='bg-blue-600 text-white px-5 py-2 rounded text-sm hover:bg-blue-700 transition'
             >
