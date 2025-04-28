@@ -69,8 +69,8 @@ class IndirectRouteSerializer(serializers.ModelSerializer):
 class TripListSerializer(serializers.ModelSerializer):
     bus = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
-    bookings_count = serializers.SerializerMethodField()  
-    seats_taken = serializers.SerializerMethodField()     
+    bookings_count = serializers.SerializerMethodField()
+    seats_taken = serializers.SerializerMethodField()
     departure_datetime = serializers.DateTimeField()
     available_seats = serializers.IntegerField(read_only=True)
 
@@ -83,8 +83,8 @@ class TripListSerializer(serializers.ModelSerializer):
             'bus',
             'route',
             'available_seats',
-            'bookings_count',  
-            'seats_taken',     
+            'bookings_count',
+            'seats_taken',
         ]
 
     def get_bus(self, obj):
@@ -113,9 +113,8 @@ class TripListSerializer(serializers.ModelSerializer):
 
     def get_seats_taken(self, obj):
         return obj.bookings.filter(status__in=["pending", "confirmed"]).aggregate(
-            total_seats=models.Sum('seats_booked')
+            total_seats=models.Sum('seat_count')  # ✅ Corrected here
         )['total_seats'] or 0
-
 
 
 class BookingCreateSerializer(serializers.ModelSerializer):
