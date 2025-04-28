@@ -168,7 +168,7 @@ const ParkAdminDashboard = () => {
             capacity: trip.bus.total_seats,
           },
           price: trip.seat_price,
-          bookings: trip.bookings,
+          bookings: trip.bookings_count,
           seatsTaken: trip.seats_taken,  
         }));
   

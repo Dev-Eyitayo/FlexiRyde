@@ -286,17 +286,11 @@ class TripDeleteView(APIView):
         except Trip.DoesNotExist:
             return Response({"error": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Check park admin ownership
-        if request.user.role == 'park_admin' and trip.route.origin_park.admin != request.user:
-            return Response({"error": "You do not have permission to delete this trip."}, status=status.HTTP_403_FORBIDDEN)
-
-        # Check if trip has bookings
         if trip.bookings.exists():
-            return Response({"error": "Cannot delete a trip that has bookings."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Cannot delete trip with existing bookings."}, status=status.HTTP_400_BAD_REQUEST)
 
         trip.delete()
         return Response({"message": "Trip deleted successfully."}, status=status.HTTP_200_OK)
-
 
 # New Payment-Related Views
 class InitializePaymentView(APIView):
