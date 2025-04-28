@@ -208,74 +208,44 @@ const ParkAdminDashboard = () => {
     }
   };
 
-  const submitTrips = () => {
+  const submitTrips = async () => {
     if (!selectedRoute || !price || !date || departureTimes.length === 0) {
       toast.error("Please fill all required fields");
       return;
     }
-
-    const incompleteTimes = departureTimes.some((dt) => !dt.time || !dt.bus);
-    if (incompleteTimes) {
-      toast.error("Please complete all departure time fields", {
-        autoClose: 2000,
+  
+    setIsSubmitting(true);
+  
+    try {
+      const tripsPayload = departureTimes.map((dt) => ({
+        route_id: selectedRoute.id,
+        bus_id: dt.bus.id,
+        departure_datetime: new Date(`${date.toISOString().split('T')[0]}T${dt.time}:00`).toISOString(),
+        seat_price: parseFloat(price),
+      }));
+  
+      const res = await authFetch(`/parks/${parkId}/trips/create/`, {
+        method: "POST",
+        body: JSON.stringify({ trips: tripsPayload }),
       });
-      return;
-    }
-
-    const normalizedDate = new Date(date);
-    normalizedDate.setHours(0, 0, 0, 0);
-
-    // Check for duplicate trips
-    for (const dt of departureTimes) {
-      const existingTrip = scheduledTrips.find((trip) => {
-        if (editingTripId && trip.id === editingTripId) return false;
-        const tripDate = new Date(trip.date);
-        tripDate.setHours(0, 0, 0, 0);
-        return (
-          trip.route.id === selectedRoute.id &&
-          tripDate.getTime() === normalizedDate.getTime() &&
-          trip.departureTime === dt.time &&
-          trip.bus.id === dt.bus?.id
-        );
-      });
-
-      if (existingTrip) {
-        toast.error(
-          `A trip with route ${selectedRoute.name}, date ${formatDate(
-            date
-          )}, time ${dt.time}, and bus ${dt.bus.plateNumber} already exists.`,
-          { autoClose: 3000 }
-        );
-        return;
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        toast.success(`${data.created_trips.length} trip(s) scheduled successfully!`);
+        resetForm(); // Reset form after success
+        loadTrips(); // Immediately refresh trips list
+      } else {
+        toast.error(data.errors?.join(", ") || "Failed to schedule trips");
       }
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Check for bus scheduling conflicts (within 2 hours)
-    for (const dt of departureTimes) {
-      const conflictingTrip = scheduledTrips.find((trip) => {
-        if (editingTripId && trip.id === editingTripId) return false;
-        const tripDate = new Date(trip.date);
-        tripDate.setHours(0, 0, 0, 0);
-        const tripTime = parseInt(trip.departureTime.split(":")[0]);
-        const newTime = parseInt(dt.time.split(":")[0]);
-        return (
-          trip.bus.id === dt.bus?.id &&
-          tripDate.getTime() === normalizedDate.getTime() &&
-          Math.abs(tripTime - newTime) < 2
-        );
-      });
-
-      if (conflictingTrip) {
-        toast.error(
-          `Bus ${dt.bus.plateNumber} is already scheduled for ${conflictingTrip.route.name} at ${conflictingTrip.departureTime} on ${formatDate(date)}.`,
-          { autoClose: 3000 }
-        );
-        return;
-      }
-    }
-
-    setShowConfirmModal(true);
   };
+  
 
   const confirmScheduleTrips = async () => {
     if (!selectedRoute || !price || !date || departureTimes.length === 0) {
