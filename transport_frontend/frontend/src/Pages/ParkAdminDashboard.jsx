@@ -284,17 +284,31 @@ const ParkAdminDashboard = () => {
         seat_price: parseFloat(price),
       }));
   
-      const res = await authFetch(`/parks/${parkId}/trips/create/`, {
-        method: "POST",
-        body: JSON.stringify({ trips: tripsPayload }),
-      });
+      let res;
+      if (editingTripId) {
+        // 🔥 If editing, update the existing trip
+        res = await authFetch(`/trips/${editingTripId}/update/`, {
+          method: "PATCH",
+          body: JSON.stringify(tripsPayload[0]), // Only one trip at a time for editing
+        });
+      } else {
+        // 🔥 If not editing, create new trips
+        res = await authFetch(`/parks/${parkId}/trips/create/`, {
+          method: "POST",
+          body: JSON.stringify({ trips: tripsPayload }),
+        });
+      }
   
       const data = await res.json();
   
       if (res.ok) {
-        toast.success(`${data.created_trips.length} trip(s) scheduled successfully!`);
-        resetForm(); // Reset form after success
-        loadTrips(); // Immediately refresh trips list
+        if (editingTripId) {
+          toast.success("Trip updated successfully!");
+        } else {
+          toast.success(`${data.created_trips.length} trip(s) scheduled successfully!`);
+        }
+        resetForm();
+        loadTrips();
       } else {
         toast.error(data.errors?.join(", ") || "Failed to schedule trips");
       }
@@ -305,6 +319,7 @@ const ParkAdminDashboard = () => {
       setIsSubmitting(false);
     }
   };
+  
   
 
   const confirmScheduleTrips = async () => {

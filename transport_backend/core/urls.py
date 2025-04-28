@@ -5,7 +5,7 @@ from .views import (
     CityViewSet, BusParkViewSet, RouteViewSet, BookingViewSet,
     TripSearchAPIView, TripViewSet, BookingCreateAPIView, BusViewSet,
     ParkBusesView, ParkRoutesView, ParkTripsView, TripCreateView,
-    InitializePaymentView, PaymentCallbackView, PaystackWebhookView, TripDeleteView
+    InitializePaymentView, PaymentCallbackView, PaystackWebhookView, TripDeleteView, TripUpdateView
 )
 
 router = DefaultRouter()
@@ -20,6 +20,7 @@ urlpatterns = [
     path('trips/search/', TripSearchAPIView.as_view(), name='trip-search'),
     path("bookings/create/", BookingCreateAPIView.as_view(), name="booking-create"),
     path('trips/<int:trip_id>/delete/', TripDeleteView.as_view(), name='trip-delete'),
+    path('trips/<int:trip_id>/update/', TripUpdateView.as_view(), name='trip-update'),
     path('parks/<int:park_id>/buses/', ParkBusesView.as_view(), name='park_buses'),
     path('parks/<int:park_id>/routes/', ParkRoutesView.as_view(), name='park_routes'),
     path('parks/<int:park_id>/trips/create/', TripCreateView.as_view(), name='trip_create'),
