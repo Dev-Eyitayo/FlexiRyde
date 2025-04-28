@@ -35,7 +35,7 @@ export default function TripCard({
             Ref:{" "}
             {trip.status === "pending" ? (
               <span className='font-mono'>
-                Please Re-book and make payment to get a ref number
+                Please Re-book and make payment to get a ticket
               </span>
             ) : (
               <span className='font-mono'>{trip.bookingRef}</span>

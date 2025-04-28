@@ -201,7 +201,7 @@ export default function ChangeBooking() {
   return (
     <div className='max-w-3xl mx-auto px-4 py-10'>
       {!booking && (
-        <div className='bg-white shadow-md rounded-xl p-6 max-w-lg mx-auto'>
+        <div className='bg-white shadow-md rounded-xl p-6 max-w-lg mx-auto md:my-14'>
           <h2 className='text-xl font-semibold text-gray-800 mb-4 flex items-center'>
             🔍 Find Your Booking
           </h2>
@@ -215,7 +215,7 @@ export default function ChangeBooking() {
               value={bookingRef}
               onChange={(e) => setBookingRef(e.target.value)}
               required
-              className='w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 mb-3'
+              className='w-full px-4 py-3 border-1 rounded-lg shadow-sm focus:outline-0 focus:border-2 focus:border-blue-500 mb-3'
             />
             <p className='text-xs text-gray-500 mb-4'>
               Find your booking reference in the travel history page
