@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast, ToastContainer} from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -80,12 +80,11 @@ const ParkAdminDashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTripId, setEditingTripId] = useState(null);
 
-
   const [parkId, setParkId] = useState(null); // parkId now dynamic
-  const [routes, setRoutes] = useState([]);
-  const [buses, setBuses] = useState([]);
-  const [scheduledTrips, setScheduledTrips] = useState([]);
-  
+  // const [routes, setRoutes] = useState([]);
+  // const [buses, setBuses] = useState([]);
+  // const [scheduledTrips, setScheduledTrips] = useState([]);
+
   const loadUserProfile = async () => {
     try {
       const res = await authFetch(`/auth/user/`);
@@ -107,7 +106,6 @@ const ParkAdminDashboard = () => {
   useEffect(() => {
     loadUserProfile();
   }, []);
-  
 
   useEffect(() => {
     if (parkId) {
@@ -116,7 +114,6 @@ const ParkAdminDashboard = () => {
       loadTrips();
     }
   }, [parkId]);
-
 
   const loadRoutes = async () => {
     try {
@@ -153,7 +150,7 @@ const ParkAdminDashboard = () => {
       const res = await authFetch(`/parks/${parkId}/trips/`);
       if (res.ok) {
         const tripsData = await res.json();
-  
+
         // 🔥 Map backend trips into frontend expected format
         const mappedTrips = tripsData.map((trip) => ({
           id: trip.id,
@@ -161,20 +158,23 @@ const ParkAdminDashboard = () => {
             name: `${trip.route.origin_park.name} ➔ ${trip.route.destination_park.name}`,
           },
           date: new Date(trip.departure_datetime),
-          departureTime: new Date(trip.departure_datetime).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-          }),
+          departureTime: new Date(trip.departure_datetime).toLocaleTimeString(
+            [],
+            {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }
+          ),
           bus: {
             plateNumber: trip.bus.number_plate,
             capacity: trip.bus.total_seats,
           },
           price: trip.seat_price,
           bookings: trip.bookings_count,
-          seatsTaken: trip.seats_taken,  
+          seatsTaken: trip.seats_taken,
         }));
-  
+
         setScheduledTrips(mappedTrips);
       } else {
         console.error("Failed to load trips");
@@ -183,8 +183,7 @@ const ParkAdminDashboard = () => {
       console.error("Error loading trips:", error);
     }
   };
-  
-  
+
   const resetForm = () => {
     setSelectedRoute(null);
     setPrice("");
@@ -210,83 +209,86 @@ const ParkAdminDashboard = () => {
 
   const editTrip = (trip) => {
     setEditingTripId(trip.id);
-  
+
     // Set selected route
-    const matchingRoute = routes.find(r => 
-      r.origin_park.name === trip.route.name.split("➔")[0].trim() &&
-      r.destination_park.name === trip.route.name.split("➔")[1].trim()
+    const matchingRoute = routes.find(
+      (r) =>
+        r.origin_park.name === trip.route.name.split("➔")[0].trim() &&
+        r.destination_park.name === trip.route.name.split("➔")[1].trim()
     );
     setSelectedRoute(matchingRoute || null);
-  
+
     // Set price
     setPrice(trip.price);
-  
+
     // Set trip date
     setDate(new Date(trip.date)); // `trip.date` was already mapped from backend
-  
+
     // Set departure time
     setDepartureTimes([
       {
-        time: trip.departureTime ? formatBackendTime(trip.departureTime) : '',
-        bus: buses.find(b => b.number_plate === trip.bus.plateNumber) || null,
+        time: trip.departureTime ? formatBackendTime(trip.departureTime) : "",
+        bus: buses.find((b) => b.number_plate === trip.bus.plateNumber) || null,
       },
     ]);
   };
-  
+
   const formatBackendTime = (timeStr) => {
     // Convert "06:00 AM" format to "06:00"
-    const parts = timeStr.split(' ');
-    let [hour, minute] = parts[0].split(':');
-    if (parts[1] === 'PM' && hour !== '12') {
+    const parts = timeStr.split(" ");
+    let [hour, minute] = parts[0].split(":");
+    if (parts[1] === "PM" && hour !== "12") {
       hour = (parseInt(hour) + 12).toString();
     }
-    if (parts[1] === 'AM' && hour === '12') {
-      hour = '00';
+    if (parts[1] === "AM" && hour === "12") {
+      hour = "00";
     }
-    return `${hour.padStart(2, '0')}:${minute}`;
+    return `${hour.padStart(2, "0")}:${minute}`;
   };
-  
 
   const deleteTrip = async (tripId) => {
     if (!window.confirm("Are you sure you want to delete this trip?")) {
       return;
     }
-  
+
     try {
       const res = await authFetch(`/trips/${tripId}/delete/`, {
         method: "DELETE",
       });
-  
+
       if (res.ok) {
         toast.success("Trip deleted successfully!", { autoClose: 2000 });
         loadTrips(); // Refresh scheduled trips
       } else {
         const data = await res.json();
-        toast.error(data.error || "Failed to delete trip.", { autoClose: 3000 });
+        toast.error(data.error || "Failed to delete trip.", {
+          autoClose: 3000,
+        });
       }
     } catch (error) {
       console.error("Error deleting trip:", error);
       toast.error("Something went wrong.", { autoClose: 3000 });
     }
   };
-  
 
   const submitTrips = async () => {
     if (!selectedRoute || !price || !date || departureTimes.length === 0) {
       toast.error("Please fill all required fields");
       return;
     }
-  
+
     setIsSubmitting(true);
-  
+
     try {
       const tripsPayload = departureTimes.map((dt) => ({
         route_id: selectedRoute.id,
         bus_id: dt.bus.id,
-        departure_datetime: new Date(`${date.toISOString().split('T')[0]}T${dt.time}:00`).toISOString(),
+        departure_datetime: new Date(
+          `${date.toISOString().split("T")[0]}T${dt.time}:00`
+        ).toISOString(),
         seat_price: parseFloat(price),
       }));
-  
+
       let res;
       if (editingTripId) {
         // 🔥 If editing, update the existing trip
@@ -301,14 +303,16 @@ const ParkAdminDashboard = () => {
           body: JSON.stringify({ trips: tripsPayload }),
         });
       }
-  
+
       const data = await res.json();
-  
+
       if (res.ok) {
         if (editingTripId) {
           toast.success("Trip updated successfully!");
         } else {
-          toast.success(`${data.created_trips.length} trip(s) scheduled successfully!`);
+          toast.success(
+            `${data.created_trips.length} trip(s) scheduled successfully!`
+          );
         }
         resetForm();
         loadTrips();
@@ -322,17 +326,15 @@ const ParkAdminDashboard = () => {
       setIsSubmitting(false);
     }
   };
-  
-  
 
   const confirmScheduleTrips = async () => {
     if (!selectedRoute || !price || !date || departureTimes.length === 0) {
       toast.error("Please fill all required fields");
       return;
     }
-  
+
     setIsSubmitting(true);
-  
+
     try {
       const tripsPayload = departureTimes.map((dt) => ({
         route_id: selectedRoute.id,
@@ -342,29 +344,32 @@ const ParkAdminDashboard = () => {
         ).toISOString(), // Proper ISO format
         seat_price: parseFloat(price),
       }));
-  
+
       const res = await authFetch(`/parks/${parkId}/trips/create/`, {
         method: "POST",
         body: JSON.stringify({ trips: tripsPayload }),
       });
-  
+
       if (res.ok) {
         const data = await res.json();
         const { created_trips, errors } = data;
-  
+
         if (created_trips && created_trips.length > 0) {
-          toast.success(`${created_trips.length} trip(s) scheduled successfully!`, {
-            autoClose: 2000,
-          });
+          toast.success(
+            `${created_trips.length} trip(s) scheduled successfully!`,
+            {
+              autoClose: 2000,
+            }
+          );
           resetForm();
-  
+
           // Optionally: Refresh trips list here or add created trips to your scheduledTrips
         }
-  
+
         if (errors && errors.length > 0) {
           errors.forEach((err) => toast.error(err, { autoClose: 3000 }));
         }
-  
+
         setShowConfirmModal(false);
       } else {
         const errorData = await res.json();
@@ -379,7 +384,6 @@ const ParkAdminDashboard = () => {
       setIsSubmitting(false);
     }
   };
-  
 
   const formatDate = (dateString) => {
     const options = {
@@ -413,11 +417,13 @@ const ParkAdminDashboard = () => {
                   value={selectedRoute?.id || ""}
                   onChange={(e) => {
                     const routeId = e.target.value;
-                    const route = routes.find((r) => r.id === parseInt(routeId));
+                    const route = routes.find(
+                      (r) => r.id === parseInt(routeId)
+                    );
                     if (route) {
                       setSelectedRoute({
                         id: route.id,
-                        name: `${route.origin_park.name} ➔ ${route.destination_park.name}`,  // 👈 build name manually
+                        name: `${route.origin_park.name} ➔ ${route.destination_park.name}`, // 👈 build name manually
                         from: route.origin_park.name,
                         to: route.destination_park.name,
                       });
@@ -425,9 +431,13 @@ const ParkAdminDashboard = () => {
                       setSelectedRoute(null);
                     }
                   }}
-                  disabled={editingTripId && scheduledTrips.find((t) => t.id === editingTripId)?.bookings > 0}
+                  disabled={
+                    editingTripId &&
+                    scheduledTrips.find((t) => t.id === editingTripId)
+                      ?.bookings > 0
+                  }
                 >
-                  <option value="">Select a route</option>
+                  <option value=''>Select a route</option>
                   {routes.map((route) => (
                     <option key={route.id} value={route.id}>
                       {route.origin_park.name} ➔ {route.destination_park.name}
@@ -566,16 +576,18 @@ const ParkAdminDashboard = () => {
                             )}
                         </div>
                         <div className='col-span-6'>
-                        <select
-                            className="w-full p-2 border border-gray-300 rounded-md"
+                          <select
+                            className='w-full p-2 border border-gray-300 rounded-md'
                             value={dt.bus?.id || ""}
                             onChange={(e) => {
                               const busId = e.target.value;
-                              const bus = buses.find((b) => b.id === parseInt(busId));
+                              const bus = buses.find(
+                                (b) => b.id === parseInt(busId)
+                              );
                               updateDepartureTime(index, "bus", bus || null);
                             }}
                           >
-                            <option value="">Select a bus</option>
+                            <option value=''>Select a bus</option>
                             {buses
                               .filter((bus) => bus.status === "available")
                               .map((bus) => (
@@ -584,7 +596,6 @@ const ParkAdminDashboard = () => {
                                 </option>
                               ))}
                           </select>
-
                         </div>
                         <div className='col-span-2'>
                           <button
