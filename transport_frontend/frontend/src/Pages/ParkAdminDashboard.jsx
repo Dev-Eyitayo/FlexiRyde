@@ -597,14 +597,17 @@ const ParkAdminDashboard = () => {
                           </select>
                         </div>
                         <div className='col-span-2'>
-                          <button
-                            type='button'
-                            className='w-full p-2 text-red-600 hover:text-red-800'
-                            onClick={() => removeDepartureTime(index)}
-                            disabled={index === 0}
-                          >
-                            Remove
-                          </button>
+                        <button
+                          type="button"
+                          onClick={() => removeDepartureTime(index)}
+                          title="Remove Time"
+                          disabled={index === 0}
+                          className={`p-2 ${
+                            index === 0 ? "text-gray-300 cursor-not-allowed" : "text-red-600 hover:text-red-800"
+                          }`}
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
                         </div>
                       </div>
                     ))}
