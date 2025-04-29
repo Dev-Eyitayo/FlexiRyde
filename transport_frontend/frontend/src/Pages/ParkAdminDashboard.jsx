@@ -721,7 +721,10 @@ const ParkAdminDashboard = () => {
 
                         {trip.bookings === 0 ? (
                           <button
-                            onClick={() => deleteTrip(trip.id)}
+                            onClick={() =>  {
+                              setTripToDelete(trip),
+                              setShowDeleteModal(true)
+                            }}
                             title="Delete Trip"
                             className="text-red-600 hover:text-red-800"
                           >
