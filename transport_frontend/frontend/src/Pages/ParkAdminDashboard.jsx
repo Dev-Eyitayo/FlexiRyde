@@ -5,6 +5,8 @@ import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import authFetch from "../utils/authFetch";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+
 
 const dummyRoutes = [
   { id: 1, name: "Lagos to Abuja", from: "Lagos", to: "Abuja" },
@@ -761,19 +763,24 @@ const ParkAdminDashboard = () => {
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                         {trip.bookings} bookings ({trip.seatsTaken} seats taken)
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center space-x-4">
                         <button
                           onClick={() => editTrip(trip)}
-                          className='text-blue-600 hover:text-blue-800 mr-3'
+                          title="Edit Trip"
+                          className="text-blue-600 hover:text-blue-800"
                         >
-                          Edit
+                          <PencilSquareIcon className="w-5 h-5" />
                         </button>
-                        <button
-                          onClick={() => deleteTrip(trip.id)}
-                          className='text-red-600 hover:text-red-800'
-                        >
-                          Delete
-                        </button>
+
+                        {trip.bookings === 0 && (
+                          <button
+                            onClick={() => deleteTrip(trip.id)}
+                            title="Delete Trip"
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
