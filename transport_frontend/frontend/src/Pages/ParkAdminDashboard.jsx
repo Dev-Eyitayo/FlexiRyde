@@ -8,67 +8,6 @@ import authFetch from "../utils/authFetch";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 
-const dummyRoutes = [
-  { id: 1, name: "Lagos to Abuja", from: "Lagos", to: "Abuja" },
-  { id: 2, name: "Lagos to Port Harcourt", from: "Lagos", to: "Port Harcourt" },
-  { id: 3, name: "Abuja to Kano", from: "Abuja", to: "Kano" },
-  { id: 4, name: "Port Harcourt to Enugu", from: "Port Harcourt", to: "Enugu" },
-];
-
-const dummyBuses = [
-  { id: 1, plateNumber: "ABC123", capacity: 18, status: "available" },
-  { id: 2, plateNumber: "XYZ789", capacity: 14, status: "available" },
-  { id: 3, plateNumber: "DEF456", capacity: 22, status: "maintenance" },
-  { id: 4, plateNumber: "GHI789", capacity: 16, status: "available" },
-];
-
-const dummyScheduledTrips = [
-  {
-    id: 1,
-    route: dummyRoutes[0], // Lagos to Abuja
-    price: 5000,
-    date: new Date("2025-04-20"),
-    departureTime: "08:00",
-    bus: dummyBuses[0], // ABC123
-    bookings: 5,
-  },
-  {
-    id: 2,
-    route: dummyRoutes[1], // Lagos to Port Harcourt
-    price: 6000,
-    date: new Date("2025-04-21"),
-    departureTime: "10:00",
-    bus: dummyBuses[1], // XYZ789
-    bookings: 0,
-  },
-  {
-    id: 3,
-    route: dummyRoutes[2], // Abuja to Kano
-    price: 4500,
-    date: new Date("2025-04-22"),
-    departureTime: "12:00",
-    bus: dummyBuses[3], // GHI789
-    bookings: 0,
-  },
-  {
-    id: 4,
-    route: dummyRoutes[3], // Port Harcourt to Enugu
-    price: 3000,
-    date: new Date("2025-04-20"),
-    departureTime: "09:00",
-    bus: dummyBuses[0], // ABC123
-    bookings: 0,
-  },
-  {
-    id: 5,
-    route: dummyRoutes[0], // Lagos to Abuja
-    price: 5500,
-    date: new Date("2025-04-19"),
-    departureTime: "14:00",
-    bus: dummyBuses[1], // XYZ789
-    bookings: 0,
-  },
-];
 
 const ParkAdminDashboard = () => {
   const [selectedRoute, setSelectedRoute] = useState(null);
@@ -79,10 +18,12 @@ const ParkAdminDashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTripId, setEditingTripId] = useState(null);
 
-  const [parkId, setParkId] = useState(null); // parkId now dynamic
+  const [parkId, setParkId] = useState(null); 
   const [routes, setRoutes] = useState([]);
   const [buses, setBuses] = useState([]);
   const [scheduledTrips, setScheduledTrips] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [tripToDelete, setTripToDelete] = useState(null);
 
   const loadUserProfile = async () => {
     try {
@@ -874,6 +815,38 @@ const ParkAdminDashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      {showDeleteModal && tripToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Confirm Deletion</h2>
+            <p className="text-sm text-gray-700 mb-6">
+              Are you sure you want to delete this trip from <strong>{tripToDelete.route.name}</strong> at <strong>{tripToDelete.departureTime}</strong>?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setTripToDelete(null);
+                }}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await deleteTrip(tripToDelete.id);
+                  setShowDeleteModal(false);
+                  setTripToDelete(null);
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
