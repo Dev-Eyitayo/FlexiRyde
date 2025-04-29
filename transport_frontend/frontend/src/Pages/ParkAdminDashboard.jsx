@@ -261,34 +261,82 @@ const ParkAdminDashboard = () => {
         };
       });
 
-      let res;
+      let updateSuccess = false;
+      let newTripsCreated = 0;
+
+      // Handle editing an existing trip
       if (editingTripId) {
-        res = await authFetch(`/trips/${editingTripId}/update/`, {
+        // Update the existing trip with the first departure time
+        const updateRes = await authFetch(`/trips/${editingTripId}/update/`, {
           method: "PATCH",
           body: JSON.stringify(tripsPayload[0]),
         });
+
+        const updateData = await updateRes.json();
+
+        if (updateRes.ok) {
+          updateSuccess = true;
+        } else {
+          toast.error(
+            updateData.errors?.join(", ") ||
+              "Failed to update trip. Please try again."
+          );
+          return;
+        }
+
+        // If there are additional departure times, create new trips
+        if (tripsPayload.length > 1) {
+          const newTripsPayload = tripsPayload.slice(1);
+          const createRes = await authFetch(`/parks/${parkId}/trips/create/`, {
+            method: "POST",
+            body: JSON.stringify({ trips: newTripsPayload }),
+          });
+
+          const createData = await createRes.json();
+
+          if (createRes.ok) {
+            newTripsCreated = createData.created_trips.length;
+          } else {
+            toast.error(
+              createData.errors?.join(", ") ||
+                "Failed to create new trips. Please try again."
+            );
+            return;
+          }
+        }
       } else {
-        res = await authFetch(`/parks/${parkId}/trips/create/`, {
+        // Create new trips for all departure times
+        const createRes = await authFetch(`/parks/${parkId}/trips/create/`, {
           method: "POST",
           body: JSON.stringify({ trips: tripsPayload }),
         });
-      }
 
-      const data = await res.json();
+        const createData = await createRes.json();
 
-      if (res.ok) {
-        if (editingTripId) {
-          toast.success("Trip updated successfully!");
+        if (createRes.ok) {
+          newTripsCreated = createData.created_trips.length;
         } else {
-          toast.success(
-            `${data.created_trips.length} trip(s) scheduled successfully!`
+          toast.error(
+            createData.errors?.join(", ") ||
+              "Failed to schedule trips. Please try again."
           );
+          return;
         }
-        resetForm();
-        loadTrips();
-      } else {
-        toast.error(data.errors?.join(", ") || "Failed to schedule trips");
       }
+
+      // Show success message based on what was done
+      if (editingTripId && updateSuccess && newTripsCreated > 0) {
+        toast.success(
+          `Trip updated successfully and ${newTripsCreated} new trip(s) created!`
+        );
+      } else if (editingTripId && updateSuccess) {
+        toast.success("Trip updated successfully!");
+      } else if (newTripsCreated > 0) {
+        toast.success(`${newTripsCreated} trip(s) scheduled successfully!`);
+      }
+
+      resetForm();
+      loadTrips();
     } catch (error) {
       console.error("Error in submitTrips:", error);
       toast.error(
@@ -792,7 +840,6 @@ const ParkAdminDashboard = () => {
                             title='Cannot delete trip with bookings'
                             className='text-gray-400 cursor-not-allowed'
                           >
-                            {/* <ToastContainer /> */}
                             <TrashIcon className='w-5 h-5' />
                           </span>
                         )}
@@ -881,7 +928,7 @@ const ParkAdminDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 40 }}
             transition={{ duration: 0.3 }}
-            className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm'
+            className='fixed inset-0 z-50 flex items-center justify-center bg-black/20 bg-opacity-50 backdrop-blur-sm'
           >
             <motion.div className='bg-white rounded-xl shadow-xl p-6 w-full max-w-md'>
               <div className='space-y-4'>
@@ -947,7 +994,7 @@ const ParkAdminDashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* <ToastContainer /> */}
+      <ToastContainer />
     </div>
   );
 };
