@@ -187,9 +187,6 @@ const ParkAdminDashboard = () => {
   };
 
   const deleteTrip = async (tripId) => {
-    if (!window.confirm("Are you sure you want to delete this trip?")) {
-      return;
-    }
 
     try {
       const res = await authFetch(`/trips/${tripId}/delete/`, {
@@ -817,39 +814,51 @@ const ParkAdminDashboard = () => {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
-      {showDeleteModal && tripToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Confirm Deletion</h2>
-            <p className="text-sm text-gray-700 mb-6">
-              Are you sure you want to delete this trip from <strong>{tripToDelete.route.name}</strong> at <strong>{tripToDelete.departureTime}</strong>?
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setTripToDelete(null);
-                }}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  await deleteTrip(tripToDelete.id);
-                  setShowDeleteModal(false);
-                  setTripToDelete(null);
-                }}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
-              >
-                Delete
-              </button>
-            </div>
+        {showDeleteModal && tripToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md"
+            >
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-800">
+                  Confirm Trip Deletion
+                </h2>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  You’re about to delete the trip from{" "}
+                  <strong>{tripToDelete.route.name}</strong> departing at{" "}
+                  <strong>{tripToDelete.departureTime}</strong>.
+                </p>
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setTripToDelete(null);
+                    }}
+                    className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await deleteTrip(tripToDelete.id);
+                      setShowDeleteModal(false);
+                      setTripToDelete(null);
+                    }}
+                    className="px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700"
+                  >
+                    Yes, Delete
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
-
+        )}
+      </AnimatePresence>
+      
     </div>
   );
 };
