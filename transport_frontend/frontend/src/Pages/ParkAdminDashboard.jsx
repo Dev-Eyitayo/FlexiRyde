@@ -78,9 +78,9 @@ const ParkAdminDashboard = () => {
   const [editingTripId, setEditingTripId] = useState(null);
 
   const [parkId, setParkId] = useState(null); // parkId now dynamic
-  // const [routes, setRoutes] = useState([]);
-  // const [buses, setBuses] = useState([]);
-  // const [scheduledTrips, setScheduledTrips] = useState([]);
+  const [routes, setRoutes] = useState([]);
+  const [buses, setBuses] = useState([]);
+  const [scheduledTrips, setScheduledTrips] = useState([]);
 
   const loadUserProfile = async () => {
     try {
