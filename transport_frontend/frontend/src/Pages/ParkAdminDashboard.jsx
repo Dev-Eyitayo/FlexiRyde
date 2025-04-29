@@ -5,68 +5,9 @@ import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import authFetch from "../utils/authFetch";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
-const dummyRoutes = [
-  { id: 1, name: "Lagos to Abuja", from: "Lagos", to: "Abuja" },
-  { id: 2, name: "Lagos to Port Harcourt", from: "Lagos", to: "Port Harcourt" },
-  { id: 3, name: "Abuja to Kano", from: "Abuja", to: "Kano" },
-  { id: 4, name: "Port Harcourt to Enugu", from: "Port Harcourt", to: "Enugu" },
-];
 
-const dummyBuses = [
-  { id: 1, plateNumber: "ABC123", capacity: 18, status: "available" },
-  { id: 2, plateNumber: "XYZ789", capacity: 14, status: "available" },
-  { id: 3, plateNumber: "DEF456", capacity: 22, status: "maintenance" },
-  { id: 4, plateNumber: "GHI789", capacity: 16, status: "available" },
-];
-
-const dummyScheduledTrips = [
-  {
-    id: 1,
-    route: dummyRoutes[0], // Lagos to Abuja
-    price: 5000,
-    date: new Date("2025-04-20"),
-    departureTime: "08:00",
-    bus: dummyBuses[0], // ABC123
-    bookings: 5,
-  },
-  {
-    id: 2,
-    route: dummyRoutes[1], // Lagos to Port Harcourt
-    price: 6000,
-    date: new Date("2025-04-21"),
-    departureTime: "10:00",
-    bus: dummyBuses[1], // XYZ789
-    bookings: 0,
-  },
-  {
-    id: 3,
-    route: dummyRoutes[2], // Abuja to Kano
-    price: 4500,
-    date: new Date("2025-04-22"),
-    departureTime: "12:00",
-    bus: dummyBuses[3], // GHI789
-    bookings: 0,
-  },
-  {
-    id: 4,
-    route: dummyRoutes[3], // Port Harcourt to Enugu
-    price: 3000,
-    date: new Date("2025-04-20"),
-    departureTime: "09:00",
-    bus: dummyBuses[0], // ABC123
-    bookings: 0,
-  },
-  {
-    id: 5,
-    route: dummyRoutes[0], // Lagos to Abuja
-    price: 5500,
-    date: new Date("2025-04-19"),
-    departureTime: "14:00",
-    bus: dummyBuses[1], // XYZ789
-    bookings: 0,
-  },
-];
 
 const ParkAdminDashboard = () => {
   const [selectedRoute, setSelectedRoute] = useState(null);
@@ -77,10 +18,12 @@ const ParkAdminDashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTripId, setEditingTripId] = useState(null);
 
-  const [parkId, setParkId] = useState(null); // parkId now dynamic
+  const [parkId, setParkId] = useState(null); 
   const [routes, setRoutes] = useState([]);
   const [buses, setBuses] = useState([]);
   const [scheduledTrips, setScheduledTrips] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [tripToDelete, setTripToDelete] = useState(null);
 
   const loadUserProfile = async () => {
     try {
@@ -244,9 +187,6 @@ const ParkAdminDashboard = () => {
   };
 
   const deleteTrip = async (tripId) => {
-    if (!window.confirm("Are you sure you want to delete this trip?")) {
-      return;
-    }
 
     try {
       const res = await authFetch(`/trips/${tripId}/delete/`, {
@@ -595,14 +535,20 @@ const ParkAdminDashboard = () => {
                           </select>
                         </div>
                         <div className='col-span-2'>
-                          <button
-                            type='button'
-                            className='w-full p-2 text-red-600 hover:text-red-800'
-                            onClick={() => removeDepartureTime(index)}
-                            disabled={index === 0}
-                          >
-                            Remove
-                          </button>
+                          <div className="flex justify-center items-center">
+                            {/* Trash button here */}
+                            <button
+                              type="button"
+                              onClick={() => removeDepartureTime(index)}
+                              title="Remove Time"
+                              disabled={index === 0}
+                              className={`p-2 ${
+                                index === 0 ? "text-gray-300 cursor-not-allowed" : "text-red-600 hover:text-red-800"
+                              }`}
+                            >
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -761,19 +707,34 @@ const ParkAdminDashboard = () => {
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                         {trip.bookings} bookings ({trip.seatsTaken} seats taken)
                       </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center space-x-4">
                         <button
                           onClick={() => editTrip(trip)}
-                          className='text-blue-600 hover:text-blue-800 mr-3'
+                          title="Edit Trip"
+                          className="text-blue-600 hover:text-blue-800"
                         >
-                          Edit
+                          <PencilSquareIcon className="w-5 h-5" />
                         </button>
-                        <button
-                          onClick={() => deleteTrip(trip.id)}
-                          className='text-red-600 hover:text-red-800'
-                        >
-                          Delete
-                        </button>
+
+                        {trip.bookings === 0 ? (
+                          <button
+                            onClick={() =>  {
+                              setTripToDelete(trip),
+                              setShowDeleteModal(true)
+                            }}
+                            title="Delete Trip"
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </button>
+                        ) : (
+                          <span
+                            title="Cannot delete trip with bookings"
+                            className="text-gray-400 cursor-not-allowed"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -853,7 +814,68 @@ const ParkAdminDashboard = () => {
             </motion.div>
           </motion.div>
         )}
+        {showDeleteModal && tripToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md"
+            >
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-800">
+                  Confirm Trip Deletion
+                </h2>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  You are about to permanently delete the scheduled trip from{" "}
+                  <strong>{tripToDelete.route.origin_park?.name}</strong> to{" "}
+                  <strong>{tripToDelete.route.destination_park?.name}</strong>.<br /><br />
+                  <span className="inline-block">
+                    <strong>Departure:</strong> {tripToDelete.departureTime}
+                  </span>
+                  <br />
+                  <span className="inline-block">
+                    <strong>Bus:</strong> {tripToDelete.bus?.number_plate} (
+                    {tripToDelete.bus?.total_seats} seats)
+                  </span>
+                  <br />
+                  <span className="inline-block">
+                    <strong>Price per Seat:</strong> ₦{tripToDelete.seat_price?.toLocaleString()}
+                  </span>
+                  <br />
+                  <span className="inline-block">
+                    <strong>Available Seats:</strong> {tripToDelete.available_seats}
+                  </span>
+                </p>
+
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setTripToDelete(null);
+                    }}
+                    className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await deleteTrip(tripToDelete.id);
+                      setShowDeleteModal(false);
+                      setTripToDelete(null);
+                    }}
+                    className="px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700"
+                  >
+                    Yes, Delete
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
+      
     </div>
   );
 };
