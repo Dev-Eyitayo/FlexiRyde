@@ -828,10 +828,27 @@ const ParkAdminDashboard = () => {
                   Confirm Trip Deletion
                 </h2>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  You’re about to delete the trip from{" "}
-                  <strong>{tripToDelete.route.name}</strong> departing at{" "}
-                  <strong>{tripToDelete.departureTime}</strong>.
+                  You are about to permanently delete the scheduled trip from{" "}
+                  <strong>{tripToDelete.route.origin_park?.name}</strong> to{" "}
+                  <strong>{tripToDelete.route.destination_park?.name}</strong>.<br /><br />
+                  <span className="inline-block">
+                    <strong>Departure:</strong> {tripToDelete.departureTime}
+                  </span>
+                  <br />
+                  <span className="inline-block">
+                    <strong>Bus:</strong> {tripToDelete.bus?.number_plate} (
+                    {tripToDelete.bus?.total_seats} seats)
+                  </span>
+                  <br />
+                  <span className="inline-block">
+                    <strong>Price per Seat:</strong> ₦{tripToDelete.seat_price?.toLocaleString()}
+                  </span>
+                  <br />
+                  <span className="inline-block">
+                    <strong>Available Seats:</strong> {tripToDelete.available_seats}
+                  </span>
                 </p>
+
                 <div className="flex justify-end space-x-3 pt-4 border-t">
                   <button
                     onClick={() => {
