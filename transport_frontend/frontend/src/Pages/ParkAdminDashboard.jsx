@@ -7,8 +7,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import authFetch from "../utils/authFetch";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
-
-
 const ParkAdminDashboard = () => {
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [price, setPrice] = useState("");
@@ -17,13 +15,13 @@ const ParkAdminDashboard = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTripId, setEditingTripId] = useState(null);
-
-  const [parkId, setParkId] = useState(null); 
+  const [parkId, setParkId] = useState(null);
   const [routes, setRoutes] = useState([]);
   const [buses, setBuses] = useState([]);
   const [scheduledTrips, setScheduledTrips] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
+  const [invalidFields, setInvalidFields] = useState([]);
 
   const loadUserProfile = async () => {
     try {
@@ -58,8 +56,6 @@ const ParkAdminDashboard = () => {
   const loadRoutes = async () => {
     try {
       const res = await authFetch(`/parks/${parkId}/routes/`);
-      console.log("Routes response:", res); // Debugging line
-      console.log("Routes response status:", res.status); // Debugging line
       if (res.ok) {
         const data = await res.json();
         setRoutes(data);
@@ -90,8 +86,6 @@ const ParkAdminDashboard = () => {
       const res = await authFetch(`/parks/${parkId}/trips/`);
       if (res.ok) {
         const tripsData = await res.json();
-
-        // 🔥 Map backend trips into frontend expected format
         const mappedTrips = tripsData.map((trip) => ({
           id: trip.id,
           route: {
@@ -114,7 +108,6 @@ const ParkAdminDashboard = () => {
           bookings: trip.bookings_count,
           seatsTaken: trip.seats_taken,
         }));
-
         setScheduledTrips(mappedTrips);
       } else {
         console.error("Failed to load trips");
@@ -130,6 +123,7 @@ const ParkAdminDashboard = () => {
     setDate(null);
     setDepartureTimes([]);
     setEditingTripId(null);
+    setInvalidFields([]);
   };
 
   const addDepartureTime = () => {
@@ -140,41 +134,55 @@ const ParkAdminDashboard = () => {
     const updatedTimes = [...departureTimes];
     updatedTimes[index][field] = value;
     setDepartureTimes(updatedTimes);
+    setInvalidFields((prev) =>
+      prev.filter((f) => f.index !== index || f.field !== field)
+    );
   };
 
   const removeDepartureTime = (index) => {
     const updatedTimes = departureTimes.filter((_, i) => i !== index);
     setDepartureTimes(updatedTimes);
+    setInvalidFields((prev) => prev.filter((f) => f.index !== index));
   };
 
   const editTrip = (trip) => {
     setEditingTripId(trip.id);
 
-    // Set selected route
     const matchingRoute = routes.find(
       (r) =>
         r.origin_park.name === trip.route.name.split("➔")[0].trim() &&
         r.destination_park.name === trip.route.name.split("➔")[1].trim()
     );
-    setSelectedRoute(matchingRoute || null);
+    if (!matchingRoute) {
+      toast.error("Selected route not found.");
+      return;
+    }
+    setSelectedRoute({
+      id: matchingRoute.id,
+      name: `${matchingRoute.origin_park.name} ➔ ${matchingRoute.destination_park.name}`,
+      from: matchingRoute.origin_park.name,
+      to: matchingRoute.destination_park.name,
+    });
 
-    // Set price
     setPrice(trip.price);
+    setDate(new Date(trip.date));
 
-    // Set trip date
-    setDate(new Date(trip.date)); // `trip.date` was already mapped from backend
-
-    // Set departure time
+    const selectedBus = buses.find(
+      (b) => b.number_plate === trip.bus.plateNumber
+    );
+    if (!selectedBus) {
+      toast.error("Selected bus not found. Please select a valid bus.");
+      return;
+    }
     setDepartureTimes([
       {
         time: trip.departureTime ? formatBackendTime(trip.departureTime) : "",
-        bus: buses.find((b) => b.number_plate === trip.bus.plateNumber) || null,
+        bus: selectedBus,
       },
     ]);
   };
 
   const formatBackendTime = (timeStr) => {
-    // Convert "06:00 AM" format to "06:00"
     const parts = timeStr.split(" ");
     let [hour, minute] = parts[0].split(":");
     if (parts[1] === "PM" && hour !== "12") {
@@ -187,7 +195,6 @@ const ParkAdminDashboard = () => {
   };
 
   const deleteTrip = async (tripId) => {
-
     try {
       const res = await authFetch(`/trips/${tripId}/delete/`, {
         method: "DELETE",
@@ -195,7 +202,7 @@ const ParkAdminDashboard = () => {
 
       if (res.ok) {
         toast.success("Trip deleted successfully!", { autoClose: 2000 });
-        loadTrips(); // Refresh scheduled trips
+        loadTrips();
       } else {
         const data = await res.json();
         toast.error(data.error || "Failed to delete trip.", {
@@ -204,37 +211,63 @@ const ParkAdminDashboard = () => {
       }
     } catch (error) {
       console.error("Error deleting trip:", error);
-      toast.error("Something went wrong.", { autoClose: 3000 });
+      toast.error("Failed to delete trip.", { autoClose: 3000 });
     }
+  };
+
+  const validateDepartureTimes = () => {
+    const invalid = [];
+    departureTimes.forEach((dt, index) => {
+      if (!dt.time) {
+        invalid.push({ index, field: "time" });
+      }
+      if (!dt.bus || !dt.bus.id) {
+        invalid.push({ index, field: "bus" });
+      }
+    });
+    setInvalidFields(invalid);
+    return invalid.length === 0;
   };
 
   const submitTrips = async () => {
     if (!selectedRoute || !price || !date || departureTimes.length === 0) {
-      toast.error("Please fill all required fields");
+      toast.error(
+        "Please fill all required fields: Route, Price, Date, and at least one Departure Time."
+      );
+      return;
+    }
+
+    if (!validateDepartureTimes()) {
+      toast.error(
+        "Please fill in all departure times and select a bus for each."
+      );
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const tripsPayload = departureTimes.map((dt) => ({
-        route_id: selectedRoute.id,
-        bus_id: dt.bus.id,
-        departure_datetime: new Date(
-          `${date.toISOString().split("T")[0]}T${dt.time}:00`
-        ).toISOString(),
-        seat_price: parseFloat(price),
-      }));
+      const tripsPayload = departureTimes.map((dt) => {
+        if (!dt.bus || !dt.bus.id) {
+          throw new Error("Invalid bus selection.");
+        }
+        return {
+          route_id: selectedRoute.id,
+          bus_id: dt.bus.id,
+          departure_datetime: new Date(
+            `${date.toISOString().split("T")[0]}T${dt.time}:00`
+          ).toISOString(),
+          seat_price: parseFloat(price),
+        };
+      });
 
       let res;
       if (editingTripId) {
-        // 🔥 If editing, update the existing trip
         res = await authFetch(`/trips/${editingTripId}/update/`, {
           method: "PATCH",
-          body: JSON.stringify(tripsPayload[0]), // Only one trip at a time for editing
+          body: JSON.stringify(tripsPayload[0]),
         });
       } else {
-        // 🔥 If not editing, create new trips
         res = await authFetch(`/parks/${parkId}/trips/create/`, {
           method: "POST",
           body: JSON.stringify({ trips: tripsPayload }),
@@ -257,8 +290,10 @@ const ParkAdminDashboard = () => {
         toast.error(data.errors?.join(", ") || "Failed to schedule trips");
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Something went wrong.");
+      console.error("Error in submitTrips:", error);
+      toast.error(
+        "Failed to submit trips. Please ensure all fields are valid."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -266,21 +301,35 @@ const ParkAdminDashboard = () => {
 
   const confirmScheduleTrips = async () => {
     if (!selectedRoute || !price || !date || departureTimes.length === 0) {
-      toast.error("Please fill all required fields");
+      toast.error(
+        "Please fill all required fields: Route, Price, Date, and at least one Departure Time."
+      );
+      return;
+    }
+
+    if (!validateDepartureTimes()) {
+      toast.error(
+        "Please fill in all departure times and select a bus for each."
+      );
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const tripsPayload = departureTimes.map((dt) => ({
-        route_id: selectedRoute.id,
-        bus_id: dt.bus.id,
-        departure_datetime: new Date(
-          `${date.toISOString().split("T")[0]}T${dt.time}:00`
-        ).toISOString(), // Proper ISO format
-        seat_price: parseFloat(price),
-      }));
+      const tripsPayload = departureTimes.map((dt) => {
+        if (!dt.bus || !dt.bus.id) {
+          throw new Error("Invalid bus selection.");
+        }
+        return {
+          route_id: selectedRoute.id,
+          bus_id: dt.bus.id,
+          departure_datetime: new Date(
+            `${date.toISOString().split("T")[0]}T${dt.time}:00`
+          ).toISOString(),
+          seat_price: parseFloat(price),
+        };
+      });
 
       const res = await authFetch(`/parks/${parkId}/trips/create/`, {
         method: "POST",
@@ -294,13 +343,10 @@ const ParkAdminDashboard = () => {
         if (created_trips && created_trips.length > 0) {
           toast.success(
             `${created_trips.length} trip(s) scheduled successfully!`,
-            {
-              autoClose: 2000,
-            }
+            { autoClose: 2000 }
           );
           resetForm();
-
-          // Optionally: Refresh trips list here or add created trips to your scheduledTrips
+          loadTrips();
         }
 
         if (errors && errors.length > 0) {
@@ -316,7 +362,9 @@ const ParkAdminDashboard = () => {
       }
     } catch (error) {
       console.error("Error scheduling trips:", error);
-      toast.error("Something went wrong.", { autoClose: 3000 });
+      toast.error(
+        "Failed to submit trips. Please ensure all fields are valid."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -360,7 +408,7 @@ const ParkAdminDashboard = () => {
                     if (route) {
                       setSelectedRoute({
                         id: route.id,
-                        name: `${route.origin_park.name} ➔ ${route.destination_park.name}`, // 👈 build name manually
+                        name: `${route.origin_park.name} ➔ ${route.destination_park.name}`,
                         from: route.origin_park.name,
                         to: route.destination_park.name,
                       });
@@ -474,7 +522,13 @@ const ParkAdminDashboard = () => {
                             />
                           ) : (
                             <select
-                              className='w-full p-2 border border-gray-300 rounded-md'
+                              className={`w-full p-2 border rounded-md ${
+                                invalidFields.some(
+                                  (f) => f.index === index && f.field === "time"
+                                )
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              } focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                               value={dt.time}
                               onChange={(e) =>
                                 updateDepartureTime(
@@ -514,7 +568,13 @@ const ParkAdminDashboard = () => {
                         </div>
                         <div className='col-span-6'>
                           <select
-                            className='w-full p-2 border border-gray-300 rounded-md'
+                            className={`w-full p-2 border rounded-md ${
+                              invalidFields.some(
+                                (f) => f.index === index && f.field === "bus"
+                              )
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                             value={dt.bus?.id || ""}
                             onChange={(e) => {
                               const busId = e.target.value;
@@ -535,18 +595,19 @@ const ParkAdminDashboard = () => {
                           </select>
                         </div>
                         <div className='col-span-2'>
-                          <div className="flex justify-center items-center">
-                            {/* Trash button here */}
+                          <div className='flex justify-center items-center'>
                             <button
-                              type="button"
+                              type='button'
                               onClick={() => removeDepartureTime(index)}
-                              title="Remove Time"
+                              title='Remove Time'
                               disabled={index === 0}
                               className={`p-2 ${
-                                index === 0 ? "text-gray-300 cursor-not-allowed" : "text-red-600 hover:text-red-800"
+                                index === 0
+                                  ? "text-gray-300 cursor-not-allowed"
+                                  : "text-red-600 hover:text-red-800"
                               }`}
                             >
-                              <TrashIcon className="w-5 h-5" />
+                              <TrashIcon className='w-5 h-5' />
                             </button>
                           </div>
                         </div>
@@ -630,14 +691,14 @@ const ParkAdminDashboard = () => {
                           className='text-sm text-gray-600 flex justify-between'
                         >
                           <span>
-                            {dt.time} -{" "}
+                            {dt.time || "No time selected"} -{" "}
                             {dt.bus
                               ? `${dt.bus.number_plate}`
                               : "No bus selected"}
                           </span>
                           {dt.bus && (
                             <span className='text-xs bg-green-100 text-green-800 px-2 py-1 rounded'>
-                              {dt.bus.capacity} seats
+                              {dt.bus.total_seats} seats
                             </span>
                           )}
                         </li>
@@ -707,32 +768,32 @@ const ParkAdminDashboard = () => {
                       <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                         {trip.bookings} bookings ({trip.seatsTaken} seats taken)
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center space-x-4">
+                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center space-x-4'>
                         <button
                           onClick={() => editTrip(trip)}
-                          title="Edit Trip"
-                          className="text-blue-600 hover:text-blue-800"
+                          title='Edit Trip'
+                          className='text-blue-600 hover:text-blue-800'
                         >
-                          <PencilSquareIcon className="w-5 h-5" />
+                          <PencilSquareIcon className='w-5 h-5' />
                         </button>
-
                         {trip.bookings === 0 ? (
                           <button
-                            onClick={() =>  {
-                              setTripToDelete(trip),
-                              setShowDeleteModal(true)
+                            onClick={() => {
+                              setTripToDelete(trip);
+                              setShowDeleteModal(true);
                             }}
-                            title="Delete Trip"
-                            className="text-red-600 hover:text-red-800"
+                            title='Delete Trip'
+                            className='text-red-600 hover:text-red-800'
                           >
-                            <TrashIcon className="w-5 h-5" />
+                            <TrashIcon className='w-5 h-5' />
                           </button>
                         ) : (
                           <span
-                            title="Cannot delete trip with bookings"
-                            className="text-gray-400 cursor-not-allowed"
+                            title='Cannot delete trip with bookings'
+                            className='text-gray-400 cursor-not-allowed'
                           >
-                            <TrashIcon className="w-5 h-5" />
+                            {/* <ToastContainer /> */}
+                            <TrashIcon className='w-5 h-5' />
                           </span>
                         )}
                       </td>
@@ -780,9 +841,9 @@ const ParkAdminDashboard = () => {
                 <ul className='list-disc list-inside mb-4 max-h-40 overflow-auto'>
                   {departureTimes.map((dt, index) => (
                     <li key={index}>
-                      {dt.time} -{" "}
-                      {dt.bus ? dt.bus.plateNumber : "No bus selected"} (
-                      {dt.bus ? dt.bus.capacity : 0} seats)
+                      {dt.time || "No time selected"} -{" "}
+                      {dt.bus ? dt.bus.number_plate : "No bus selected"} (
+                      {dt.bus ? dt.bus.total_seats : 0} seats)
                     </li>
                   ))}
                 </ul>
@@ -815,47 +876,57 @@ const ParkAdminDashboard = () => {
           </motion.div>
         )}
         {showDeleteModal && tripToDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md"
-            >
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold text-gray-800">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.3 }}
+            className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm'
+          >
+            <motion.div className='bg-white rounded-xl shadow-xl p-6 w-full max-w-md'>
+              <div className='space-y-4'>
+                <h2 className='text-xl font-bold text-gray-800'>
                   Confirm Trip Deletion
                 </h2>
-                <p className="text-sm text-gray-600 leading-relaxed">
+                <p className='text-sm text-gray-600 leading-relaxed'>
                   You are about to permanently delete the scheduled trip from{" "}
-                  <strong>{tripToDelete.route.origin_park?.name}</strong> to{" "}
-                  <strong>{tripToDelete.route.destination_park?.name}</strong>.<br /><br />
-                  <span className="inline-block">
+                  <strong>
+                    {tripToDelete.route.name.split("➔")[0].trim()}
+                  </strong>{" "}
+                  to{" "}
+                  <strong>
+                    {tripToDelete.route.name.split("➔")[1].trim()}
+                  </strong>
+                  .
+                  <br />
+                  <br />
+                  <span className='inline-block'>
                     <strong>Departure:</strong> {tripToDelete.departureTime}
                   </span>
                   <br />
-                  <span className="inline-block">
-                    <strong>Bus:</strong> {tripToDelete.bus?.number_plate} (
-                    {tripToDelete.bus?.total_seats} seats)
+                  <span className='inline-block'>
+                    <strong>Bus:</strong> {tripToDelete.bus.plateNumber} (
+                    {tripToDelete.bus.capacity} seats)
                   </span>
                   <br />
-                  <span className="inline-block">
-                    <strong>Price per Seat:</strong> ₦{tripToDelete.seat_price?.toLocaleString()}
+                  <span className='inline-block'>
+                    <strong>Price per Seat:</strong> ₦
+                    {tripToDelete.price.toLocaleString()}
                   </span>
                   <br />
-                  <span className="inline-block">
-                    <strong>Available Seats:</strong> {tripToDelete.available_seats}
+                  <span className='inline-block'>
+                    <strong>Available Seats:</strong>{" "}
+                    {tripToDelete.bus.capacity - tripToDelete.seatsTaken}
                   </span>
                 </p>
 
-                <div className="flex justify-end space-x-3 pt-4 border-t">
+                <div className='flex justify-end space-x-3 pt-4 border-t'>
                   <button
                     onClick={() => {
                       setShowDeleteModal(false);
                       setTripToDelete(null);
                     }}
-                    className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    className='px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100'
                   >
                     Cancel
                   </button>
@@ -865,17 +936,18 @@ const ParkAdminDashboard = () => {
                       setShowDeleteModal(false);
                       setTripToDelete(null);
                     }}
-                    className="px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700"
+                    className='px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700'
                   >
                     Yes, Delete
                   </button>
                 </div>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
-      
+
+      {/* <ToastContainer /> */}
     </div>
   );
 };
