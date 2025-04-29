@@ -772,7 +772,7 @@ const ParkAdminDashboard = () => {
                           <PencilSquareIcon className="w-5 h-5" />
                         </button>
 
-                        {trip.bookings === 0 && (
+                        {trip.bookings === 0 ? (
                           <button
                             onClick={() => deleteTrip(trip.id)}
                             title="Delete Trip"
@@ -780,6 +780,13 @@ const ParkAdminDashboard = () => {
                           >
                             <TrashIcon className="w-5 h-5" />
                           </button>
+                        ) : (
+                          <span
+                            title="Cannot delete trip with bookings"
+                            className="text-gray-400 cursor-not-allowed"
+                          >
+                            <TrashIcon className="w-5 h-5" />
+                          </span>
                         )}
                       </td>
                     </tr>
