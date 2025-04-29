@@ -69,9 +69,6 @@ const dummyScheduledTrips = [
 ];
 
 const ParkAdminDashboard = () => {
-  const [routes, setRoutes] = useState([]);
-  const [buses, setBuses] = useState([]);
-  const [scheduledTrips, setScheduledTrips] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [price, setPrice] = useState("");
   const [date, setDate] = useState(null);
