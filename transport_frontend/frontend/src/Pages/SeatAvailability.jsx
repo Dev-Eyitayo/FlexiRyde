@@ -126,10 +126,10 @@ export default function SeatAvailability() {
 
       // Step 2: Initialize payment using standard fetch
       const paymentPayload = { booking_id: bookingData.booking.id };
-      console.log(
-        "Calling http://127.0.0.1:8000/api/payment/initialize/ with:",
-        paymentPayload
-      );
+      // console.log(
+      //   "Calling http://127.0.0.1:8000/api/payment/initialize/ with:",
+      //   paymentPayload
+      // );
 
       let paymentResponse = await authFetch("/payment/initialize/", {
         method: "POST",

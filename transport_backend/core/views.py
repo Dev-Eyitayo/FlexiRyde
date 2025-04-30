@@ -1,4 +1,5 @@
-# views.py
+
+from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
@@ -13,6 +14,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import json
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 
 from .models import *
@@ -88,6 +90,14 @@ class BookingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+# from rest_framework.generics import ListAPIView
+# from rest_framework.permissions import AllowAny
+# from django.utils import timezone
+
+# from .models import Trip
+# from .serializers import TripListSerializer
+
+
 class TripSearchAPIView(ListAPIView):
     serializer_class = TripListSerializer
     permission_classes = [permissions.AllowAny]
@@ -102,15 +112,36 @@ class TripSearchAPIView(ListAPIView):
         print("Origin ID:", origin_id)  # Debugging line
         print("Destination ID:", destination_id)  # Debugging line
         print("Travel Date:", travel_date)  # Debugging line
+
+        # Apply origin and destination filters
         if origin_id:
             queryset = queryset.filter(route__origin_park_id=origin_id)
         if destination_id:
             queryset = queryset.filter(route__destination_park_id=destination_id)
+
+        # Apply date and time filters
         if travel_date:
-            queryset = queryset.filter(departure_datetime__date=travel_date)
+            try:
+                # Parse the travel_date (assuming format like '2025-04-30')
+                travel_date_obj = datetime.strptime(travel_date, '%Y-%m-%d').date()
+                today = timezone.now().date()
+
+                if travel_date_obj == today:
+                    # For today, only include trips with departure time >= now
+                    queryset = queryset.filter(
+                        Q(departure_datetime__date=travel_date_obj) &
+                        Q(departure_datetime__gte=timezone.now())
+                    )
+                else:
+                    # For future dates, include all trips on that date
+                    queryset = queryset.filter(departure_datetime__date=travel_date_obj)
+            except ValueError:
+                # Handle invalid date format
+                print(f"Invalid date format for travel_date: {travel_date}")
+                queryset = queryset.none()  # Return empty queryset for invalid date
 
         print("Queryset after filtering:", queryset)  # Debugging line
-        return queryset
+        return queryset.order_by('departure_datetime')
 
 
 class BookingCreateAPIView(CreateAPIView):
