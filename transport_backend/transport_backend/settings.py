@@ -6,11 +6,13 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
-SECRET_KEY = 'django-insecure-4*zbga86i%=@an$zgacq&7j8zz8ii9sms5_mrt#lk9$-*&yrg3'
+# SECRET_KEY = 'django-insecure-4*zbga86i%=@an$zgacq&7j8zz8ii9sms5_mrt#lk9$-*&yrg3'
+SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 # ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'w1nxrvdv-5173.uks1.devtunnels.ms']
 
@@ -54,6 +56,7 @@ ROOT_URLCONF = 'transport_backend.urls'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://flexiryde.vercel.app",
     "https://w1nxrvdv-5173.uks1.devtunnels.ms",
 ]
 
@@ -137,12 +140,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'transport_backend.wsgi.application'
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
