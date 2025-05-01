@@ -114,7 +114,8 @@ EMAIL_HOST_USER = 'ezekieleyitayo2020@gmail.com'
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'flexiryde@gmail.com'
 
-SITE_DOMAIN = 'localhost:5173'
+# SITE_DOMAIN = 'localhost:5173'
+SITE_DOMAIN = 'flexiryde.vercel.app'
 SITE_PROTOCOL = 'https'
 
 PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY')
