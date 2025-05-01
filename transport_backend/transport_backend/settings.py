@@ -21,7 +21,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 AUTH_USER_MODEL = 'accounts.User'
 
 
-TIME_ZONE = 'Africa/Nairobi'  # Adjust to match frontend’s timezone
+TIME_ZONE = 'Africa/Lagos'  # Adjust to match frontend’s timezone
 USE_TZ = True
 
 INSTALLED_APPS = [

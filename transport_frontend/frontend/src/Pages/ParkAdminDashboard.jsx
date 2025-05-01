@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,6 +22,46 @@ const ParkAdminDashboard = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [tripToDelete, setTripToDelete] = useState(null);
   const [invalidFields, setInvalidFields] = useState([]);
+
+  // Utility function to check if the selected date is today in Africa/Lagos
+  const isToday = (selectedDate) => {
+    if (!selectedDate) return false;
+    const today = new Date().toLocaleString("en-US", {
+      timeZone: "Africa/Lagos",
+    });
+    const selected = selectedDate.toLocaleString("en-US", {
+      timeZone: "Africa/Lagos",
+    });
+    const todayDate = new Date(today).setHours(0, 0, 0, 0);
+    const selectedDateOnly = new Date(selected).setHours(0, 0, 0, 0);
+    return todayDate === selectedDateOnly;
+  };
+
+  // Utility function to get filtered time options
+  const getTimeOptions = useMemo(() => {
+    return (selectedDate) => {
+      const options = [];
+      const now = new Date().toLocaleString("en-US", {
+        timeZone: "Africa/Lagos",
+      });
+      const currentHour = isToday(selectedDate) ? new Date(now).getHours() : -1;
+
+      for (let i = 6; i < 24; i++) {
+        const hour = i;
+        const ampm = hour >= 12 ? "PM" : "AM";
+        const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+        const timeString = `${displayHour}:00 ${ampm}`;
+        const valueString = `${hour.toString().padStart(2, "0")}:00`;
+
+        // Only include times that are in the future if the date is today
+        if (!isToday(selectedDate) || hour > currentHour) {
+          options.push({ value: valueString, label: timeString });
+        }
+      }
+
+      return options;
+    };
+  }, []);
 
   const loadUserProfile = async () => {
     try {
@@ -251,10 +291,10 @@ const ParkAdminDashboard = () => {
         if (!dt.bus || !dt.bus.id) {
           throw new Error("Invalid bus selection.");
         }
-        // Get date in Africa/Nairobi
+        // Get date in Africa/Lagos
         const dateString = date
           .toLocaleString("en-US", {
-            timeZone: "Africa/Nairobi",
+            timeZone: "Africa/Lagos",
             year: "numeric",
             month: "2-digit",
             day: "2-digit",
@@ -266,7 +306,7 @@ const ParkAdminDashboard = () => {
         const departureDate = new Date(localDatetimeString);
         departureDate.setHours(departureDate.getHours());
         const isoDate = departureDate.toISOString();
-        console.log(`Constructed datetime (Nairobi): ${localDatetimeString}`);
+        console.log(`Constructed datetime (Lagos): ${localDatetimeString}`);
         console.log(`Departure date (UTC): ${departureDate.toString()}`);
         console.log(`Sending departure_datetime: ${isoDate}`);
         return {
@@ -385,10 +425,10 @@ const ParkAdminDashboard = () => {
         if (!dt.bus || !dt.bus.id) {
           throw new Error("Invalid bus selection.");
         }
-        // Get date in Africa/Nairobi
+        // Get date in Africa/Lagos
         const dateString = date
           .toLocaleString("en-US", {
-            timeZone: "Africa/Nairobi",
+            timeZone: "Africa/Lagos",
             year: "numeric",
             month: "2-digit",
             day: "2-digit",
@@ -396,13 +436,13 @@ const ParkAdminDashboard = () => {
           .split(", ")[0]; // e.g., 05/01/2025
         const [month, day, year] = dateString.split("/");
         const formattedDate = `${year}-${month}-${day}`; // e.g., 2025-05-01
-        // Construct datetime as if in Africa/Nairobi
+        // Construct datetime as if in Africa/Lagos
         const localDatetimeString = `${formattedDate}T${dt.time}:00`;
-        // Parse as UTC by adjusting for +03:00 offset
+        // Parse as UTC by adjusting for +01:00 offset
         const departureDate = new Date(localDatetimeString);
         departureDate.setHours(departureDate.getHours());
         const isoDate = departureDate.toISOString();
-        console.log(`Constructed datetime (Nairobi): ${localDatetimeString}`);
+        console.log(`Constructed datetime (Lagos): ${localDatetimeString}`);
         console.log(`Departure date (UTC): ${departureDate.toString()}`);
         console.log(`Sending departure_datetime: ${isoDate}`);
         return {
@@ -542,16 +582,16 @@ const ParkAdminDashboard = () => {
                   <DatePicker
                     selected={date}
                     onChange={(selectedDate) => {
-                      // Normalize to Africa/Nairobi
+                      // Normalize to Africa/Lagos
                       const normalizedDate = new Date(
                         selectedDate.toLocaleString("en-US", {
-                          timeZone: "Africa/Nairobi",
+                          timeZone: "Africa/Lagos",
                         })
                       );
-                      // Set to start of day in Africa/Nairobi
+                      // Set to start of day in Africa/Lagos
                       normalizedDate.setHours(0, 0, 0, 0);
                       console.log(
-                        `Selected date: ${normalizedDate.toString()}`
+                        `Selected date (Lagos): ${normalizedDate.toString()}`
                       );
                       console.log(
                         `Selected date (ISO): ${normalizedDate.toISOString()}`
@@ -637,21 +677,11 @@ const ParkAdminDashboard = () => {
                               }
                             >
                               <option value=''>Select time</option>
-                              {Array.from({ length: 18 }, (_, i) => {
-                                const hour = i + 6;
-                                const ampm = hour >= 12 ? "PM" : "AM";
-                                const displayHour =
-                                  hour % 12 === 0 ? 12 : hour % 12;
-                                const timeString = `${displayHour}:00 ${ampm}`;
-                                const valueString = `${hour
-                                  .toString()
-                                  .padStart(2, "0")}:00`;
-                                return (
-                                  <option key={valueString} value={valueString}>
-                                    {timeString}
-                                  </option>
-                                );
-                              })}
+                              {getTimeOptions(date).map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
                             </select>
                           )}
                           {index === 0 &&
@@ -661,6 +691,12 @@ const ParkAdminDashboard = () => {
                               <p className='text-sm text-red-600 mt-1'>
                                 Existing departure time cannot be changed due to
                                 bookings.
+                              </p>
+                            )}
+                          {isToday(date) &&
+                            getTimeOptions(date).length === 0 && (
+                              <p className='text-sm text-red-600 mt-1'>
+                                No future times available for today.
                               </p>
                             )}
                         </div>
