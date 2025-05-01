@@ -126,11 +126,10 @@ class TripListSerializer(serializers.ModelSerializer):
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ["trip", "seat_count", "price", "status"]  # Added status
+        fields = ["trip", "seat_count", "price", "status"]
 
     def validate(self, attrs):
-        # For creation, trip and seat_count are required
-        if not self.partial:  # Full validation for POST
+        if not self.partial:
             if "trip" not in attrs:
                 raise serializers.ValidationError("Trip is required.")
             if "seat_count" not in attrs:
@@ -149,14 +148,12 @@ class BookingCreateSerializer(serializers.ModelSerializer):
                     f"Only {trip.available_seats} seats are available."
                 )
 
-            # Validate price
             expected_price = trip.seat_price * seat_count
             if attrs["price"] != expected_price:
                 raise serializers.ValidationError(
                     f"Price must be {expected_price} for {seat_count} seats."
                 )
 
-        # For partial updates (PATCH), validate status if provided
         if "status" in attrs:
             status_value = attrs["status"]
             instance = self.instance
@@ -173,19 +170,31 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         seat_count = validated_data["seat_count"]
         payment_reference = generate_ref_code(trip)
 
-        # Create booking without reserving seats
-        booking = Booking.objects.create(
-            user=self.context["request"].user,
-            trip=trip,
-            seat_count=seat_count,
-            price=validated_data["price"],
-            payment_reference=payment_reference,
-            status="pending",
-            payment_status="pending",
-        )
+        # Use a transaction to ensure atomicity
+        with transaction.atomic():
+            # Lock the trip to prevent concurrent modifications
+            trip = Trip.objects.select_for_update().get(id=trip.id)
+            if seat_count > trip.available_seats:
+                raise serializers.ValidationError(
+                    f"Only {trip.available_seats} seats are available."
+                )
+
+            # Create the booking
+            booking = Booking.objects.create(
+                user=self.context["request"].user,
+                trip=trip,
+                seat_count=seat_count,
+                price=validated_data["price"],
+                payment_reference=payment_reference,
+                status="pending",
+                payment_status="pending",
+            )
+
+            # Decrease available seats
+            trip.available_seats -= seat_count
+            trip.save()
+
         return booking
-
-
 
 class BusSerializer(serializers.ModelSerializer):
     park = BusParkSerializer(read_only=True)
