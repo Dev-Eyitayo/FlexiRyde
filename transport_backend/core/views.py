@@ -320,7 +320,7 @@ class TripCreateView(APIView):
                 status=status.HTTP_207_MULTI_STATUS if errors else status.HTTP_201_CREATED
             )
         else:
-            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"errors": {"The inputs are not valid"}}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

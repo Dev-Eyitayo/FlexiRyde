@@ -12,7 +12,11 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = 'django-insecure-4*zbga86i%=@an$zgacq&7j8zz8ii9sms5_mrt#lk9$-*&yrg3'
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'w1nxrvdv-5173.uks1.devtunnels.ms']
+# ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'w1nxrvdv-5173.uks1.devtunnels.ms']
+
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+
 
 AUTH_USER_MODEL = 'accounts.User'
 
