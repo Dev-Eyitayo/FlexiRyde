@@ -57,7 +57,6 @@ ROOT_URLCONF = 'transport_backend.urls'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://flexiryde.vercel.app",
-    "https://w1nxrvdv-5173.uks1.devtunnels.ms",
 ]
 
 REST_FRAMEWORK = {
