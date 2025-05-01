@@ -90,7 +90,7 @@ def google_auth(request):
             id_token_str,
             google_requests.Request(),
             client_id,
-            clock_skew_in_seconds=60
+            clock_skew_in_seconds=100
         )
         logger.info(f"Google user info: {user_info}")
         email = user_info.get('email')

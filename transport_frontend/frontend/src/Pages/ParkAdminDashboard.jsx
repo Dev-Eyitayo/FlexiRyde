@@ -251,12 +251,28 @@ const ParkAdminDashboard = () => {
         if (!dt.bus || !dt.bus.id) {
           throw new Error("Invalid bus selection.");
         }
+        // Get date in Africa/Nairobi
+        const dateString = date
+          .toLocaleString("en-US", {
+            timeZone: "Africa/Nairobi",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          })
+          .split(", ")[0]; // e.g., 05/01/2025
+        const [month, day, year] = dateString.split("/");
+        const formattedDate = `${year}-${month}-${day}`; // e.g., 2025-05-01
+        const localDatetimeString = `${formattedDate}T${dt.time}:00`;
+        const departureDate = new Date(localDatetimeString);
+        departureDate.setHours(departureDate.getHours());
+        const isoDate = departureDate.toISOString();
+        console.log(`Constructed datetime (Nairobi): ${localDatetimeString}`);
+        console.log(`Departure date (UTC): ${departureDate.toString()}`);
+        console.log(`Sending departure_datetime: ${isoDate}`);
         return {
           route_id: selectedRoute.id,
           bus_id: dt.bus.id,
-          departure_datetime: new Date(
-            `${date.toISOString().split("T")[0]}T${dt.time}:00`
-          ).toISOString(),
+          departure_datetime: isoDate,
           seat_price: parseFloat(price),
         };
       });
@@ -369,12 +385,30 @@ const ParkAdminDashboard = () => {
         if (!dt.bus || !dt.bus.id) {
           throw new Error("Invalid bus selection.");
         }
+        // Get date in Africa/Nairobi
+        const dateString = date
+          .toLocaleString("en-US", {
+            timeZone: "Africa/Nairobi",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          })
+          .split(", ")[0]; // e.g., 05/01/2025
+        const [month, day, year] = dateString.split("/");
+        const formattedDate = `${year}-${month}-${day}`; // e.g., 2025-05-01
+        // Construct datetime as if in Africa/Nairobi
+        const localDatetimeString = `${formattedDate}T${dt.time}:00`;
+        // Parse as UTC by adjusting for +03:00 offset
+        const departureDate = new Date(localDatetimeString);
+        departureDate.setHours(departureDate.getHours());
+        const isoDate = departureDate.toISOString();
+        console.log(`Constructed datetime (Nairobi): ${localDatetimeString}`);
+        console.log(`Departure date (UTC): ${departureDate.toString()}`);
+        console.log(`Sending departure_datetime: ${isoDate}`);
         return {
           route_id: selectedRoute.id,
           bus_id: dt.bus.id,
-          departure_datetime: new Date(
-            `${date.toISOString().split("T")[0]}T${dt.time}:00`
-          ).toISOString(),
+          departure_datetime: isoDate,
           seat_price: parseFloat(price),
         };
       });
@@ -507,7 +541,23 @@ const ParkAdminDashboard = () => {
                 <div className='relative'>
                   <DatePicker
                     selected={date}
-                    onChange={(date) => setDate(date)}
+                    onChange={(selectedDate) => {
+                      // Normalize to Africa/Nairobi
+                      const normalizedDate = new Date(
+                        selectedDate.toLocaleString("en-US", {
+                          timeZone: "Africa/Nairobi",
+                        })
+                      );
+                      // Set to start of day in Africa/Nairobi
+                      normalizedDate.setHours(0, 0, 0, 0);
+                      console.log(
+                        `Selected date: ${normalizedDate.toString()}`
+                      );
+                      console.log(
+                        `Selected date (ISO): ${normalizedDate.toISOString()}`
+                      );
+                      setDate(normalizedDate);
+                    }}
                     minDate={new Date()}
                     className='w-full p-2 border border-gray-300 rounded-md focus:border-2 focus:ring-2 focus:ring-blue-500'
                     placeholderText='Select date'
@@ -994,7 +1044,7 @@ const ParkAdminDashboard = () => {
         )}
       </AnimatePresence>
 
-      <ToastContainer />
+      <ToastContainer autoClose={2000} />
     </div>
   );
 };

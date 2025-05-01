@@ -16,6 +16,10 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'w1nxrvdv-5173.uks1.devtunnels.ms']
 
 AUTH_USER_MODEL = 'accounts.User'
 
+
+TIME_ZONE = 'Africa/Nairobi'  # Adjust to match frontend’s timezone
+USE_TZ = True
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

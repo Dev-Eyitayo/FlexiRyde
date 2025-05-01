@@ -6,6 +6,12 @@ from django.db import models
 from rest_framework import serializers
 from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
 from django.db import transaction
+from dateutil.parser import parse
+from dateutil.parser import parse
+import logging
+import pytz 
+
+logger = logging.getLogger(__name__)
 
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -191,6 +197,7 @@ class BusSerializer(serializers.ModelSerializer):
         model = Bus
         fields = ['id', 'number_plate', 'total_seats', 'park', 'park_id', 'driver_name', 'status']
 
+
 class TripSerializer(serializers.ModelSerializer):
     route_id = serializers.PrimaryKeyRelatedField(
         queryset=Route.objects.all(), source='route', write_only=True
@@ -213,16 +220,38 @@ class TripSerializer(serializers.ModelSerializer):
         ]
 
     def validate_departure_datetime(self, dt):
+        raw_input = self.initial_data.get('departure_datetime', dt)
+        logger.info(f"Raw departure_datetime input: {raw_input}")
+
+        if isinstance(dt, str):
+            try:
+                dt = parse(dt, ignoretz=False)  # Parse datetime, respect timezone if provided
+                logger.info(f"Parsed datetime: {dt}")
+            except ValueError:
+                raise serializers.ValidationError(
+                    "Invalid datetime format. Use ISO 8601 (e.g., '2025-05-02T01:00:00Z') or a valid datetime string (e.g., '2025-05-02 01:00:00')."
+                )
+
         # Ensure the datetime is timezone-aware
         if not timezone.is_aware(dt):
-            # Assume the input is in UTC if not timezone-aware
-            dt = timezone.make_aware(dt, timezone=timezone.utc)
-        if dt < timezone.now():
-            raise serializers.ValidationError("Departure time must be in the future.")
-        return dt
-       
+            logger.info(f"Converting naive datetime {dt} to {timezone.get_current_timezone_name()}")
+            dt = timezone.make_aware(dt, timezone=timezone.get_current_timezone())
 
+        # Log the final datetime in UTC
+        utc_dt = dt.astimezone(pytz.UTC)  # Use pytz.UTC instead of timezone.utc
+        logger.info(f"Final departure_datetime: {dt} (UTC: {utc_dt})")
 
+        # Check if departure time is in the future
+        now = timezone.now()
+        if dt < now:
+            raise serializers.ValidationError(f"Departure time must be in the future. Provided: {dt} (UTC: {utc_dt}), Now: {now}")
+
+        return dt    
+    
+    
+    
+    
+    
 class BookingSerializer(serializers.ModelSerializer):
     trip = TripSerializer(read_only=True)
     trip_id = serializers.PrimaryKeyRelatedField(

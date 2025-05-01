@@ -16,6 +16,11 @@ import requests
 import json
 from django.db.models import Q
 from django.http import HttpResponseRedirect
+from django.db import transaction
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 from .models import *
 from .serializers import (
@@ -89,13 +94,6 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-# from rest_framework.generics import ListAPIView
-# from rest_framework.permissions import AllowAny
-# from django.utils import timezone
-
-# from .models import Trip
-# from .serializers import TripListSerializer
 
 
 class TripSearchAPIView(ListAPIView):
@@ -257,6 +255,7 @@ class ParkTripsView(APIView):
             )
 
 
+
 class TripCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -270,43 +269,61 @@ class TripCreateView(APIView):
             )
 
         trips_data = request.data.get('trips', [])
+        if not isinstance(trips_data, list):
+            return Response({"error": "Trips data must be a list."}, status=status.HTTP_400_BAD_REQUEST)
         if not trips_data:
             return Response({"error": "No trips data provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        logger.info(f"Received trips data: {trips_data}")
 
         created_trips = []
         errors = []
 
-        for trip_data in trips_data:
-            serializer = TripSerializer(data=trip_data)
-            if serializer.is_valid():
-                # Check for ±2 hour bus conflict
-                departure_datetime = serializer.validated_data['departure_datetime']
-                bus = serializer.validated_data['bus']
+        with transaction.atomic():
+            for index, trip_data in enumerate(trips_data):
+                serializer = TripSerializer(data=trip_data)
+                if serializer.is_valid():
+                    bus = serializer.validated_data['bus']
+                    departure_datetime = serializer.validated_data['departure_datetime']
 
-                bus_conflict = Trip.objects.filter(
-                    bus=bus,
-                    departure_datetime__date=departure_datetime.date()
-                ).filter(
-                    departure_datetime__range=[
-                        departure_datetime - timezone.timedelta(hours=2),
-                        departure_datetime + timezone.timedelta(hours=2)
-                    ]
-                ).exists()
+                    # Ensure bus belongs to the park
+                    if bus.park != park:
+                        errors.append({"trip_index": index, "error": f"Bus {bus.number_plate} does not belong to the specified park."})
+                        continue
 
-                if bus_conflict:
-                    errors.append(f"Bus {bus.number_plate} already has a trip near {departure_datetime}.")
-                    continue
+                    # Check for ±2 hour bus conflict
+                    bus_conflict = Trip.objects.filter(
+                        bus=bus,
+                        departure_datetime__date=departure_datetime.date()
+                    ).filter(
+                        departure_datetime__range=[
+                            departure_datetime - timezone.timedelta(hours=2),
+                            departure_datetime + timezone.timedelta(hours=2)
+                        ]
+                    ).exists()
 
-                created_trip = serializer.save()
-                created_trips.append(created_trip)
-            else:
-                errors.append(serializer.errors)
+                    if bus_conflict:
+                        logger.warning(f"Bus conflict for bus {bus.number_plate} at {departure_datetime}")
+                        errors.append({"trip_index": index, "error": f"Bus {bus.number_plate} already has a trip near {departure_datetime}."})
+                        continue
+
+                    created_trip = serializer.save()
+                    created_trips.append(created_trip)
+                else:
+                    logger.error(f"Validation error for trip {index}: {serializer.errors}")
+                    errors.append({"trip_index": index, "errors": serializer.errors})
 
         if created_trips:
             response_data = TripListSerializer(created_trips, many=True).data
-            return Response({"created_trips": response_data, "errors": errors}, status=status.HTTP_201_CREATED)
+            return Response(
+                {"created_trips": response_data, "errors": errors},
+                status=status.HTTP_207_MULTI_STATUS if errors else status.HTTP_201_CREATED
+            )
         else:
             return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 class TripDeleteView(APIView):
     permission_classes = [IsAuthenticated]
