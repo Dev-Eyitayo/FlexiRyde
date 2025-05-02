@@ -5,7 +5,8 @@ import { toast } from "react-toastify";
 import ModalWrapper from "../components/Authentication/Modalwrapper";
 import TabNavigation from "../components/Authentication/TabNavigation";
 import LoginForm from "../components/Authentication/LoginForm";
-import SignupForm from "../components/Authentication/SignUpForm";
+// import SignupForm from "../components/Authentication/SignUpForm";
+import SignupForm from "../components/Authentication/SignupForm";
 import GoogleAuthButton from "../components/Authentication/GoogleAuthButton";
 import PasswordResetForm from "../components/Authentication/PasswordResetForm"; // New import
 import { useAuth } from "../context/AuthContext";
