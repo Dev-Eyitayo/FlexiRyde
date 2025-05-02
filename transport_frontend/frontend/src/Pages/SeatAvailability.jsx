@@ -235,11 +235,11 @@ export default function SeatAvailability() {
 
   return (
     <div className='min-h-screen bg-gray-50 flex flex-col items-center py-8 px-4 lg:px-8'>
-      <ToastContainer position='top-center' autoClose={5000} />
+      <ToastContainer position='top-right' autoClose={2000} />
 
       {/* Title */}
       <div className='w-full max-w-6xl text-center mb-8'>
-        <h1 className='text-3xl font-bold text-gray-800 mb-2'>
+        <h1 className='md:text-3xl text-2xl font-bold text-gray-800 mb-2'>
           Seat Availability
         </h1>
         <p className='text-gray-600'>
@@ -394,7 +394,7 @@ export default function SeatAvailability() {
         <button
           onClick={handleProceed}
           disabled={!isSeatAvailable || loading}
-          className={`w-full py-4 px-6 rounded-lg text-lg font-semibold transition-all duration-300 shadow-md ${
+          className={`w-full md:py-4 py-3 md:px-6 px-4 rounded-lg md:text-lg text-base font-semibold transition-all duration-300 shadow-md ${
             isSeatAvailable
               ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 hover:shadow-lg"
               : "bg-gray-200 text-gray-500 cursor-not-allowed"
