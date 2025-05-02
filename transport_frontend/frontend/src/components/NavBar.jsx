@@ -86,7 +86,7 @@ export default function NavBar() {
   }, []);
 
   return (
-    <nav className='bg-white shadow-md p-3 sticky top-0 z-50'>
+    <nav className='bg-white shadow-md p-4 sticky top-0 z-50'>
       <div className='container mx-auto flex items-center justify-between'>
         <button
           className='flex items-center space-x-6 cursor-pointer'
