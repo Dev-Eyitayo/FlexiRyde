@@ -6,11 +6,13 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
-SECRET_KEY = 'django-insecure-4*zbga86i%=@an$zgacq&7j8zz8ii9sms5_mrt#lk9$-*&yrg3'
+# SECRET_KEY = 'django-insecure-4*zbga86i%=@an$zgacq&7j8zz8ii9sms5_mrt#lk9$-*&yrg3'
+SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 # ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'w1nxrvdv-5173.uks1.devtunnels.ms']
 
@@ -54,7 +56,7 @@ ROOT_URLCONF = 'transport_backend.urls'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://w1nxrvdv-5173.uks1.devtunnels.ms",
+    "https://flexiryde.vercel.app",
 ]
 
 REST_FRAMEWORK = {
@@ -83,7 +85,8 @@ AUTHENTICATION_BACKENDS = [
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
-SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'http://127.0.0.1:8000/auth/complete/google-oauth2/'
+# SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'http://127.0.0.1:8000/auth/complete/google-oauth2/'
+SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'https://flexiryde.vercel.app/auth/complete/google-oauth2/'
 
 SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.social_details',
@@ -111,8 +114,9 @@ EMAIL_HOST_USER = 'ezekieleyitayo2020@gmail.com'
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'flexiryde@gmail.com'
 
-SITE_DOMAIN = 'localhost:5173'
-SITE_PROTOCOL = 'http'
+# SITE_DOMAIN = 'localhost:5173'
+SITE_DOMAIN = 'flexiryde.vercel.app'
+SITE_PROTOCOL = 'https'
 
 PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY')
 PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY')
@@ -137,12 +141,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'transport_backend.wsgi.application'
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
