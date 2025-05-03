@@ -20,7 +20,7 @@ const faqData = {
       question:
         "Do I need to create an account on FlexiRyde to book my bus ticket?",
       answer:
-        "No, you don’t have to create an account on FlexiRyde to book your bus ticket. But it is advisable to make one to accelerate the process next time you want to book bus tickets and help you modify your booking.",
+        "Yes, you have to create an account on FlexiRyde to book your bus ticket. It helps to accelerate the process next time you want to book bus tickets and help you modify your booking.",
     },
     {
       question: "Does bus booking online cost me more?",
@@ -53,12 +53,12 @@ const faqData = {
     {
       question: "What payment methods are available?",
       answer:
-        "We accept debit cards, mobile payments, and bank transfers via Paystack and Opay.",
+        "We accept debit cards, mobile payments, and bank transfers via Paystack.",
     },
     {
       question: "Is my payment secure on FlexiRyde?",
       answer:
-        "Yes, all payments are processed through secure gateways like Paystack and Opay, ensuring data encryption and fraud protection.",
+        "Yes, all payments are processed through secure gateways like Paystack, ensuring data encryption and fraud protection.",
     },
     {
       question: "Does FlexiRyde charge any extra fees for online payments??",
