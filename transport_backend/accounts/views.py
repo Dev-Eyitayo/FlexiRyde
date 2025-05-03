@@ -19,6 +19,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import logging
+from google.auth.transport.requests import Request
 
 logger = logging.getLogger(__name__)
 
@@ -78,24 +79,43 @@ class UserProfileView(APIView):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+
+
 @api_view(['POST'])
 def google_auth(request):
     try:
-        id_token_str = request.data.get('access_token')
-        if not id_token_str:
-            return Response({'error': 'ID token is required'}, status=status.HTTP_400_BAD_REQUEST)
-        logger.info(f"Received ID token: {id_token_str}")
-        client_id = settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
-        user_info = id_token.verify_oauth2_token(
-            id_token_str,
-            google_requests.Request(),
-            client_id,
-            clock_skew_in_seconds=100
-        )
-        logger.info(f"Google user info: {user_info}")
+        token = request.data.get('access_token')
+        if not token:
+            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        logger.info(f"Received token: {token}")
+
+        # Try to verify as ID token first
+        try:
+            user_info = id_token.verify_oauth2_token(
+                token,
+                Request(),
+                settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
+                clock_skew_in_seconds=100
+            )
+            logger.info(f"Verified as ID token: {user_info}")
+        except ValueError as e:
+            logger.info("Not an ID token, trying access token...")
+            # Fallback: Validate as access token
+            user_info_response = requests.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            if user_info_response.status_code != 200:
+                logger.error(f"Access token validation failed: {user_info_response.text}")
+                return Response({'error': 'Invalid Google token'}, status=status.HTTP_400_BAD_REQUEST)
+            user_info = user_info_response.json()
+            logger.info(f"Verified as access token: {user_info}")
+
         email = user_info.get('email')
         if not email:
             return Response({'error': 'Email not provided by Google'}, status=status.HTTP_400_BAD_REQUEST)
+
         user, created = User.objects.get_or_create(
             email=email,
             defaults={
@@ -105,6 +125,7 @@ def google_auth(request):
                 'role': 'passenger',
             }
         )
+
         refresh = RefreshToken.for_user(user)
         serializer = UserSerializer(user)
         return Response({
@@ -114,11 +135,10 @@ def google_auth(request):
         }, status=status.HTTP_200_OK)
     except ValueError as e:
         logger.error(f"Token verification error: {str(e)}")
-        return Response({'error': 'Invalid Google token'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': f"Invalid Google token: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         logger.error(f"General error in google_auth: {str(e)}")
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 

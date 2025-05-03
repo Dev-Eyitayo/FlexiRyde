@@ -118,18 +118,61 @@ export default function AuthPage({ isOpen, onClose }) {
     setError("");
     setLoading(true);
 
+    console.log("Google Credential Response:", credentialResponse);
+
+    let idToken = credentialResponse.credential;
+
+    // Fallback: If no credential, try to fetch user info with access token
+    if (!idToken && credentialResponse.access_token) {
+      try {
+        const userInfoResponse = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${credentialResponse.access_token}`,
+            },
+          }
+        );
+        console.log("Google User Info:", userInfoResponse.data);
+        // Note: userinfo doesn't return ID token directly; rely on backend verification
+        idToken = credentialResponse.access_token; // Send access_token as fallback
+      } catch (err) {
+        console.error("Failed to fetch user info:", err);
+        const errorMessage = "Unable to validate Google access token.";
+        setError(errorMessage);
+        toast.error("Login failed! " + errorMessage, { autoClose: 1000 });
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (!idToken) {
+      const errorMessage = "No ID token received from Google.";
+      console.error("Missing ID token in response:", credentialResponse);
+      setError(errorMessage);
+      toast.error("Login failed! " + errorMessage, { autoClose: 1000 });
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/google-auth/`,
         {
-          access_token: credentialResponse.credential,
+          access_token: idToken, // Send ID token or access token as fallback
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
       loginToContext(response.data, true);
-      navigate("/", { replace: true }); // Navigate to home, replace history
+      navigate("/", { replace: true });
       toast.success("Login successful! 🎉", { autoClose: 1000 });
       onClose();
     } catch (err) {
+      console.error("Backend Error:", err.response?.data, err.message);
       const friendlyMessage = getFriendlyErrorMessage(err);
       setError(friendlyMessage);
       toast.error("Login failed! " + friendlyMessage, { autoClose: 1000 });
