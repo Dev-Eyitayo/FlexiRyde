@@ -46,7 +46,7 @@ const GoogleAuthButton = ({
           <div className='flex items-center'>
             <div className='w-6 h-6 border-4 border-t-transparent border-gray-600 rounded-full animate-spin mr-3'></div>
             <span className='text-gray-600 font-semibold text-base'>
-              Processing...
+              signing you in...
             </span>
           </div>
         ) : (
