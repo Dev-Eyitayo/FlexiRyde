@@ -160,7 +160,7 @@ const Ticket = () => {
         )}
 
         <div className='bg-blue-600 text-white p-4 text-center'>
-          <h1 className='text-2xl font-bold'>Travel Ticket Pass</h1>
+          <h1 className='text-xl md:text-2xl font-bold'>Travel Ticket Pass</h1>
           <p className='text-xs'>FlexiRyde Ticket</p>
         </div>
 
@@ -168,12 +168,14 @@ const Ticket = () => {
           <div className='flex justify-between items-start mb-5'>
             <div>
               <p className='text-xs text-gray-500 mb-1'>PASSENGER</p>
-              <p className='font-bold text-base'>{passengerName}</p>
+              <p className='text-sm md:text-base font-bold'>{passengerName}</p>
             </div>
             <div>
               <p className='text-xs text-gray-500 mb-1'>TICKET NO</p>
               <div className='flex items-center space-x-2'>
-                <p className='font-bold text-base break-all'>{ticketRef}</p>
+                <p className='text-sm md:text-base font-bold break-all'>
+                  {ticketRef}
+                </p>
                 <button
                   onClick={handleCopy}
                   className='text-blue-600 hover:text-blue-800 focus:outline-none'
@@ -191,7 +193,7 @@ const Ticket = () => {
 
           <div className='border-t-2 border-b-2 border-dashed border-gray-300 py-3 my-4'>
             <p className='text-xs text-gray-500 mb-1'>ROUTE</p>
-            <p className='font-semibold text-gray-800 text-base'>
+            <p className='font-semibold text-gray-800 text-sm md:text-base'>
               {routePath.join(" → ")}
             </p>
             <p className='text-xs text-gray-500 mt-1'>
@@ -202,11 +204,13 @@ const Ticket = () => {
           <div className='grid grid-cols-2 gap-4 mb-5'>
             <div>
               <p className='text-xs text-gray-500 mb-1'>DEPARTURE</p>
-              <p className='font-bold'>{formattedDepartureTime}</p>
+              <p className='text-sm md:text-base font-bold'>
+                {formattedDepartureTime}
+              </p>
             </div>
             <div>
               <p className='text-xs text-gray-500 mb-1'>SEAT(S)</p>
-              <p className='font-bold'>
+              <p className='text-sm md:text-base font-bold'>
                 {totalSeats} seat{totalSeats > 1 ? "s" : ""}
               </p>
             </div>
@@ -215,7 +219,7 @@ const Ticket = () => {
           <div className='flex justify-between items-center mb-6'>
             <div>
               <p className='text-xs text-gray-500 mb-1'>BUS PLATE NUMBER</p>
-              <p className='font-bold'>{busCompany}</p>
+              <p className='text-sm md:text-base font-bold'>{busCompany}</p>
             </div>
             <div
               className={`px-2 py-1 rounded text-sm ${
@@ -248,14 +252,14 @@ const Ticket = () => {
             <p className='text-xs text-gray-500 mb-3'>SCAN TO VERIFY</p>
             <button
               onClick={handlePrint}
-              className='bg-blue-600 text-white px-5 py-2 rounded text-sm hover:bg-blue-700 transition'
+              className='bg-blue-600 text-white px-5 py-2 rounded text-xs md:text-sm hover:bg-blue-700 transition'
             >
               Print Ticket
             </button>
           </div>
         </div>
 
-        <div className='bg-gray-100 p-3 text-center text-xs text-gray-600'>
+        <div className='bg-gray-100 p-3 text-center text-xs md:text-sm text-gray-600'>
           <p>Please arrive 30 minutes before departure</p>
         </div>
       </div>
