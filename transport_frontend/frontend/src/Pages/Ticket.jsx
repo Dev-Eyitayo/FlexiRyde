@@ -21,7 +21,7 @@ const Ticket = () => {
     seats,
     trip = {},
     user = {},
-    status, // Added status
+    status,
   } = booking;
 
   const { departure_datetime, route = {}, bus = {} } = trip;
@@ -63,6 +63,72 @@ const Ticket = () => {
     });
   };
 
+  const handlePrint = () => {
+    // Create a print-specific stylesheet
+    const printStyle = document.createElement("style");
+    printStyle.innerHTML = `
+      @media print {
+        body * {
+          visibility: hidden; /* Hide everything by default */
+        }
+        #ticket-content, #ticket-content * {
+          visibility: visible; /* Show only ticket content */
+        }
+        #ticket-content {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+        }
+        .watermark {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-45deg);
+          opacity: 0.2;
+          z-index: 10;
+          color: ${status === "cancelled" ? "red" : "gray"};
+          font-size: 3rem;
+          font-weight: bold;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+        /* Center QR code in print */
+        .qr-code-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+        }
+        .qr-code-container img {
+          margin-left: auto;
+          margin-right: auto;
+          display: block;
+        }
+        /* Ensure no headers, footers, or other UI elements are printed */
+        header, footer, nav, aside, .navbar, .sidebar, .modal, .toast, [class*="header"], [class*="footer"] {
+          display: none !important;
+        }
+        @page {
+          size: auto;
+          margin: 1cm;
+        }
+      }
+    `;
+    document.head.appendChild(printStyle);
+
+    // Trigger print
+    window.print();
+
+    // Clean up the stylesheet after printing
+    setTimeout(() => {
+      document.head.removeChild(printStyle);
+    }, 1000); // Delay to ensure print dialog has appeared
+  };
+
   // Determine watermark text based on status
   const watermarkText =
     status === "cancelled"
@@ -77,13 +143,13 @@ const Ticket = () => {
         {/* Watermark */}
         {watermarkText && (
           <div
-            className='absolute inset-0 flex items-center justify-center pointer-events-none'
+            className='absolute inset-0 flex items-center justify-center pointer-events-none watermark'
             style={{
               transform: "rotate(-45deg)",
-              opacity: 0.2, // Semi-transparent
+              opacity: 0.2,
               zIndex: 10,
-              color: status === "cancelled" ? "red" : "gray", // Red for cancelled, gray for completed
-              fontSize: "4.2rem", // Large text
+              color: status === "cancelled" ? "red" : "gray",
+              fontSize: "4.2rem",
               fontWeight: "bold",
               textTransform: "uppercase",
               whiteSpace: "nowrap",
@@ -173,7 +239,7 @@ const Ticket = () => {
           </div>
 
           {/* QR Code */}
-          <div className='text-center mt-6'>
+          <div className='qr-code-container flex flex-col items-center justify-center mt-6'>
             <img
               src={qrCodeUrl}
               alt='QR Code'
@@ -181,41 +247,7 @@ const Ticket = () => {
             />
             <p className='text-xs text-gray-500 mb-3'>SCAN TO VERIFY</p>
             <button
-              onClick={() => {
-                const originalContent = document.body.innerHTML;
-                const printContent =
-                  document.getElementById("ticket-content").outerHTML;
-                document.body.innerHTML = `
-                  <!DOCTYPE html>
-                  <html>
-                    <head>
-                      <style>
-                        @media print {
-                          @page { size: auto; margin: 0mm; }
-                          body { margin: 1.6cm; }
-                          .watermark {
-                            position: absolute;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%) rotate(-45deg);
-                            opacity: 0.2;
-                            z-index: 10;
-                            color: ${status === "cancelled" ? "red" : "gray"};
-                            font-size: 3rem;
-                            font-weight: bold;
-                            text-transform: uppercase;
-                            white-space: nowrap;
-                          }
-                        }
-                      </style>
-                    </head>
-                    <body>${printContent}</body>
-                  </html>
-                `;
-                window.print();
-                document.body.innerHTML = originalContent;
-                window.location.reload(); // Restore event listeners
-              }}
+              onClick={handlePrint}
               className='bg-blue-600 text-white px-5 py-2 rounded text-sm hover:bg-blue-700 transition'
             >
               Print Ticket
