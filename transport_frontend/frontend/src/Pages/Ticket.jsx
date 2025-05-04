@@ -5,6 +5,7 @@ import { FiCopy, FiCheck } from "react-icons/fi";
 const Ticket = () => {
   const location = useLocation();
   const [copied, setCopied] = useState(false);
+
   const booking =
     location.state?.booking ||
     JSON.parse(sessionStorage.getItem("recentBooking")) ||
@@ -64,6 +65,7 @@ const Ticket = () => {
   };
 
   const handlePrint = () => {
+    console.log("Initiating print");
     window.print();
   };
 
@@ -77,7 +79,6 @@ const Ticket = () => {
 
   return (
     <>
-      {/* Static print stylesheet */}
       <style>
         {`
           @media print {
@@ -88,15 +89,12 @@ const Ticket = () => {
               visibility: visible; /* Show only ticket content */
             }
             #ticket-content {
-              position: static; /* Use static positioning for centering */
               width: 100%;
               max-width: 600px; /* Constrain width for readability */
-              margin: 0 auto; /* Center horizontally */
-              padding: 0;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
+              margin: 2cm auto; /* Center horizontally with top/bottom spacing */
+              padding: 0; /* Rely on Tailwind classes for padding */
+              display: block; /* Match UI rendering */
+              box-sizing: border-box;
             }
             .watermark {
               position: absolute;
@@ -105,24 +103,11 @@ const Ticket = () => {
               transform: translate(-50%, -50%) rotate(-45deg);
               opacity: 0.2;
               z-index: 10;
-              color: ${status === "cancelled" ? "red" : "gray"};
-              font-size: 3rem;
+              font-size: 4.2rem; /* Match UI watermark size */
               font-weight: bold;
               text-transform: uppercase;
               white-space: nowrap;
-            }
-            /* Center QR code in print */
-            .qr-code-container {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              text-align: center;
-            }
-            .qr-code-container img {
-              margin-left: auto;
-              margin-right: auto;
-              display: block;
+              color: ${status === "cancelled" ? "red" : "gray"};
             }
             /* Ensure no headers, footers, or other UI elements are printed */
             header, footer, nav, aside, .navbar, .sidebar, .modal, .toast, [class*="header"], [class*="footer"] {
@@ -130,7 +115,7 @@ const Ticket = () => {
             }
             @page {
               size: auto;
-              margin: 1cm; /* Consistent margins */
+              margin: 1cm; /* Consistent page margins */
             }
             body {
               display: flex;
@@ -139,139 +124,164 @@ const Ticket = () => {
               min-height: 100vh;
               margin: 0;
               padding: 0;
+              background: white;
             }
+            /* Explicitly preserve flexbox spacing for passenger and ticket ref */
+            .passenger-ticket-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 1.25rem; /* Match Tailwind mb-5 */
+              gap: 1rem; /* Ensure spacing between items */
+            }
+            .passenger-ticket-container > div {
+              min-width: 0; /* Prevent flex items from shrinking too much */
+              flex: 1; /* Distribute space evenly */
+            }
+            .ticket-no-container {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem; /* Match Tailwind space-x-2 */
+            }
+            /* Debug outlines for print */
+            /* #ticket-content * {
+              outline: 1px solid rgba(0, 0, 0, 0.1);
+            } */
           }
         `}
       </style>
-
-      <div className='max-w-xl mx-auto my-8 p-4' id='ticket-content'>
-        <div className='border-2 border-gray-800 rounded-lg overflow-hidden shadow-xl relative'>
-          {/* Watermark */}
-          {watermarkText && (
-            <div
-              className='absolute inset-0 flex items-center justify-center pointer-events-none watermark'
-              style={{
-                transform: "rotate(-45deg)",
-                opacity: 0.2,
-                zIndex: 10,
-                color: status === "cancelled" ? "red" : "gray",
-                fontSize: "4.2rem",
-                fontWeight: "bold",
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {watermarkText}
-            </div>
-          )}
-
-          <div className='bg-blue-600 text-white p-4 text-center'>
-            <h1 className='text-xl md:text-2xl font-bold'>
-              Travel Ticket Pass
-            </h1>
-            <p className='text-xs'>FlexiRyde Ticket</p>
-          </div>
-
-          <div className='p-5 bg-white relative'>
-            <div className='flex justify-between items-start mb-5'>
-              <div>
-                <p className='text-xs text-gray-500 mb-1'>PASSENGER</p>
-                <p className='text-sm md:text-base font-bold'>
-                  {passengerName}
-                </p>
+      <div>
+        <div className='max-w-xl mx-auto my-8 p-4' id='ticket-content'>
+          <div className='border-2 border-gray-800 rounded-lg overflow-hidden shadow-xl relative'>
+            {/* Watermark */}
+            {watermarkText && (
+              <div
+                className='absolute inset-0 flex items-center justify-center pointer-events-none watermark'
+                style={{
+                  transform: "rotate(-45deg)",
+                  opacity: 0.2,
+                  zIndex: 10,
+                  fontSize: "4.2rem",
+                  fontWeight: "bold",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {watermarkText}
               </div>
-              <div>
-                <p className='text-xs text-gray-500 mb-1'>TICKET NO</p>
-                <div className='flex items-center space-x-2'>
-                  <p className='text-sm md:text-base font-bold break-all'>
-                    {ticketRef}
+            )}
+
+            <div className='bg-blue-600 text-white p-4 text-center'>
+              <h1 className='text-xl md:text-2xl font-bold'>
+                Travel Ticket Pass
+              </h1>
+              <p className='text-xs'>FlexiRyde Ticket</p>
+            </div>
+
+            <div className='p-5 bg-white relative'>
+              <div className='passenger-ticket-container flex justify-between items-start mb-5 gap-4'>
+                <div>
+                  <p className='text-xs text-gray-500 mb-1'>PASSENGER</p>
+                  <p className='text-sm md:text-base font-bold'>
+                    {passengerName}
                   </p>
-                  <button
-                    onClick={handleCopy}
-                    className='text-blue-600 hover:text-blue-800 focus:outline-none'
-                    title='Copy Reference'
-                  >
-                    {copied ? (
-                      <FiCheck className='w-5 h-5' />
-                    ) : (
-                      <FiCopy className='w-5 h-5' />
-                    )}
-                  </button>
+                </div>
+                <div>
+                  <p className='text-xs text-gray-500 mb-1'>TICKET NO</p>
+                  <div className='ticket-no-container flex items-center space-x-2'>
+                    <p className='text-sm md:text-base font-bold break-all'>
+                      {ticketRef}
+                    </p>
+                    <button
+                      onClick={handleCopy}
+                      className='text-blue-600 hover:text-blue-800 focus:outline-none'
+                      title='Copy Reference'
+                    >
+                      {copied ? (
+                        <FiCheck className='w-5 h-5' />
+                      ) : (
+                        <FiCopy className='w-5 h-5' />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className='border-t-2 border-b-2 border-dashed border-gray-300 py-3 my-4'>
-              <p className='text-xs text-gray-500 mb-1'>ROUTE</p>
-              <p className='font-semibold text-gray-800 text-sm md:text-base'>
-                {routePath.join(" → ")}
-              </p>
-              <p className='text-xs text-gray-500 mt-1'>
-                {origin_city?.name} → {destination_city?.name}
-              </p>
-            </div>
-
-            <div className='grid grid-cols-2 gap-4 mb-5'>
-              <div>
-                <p className='text-xs text-gray-500 mb-1'>DEPARTURE</p>
-                <p className='text-sm md:text-base font-bold'>
-                  {formattedDepartureTime}
+              <div className='border-t-2 border-b-2 border-dashed border-gray-300 py-3 my-4'>
+                <p className='text-xs text-gray-500 mb-1'>ROUTE</p>
+                <p className='font-semibold text-gray-800 text-sm md:text-base'>
+                  {routePath.join(" → ")}
+                </p>
+                <p className='text-xs text-gray-500 mt-1'>
+                  {origin_city?.name} → {destination_city?.name}
                 </p>
               </div>
-              <div>
-                <p className='text-xs text-gray-500 mb-1'>SEAT(S)</p>
-                <p className='text-sm md:text-base font-bold'>
-                  {totalSeats} seat{totalSeats > 1 ? "s" : ""}
-                </p>
-              </div>
-            </div>
 
-            <div className='flex justify-between items-center mb-6'>
-              <div>
-                <p className='text-xs text-gray-500 mb-1'>BUS PLATE NUMBER</p>
-                <p className='text-sm md:text-base font-bold'>{busCompany}</p>
+              <div className='grid grid-cols-2 gap-4 mb-5'>
+                <div>
+                  <p className='text-xs text-gray-500 mb-1'>DEPARTURE</p>
+                  <p className='text-sm md:text-base font-bold'>
+                    {formattedDepartureTime}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-xs text-gray-500 mb-1'>SEAT(S)</p>
+                  <p className='text-sm md:text-base font-bold'>
+                    {totalSeats} seat{totalSeats > 1 ? "s" : ""}
+                  </p>
+                </div>
               </div>
-              <div
-                className={`px-2 py-1 rounded text-sm ${
-                  status === "cancelled"
-                    ? "bg-red-100 text-red-800"
+
+              <div className='flex justify-between items-center mb-6'>
+                <div>
+                  <p className='text-xs text-gray-500 mb-1'>BUS PLATE NUMBER</p>
+                  <p className='text-sm md:text-base font-bold'>{busCompany}</p>
+                </div>
+                <div
+                  className={`px-2 py-1 rounded text-sm ${
+                    status === "cancelled"
+                      ? "bg-red-100 text-red-800"
+                      : status === "completed"
+                        ? "bg-gray-100 text-gray-800"
+                        : status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-green-100 text-green-800"
+                  }`}
+                >
+                  {status === "cancelled"
+                    ? "Cancelled"
                     : status === "completed"
-                      ? "bg-gray-100 text-gray-800"
+                      ? "Completed"
                       : status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-green-100 text-green-800"
-                }`}
-              >
-                {status === "cancelled"
-                  ? "Cancelled"
-                  : status === "completed"
-                    ? "Completed"
-                    : status === "pending"
-                      ? "Pending"
-                      : "Paid"}
+                        ? "Pending"
+                        : "Paid"}
+                </div>
+              </div>
+
+              {/* QR Code */}
+              <div className='qr-code-container flex flex-col items-center justify-center mt-6'>
+                <img
+                  src={qrCodeUrl}
+                  alt='QR Code'
+                  className='w-24 h-24 mx-auto mb-2'
+                />
+                <p className='text-xs text-gray-500 mb-3'>SCAN TO VERIFY</p>
+                <button
+                  onClick={() => {
+                    console.log("Print button clicked");
+                    handlePrint();
+                  }}
+                  className='bg-blue-600 text-white px-5 py-2 rounded text-xs md:text-sm hover:bg-blue-700 transition'
+                  aria-label='Print travel ticket'
+                >
+                  Print Ticket
+                </button>
               </div>
             </div>
 
-            {/* QR Code */}
-            <div className='qr-code-container flex flex-col items-center justify-center mt-6'>
-              <img
-                src={qrCodeUrl}
-                alt='QR Code'
-                className='w-24 h-24 mx-auto mb-2'
-              />
-              <p className='text-xs text-gray-500 mb-3'>SCAN TO VERIFY</p>
-              <button
-                onClick={handlePrint}
-                className='bg-blue-600 text-white px-5 py-2 rounded text-xs md:text-sm hover:bg-blue-700 transition'
-                aria-label='Print travel ticket'
-              >
-                Print Ticket
-              </button>
+            <div className='bg-gray-100 p-3 text-center text-xs md:text-sm text-gray-600'>
+              <p>Please arrive 30 minutes before departure</p>
             </div>
-          </div>
-
-          <div className='bg-gray-100 p-3 text-center text-xs md:text-sm text-gray-600'>
-            <p>Please arrive 30 minutes before departure</p>
           </div>
         </div>
       </div>
