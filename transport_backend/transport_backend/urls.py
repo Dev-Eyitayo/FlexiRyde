@@ -11,7 +11,7 @@ schema_view = get_schema_view(
         title="Flexiryde API",
         default_version='v1',
         description="API documentation for Flexiryde Backend System",
-        # terms_of_service="https://www.flexiryde.com/terms/",
+        terms_of_service="https://www.flexiryde.com/terms/",
         contact=openapi.Contact(email="ezekieleyitayo2020@gmail.com"),
         license=openapi.License(name="MIT License"),
     ),
