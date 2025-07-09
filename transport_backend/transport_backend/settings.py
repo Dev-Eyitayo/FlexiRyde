@@ -58,7 +58,9 @@ ROOT_URLCONF = 'transport_backend.urls'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://flexiryde.vercel.app",
+    "http://127.0.1.5500"
 ]
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
