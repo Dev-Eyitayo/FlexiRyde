@@ -58,7 +58,7 @@ ROOT_URLCONF = 'transport_backend.urls'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://flexiryde.vercel.app",
-    "http://127.0.1.5500/",
+    # "http://127.0.1.5500/",
     "http://127.0.1.5500",
 ]
 
@@ -144,6 +144,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'transport_backend.wsgi.application'
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': "Enter **'Bearer &lt;your token&gt;'**",
+        }
+    },
+    'USE_SESSION_AUTH': False,  
+}
+
 
 # DATABASES = {
 #     'default': {
