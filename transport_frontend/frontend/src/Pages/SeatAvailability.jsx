@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SeatSelector from "../components/SeatSelector";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -239,7 +240,7 @@ export default function SeatAvailability() {
 
       {/* Title */}
       <div className='w-full max-w-6xl text-center mb-8'>
-        <h1 className='md:text-2xl text-xl font-bold text-gray-800 mb-2'>
+        <h1 className='md:text-3xl text-2xl font-bold text-gray-800 mb-2'>
           Seat Availability
         </h1>
         <p className='text-gray-600'>
@@ -262,7 +263,7 @@ export default function SeatAvailability() {
       <div className='w-full max-w-4xl mb-6'>
         <label
           htmlFor='time'
-          className='block text-base text-gray-700 mb-2 font-medium'
+          className='block text-lg text-gray-700 mb-2 font-medium'
         >
           Select Departure Time
         </label>
@@ -271,7 +272,7 @@ export default function SeatAvailability() {
             id='time'
             value={selectedTripId}
             onChange={(e) => setSelectedTripId(e.target.value)}
-            className='w-full appearance-none border border-gray-300 bg-white rounded-lg pl-4 pr-10 py-3 text-gray-800 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all hover:bg-gray-50'
+            className='w-full appearance-none border border-gray-300 bg-white rounded-lg pl-4 pr-10 py-3 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:bg-gray-50'
           >
             {trips.map((t) => (
               <option key={t.id} value={t.id}>
@@ -295,7 +296,7 @@ export default function SeatAvailability() {
 
       {/* Travel Summary */}
       <div className='bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100'>
-        <h2 className='text-lg font-semibold text-gray-800 mb-4 flex items-center'>
+        <h2 className='text-xl font-semibold text-gray-800 mb-4 flex items-center'>
           <FaClock className='mr-2 text-blue-500' />
           Travel Details
         </h2>
@@ -323,25 +324,25 @@ export default function SeatAvailability() {
 
       {/* Seat Breakdown */}
       <div className='bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100'>
-        <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+        <h3 className='text-xl font-semibold text-gray-800 mb-4'>
           Seat Availability
         </h3>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
           <div className='bg-gray-50 p-4 rounded-lg'>
             <p className='text-gray-600'>Total Seats</p>
-            <p className='text-xl font-bold text-gray-800'>
+            <p className='text-2xl font-bold text-gray-800'>
               {currentSeats.totalSeats}
             </p>
           </div>
           <div className='bg-green-50 p-4 rounded-lg'>
             <p className='text-gray-600'>Available Seats</p>
-            <p className='text-xl font-bold text-green-600'>
+            <p className='text-2xl font-bold text-green-600'>
               {currentSeats.totalSeats - currentSeats.takenSeats}
             </p>
           </div>
           <div className='bg-red-50 p-4 rounded-lg'>
             <p className='text-gray-600'>Booked Seats</p>
-            <p className='text-xl font-bold text-red-600'>
+            <p className='text-2xl font-bold text-red-600'>
               {currentSeats.takenSeats}
             </p>
           </div>
@@ -364,9 +365,19 @@ export default function SeatAvailability() {
         )}
       </div>
 
+      <div className='bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100'>
+        <h3 className='text-xl font-semibold text-gray-800 mb-4'>
+          Choose Your Seat(s)
+        </h3>
+        <SeatSelector
+          totalSeats={currentSeats.totalSeats}
+          maxSelectable={bookedSeats}
+        />
+      </div>
+
       {/* Payment */}
       <div className='bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100'>
-        <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+        <h3 className='text-xl font-semibold text-gray-800 mb-4'>
           Payment Summary
         </h3>
         <div className='space-y-3'>
@@ -381,7 +392,7 @@ export default function SeatAvailability() {
           <div className='border-t border-gray-200 pt-3'>
             <div className='flex justify-between'>
               <span className='text-gray-600 font-semibold'>Total Amount:</span>
-              <span className='text-gray-800 text-base font-bold'>
+              <span className='text-gray-800 text-lg font-bold'>
                 ₦{(price * bookedSeats).toLocaleString()}
               </span>
             </div>
@@ -394,7 +405,7 @@ export default function SeatAvailability() {
         <button
           onClick={handleProceed}
           disabled={!isSeatAvailable || loading}
-          className={`w-full md:py-4 py-3 md:px-6 px-4 rounded-lg md:text-base text-sm font-semibold transition-all duration-300 shadow-md ${
+          className={`w-full md:py-4 py-3 md:px-6 px-4 rounded-lg md:text-lg text-base font-semibold transition-all duration-300 shadow-md ${
             isSeatAvailable
               ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 hover:shadow-lg"
               : "bg-gray-200 text-gray-500 cursor-not-allowed"
