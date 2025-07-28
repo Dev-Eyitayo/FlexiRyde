@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SeatSelector from "../components/SeatSelector";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -362,6 +363,16 @@ export default function SeatAvailability() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className='bg-white rounded-lg shadow-md w-full max-w-4xl mb-8 p-6 border border-gray-100'>
+        <h3 className='text-xl font-semibold text-gray-800 mb-4'>
+          Choose Your Seat(s)
+        </h3>
+        <SeatSelector
+          totalSeats={currentSeats.totalSeats}
+          maxSelectable={bookedSeats}
+        />
       </div>
 
       {/* Payment */}
