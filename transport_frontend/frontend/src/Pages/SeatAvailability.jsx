@@ -14,7 +14,7 @@ export default function SeatAvailability() {
   const navigate = useNavigate();
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  // Pull from location.state: an array of trips and the user's search data
+  // Pull from location.state: an array of trips and the user search data
   const trips = location.state?.trips || [];
   const travelData = location.state?.searchInfo || {};
   const { from, to, date, passengers: bookedSeats } = travelData;
