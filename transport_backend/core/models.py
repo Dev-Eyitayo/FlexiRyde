@@ -134,3 +134,23 @@ class Booking(models.Model):
 
     def __str__(self):
          return f"{self.user.email} | {self.trip.route.origin_park.name} → {self.trip.route.destination_park.name}"
+
+
+class SeatAssignment(models.Model):
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='seat_assignments')
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='seat_assignments')
+    seat_number = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('trip', 'seat_number')  # Ensure a seat is only booked once per trip
+        indexes = [
+            models.Index(fields=['trip', 'seat_number']),
+        ]
+
+    def __str__(self):
+        return f"Seat {self.seat_number} for Booking {self.booking.id} on Trip {self.trip.id}"
+
+    def clean(self):
+        # Validate that seat_number is within the bus's total seats
+        if self.seat_number < 1 or self.seat_number > self.trip.bus.total_seats:
+            raise models.ValidationError(f"Seat number must be between 1 and {self.trip.bus.total_seats}.")

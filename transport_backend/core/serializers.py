@@ -4,7 +4,7 @@ from datetime import datetime
 from django.utils import timezone
 from django.db import models
 from rest_framework import serializers
-from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus
+from .models import City, BusPark, Route, IndirectRoute, Booking, Trip, Bus, SeatAssignment
 from django.db import transaction
 from dateutil.parser import parse
 from dateutil.parser import parse
@@ -72,6 +72,7 @@ class IndirectRouteSerializer(serializers.ModelSerializer):
             'total_distance', 'total_price'
         ]
 
+
 class TripListSerializer(serializers.ModelSerializer):
     bus = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
@@ -79,6 +80,7 @@ class TripListSerializer(serializers.ModelSerializer):
     seats_taken = serializers.SerializerMethodField()
     departure_datetime = serializers.DateTimeField()
     available_seats = serializers.IntegerField(read_only=True)
+    booked_seats = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
@@ -91,6 +93,7 @@ class TripListSerializer(serializers.ModelSerializer):
             'available_seats',
             'bookings_count',
             'seats_taken',
+            'booked_seats',
         ]
 
     def get_bus(self, obj):
@@ -119,14 +122,23 @@ class TripListSerializer(serializers.ModelSerializer):
 
     def get_seats_taken(self, obj):
         return obj.bookings.filter(status__in=["pending", "confirmed"]).aggregate(
-            total_seats=models.Sum('seat_count') 
+            total_seats=models.Sum('seat_count')
         )['total_seats'] or 0
+
+    def get_booked_seats(self, obj):
+        return list(SeatAssignment.objects.filter(trip=obj).values_list('seat_number', flat=True))
 
 
 class BookingCreateSerializer(serializers.ModelSerializer):
+    seat_numbers = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        write_only=True,
+        required=True
+    )
+
     class Meta:
         model = Booking
-        fields = ["trip", "seat_count", "price", "status"]
+        fields = ["trip", "seat_count", "price", "status", "seat_numbers"]
 
     def validate(self, attrs):
         if not self.partial:
@@ -136,10 +148,39 @@ class BookingCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Seat count is required.")
             if "price" not in attrs:
                 raise serializers.ValidationError("Price is required.")
+            if "seat_numbers" not in attrs:
+                raise serializers.ValidationError("Seat numbers are required.")
 
             trip = attrs["trip"]
             seat_count = attrs["seat_count"]
+            seat_numbers = attrs["seat_numbers"]
 
+            # Validate seat_count matches the number of seat_numbers
+            if len(seat_numbers) != seat_count:
+                raise serializers.ValidationError(
+                    f"Number of seats selected ({len(seat_numbers)}) does not match seat_count ({seat_count})."
+                )
+
+            # Validate seat_numbers are unique
+            if len(set(seat_numbers)) != len(seat_numbers):
+                raise serializers.ValidationError("Duplicate seat numbers are not allowed.")
+
+            # Validate seat_numbers are within bus capacity
+            if max(seat_numbers, default=0) > trip.bus.total_seats:
+                raise serializers.ValidationError(
+                    f"Seat numbers must be between 1 and {trip.bus.total_seats}."
+                )
+
+            # Check if any seats are already booked
+            existing_seats = SeatAssignment.objects.filter(
+                trip=trip, seat_number__in=seat_numbers
+            ).values_list('seat_number', flat=True)
+            if existing_seats:
+                raise serializers.ValidationError(
+                    f"Seats {list(existing_seats)} are already booked."
+                )
+
+            # Validate seat_count
             if seat_count < 1:
                 raise serializers.ValidationError("Must book at least 1 seat.")
 
@@ -148,6 +189,7 @@ class BookingCreateSerializer(serializers.ModelSerializer):
                     f"Only {trip.available_seats} seats are available."
                 )
 
+            # Validate price
             expected_price = trip.seat_price * seat_count
             if attrs["price"] != expected_price:
                 raise serializers.ValidationError(
@@ -165,37 +207,53 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    @transaction.atomic
     def create(self, validated_data):
         trip = validated_data["trip"]
         seat_count = validated_data["seat_count"]
+        seat_numbers = validated_data.pop("seat_numbers")
         payment_reference = generate_ref_code(trip)
 
-        # Use a transaction to ensure atomicity
-        with transaction.atomic():
-            # Lock the trip to prevent concurrent modifications
-            trip = Trip.objects.select_for_update().get(id=trip.id)
-            if seat_count > trip.available_seats:
-                raise serializers.ValidationError(
-                    f"Only {trip.available_seats} seats are available."
-                )
-
-            # Create the booking
-            booking = Booking.objects.create(
-                user=self.context["request"].user,
-                trip=trip,
-                seat_count=seat_count,
-                price=validated_data["price"],
-                payment_reference=payment_reference,
-                status="pending",
-                payment_status="pending",
+        # Lock the trip to prevent concurrent modifications
+        trip = Trip.objects.select_for_update().get(id=trip.id)
+        if seat_count > trip.available_seats:
+            raise serializers.ValidationError(
+                f"Only {trip.available_seats} seats are available."
             )
 
-            # Decrease available seats
-            trip.available_seats -= seat_count
-            trip.save()
+        # Re-validate seat availability
+        existing_seats = SeatAssignment.objects.filter(
+            trip=trip, seat_number__in=seat_numbers
+        ).values_list('seat_number', flat=True)
+        if existing_seats:
+            raise serializers.ValidationError(
+                f"Seats {list(existing_seats)} are already booked."
+            )
+
+        # Create the booking
+        booking = Booking.objects.create(
+            user=self.context["request"].user,
+            trip=trip,
+            seat_count=seat_count,
+            price=validated_data["price"],
+            payment_reference=payment_reference,
+            status="pending",
+            payment_status="pending",
+        )
+
+        # Create seat assignments
+        for seat_number in seat_numbers:
+            SeatAssignment.objects.create(
+                booking=booking,
+                trip=trip,
+                seat_number=seat_number
+            )
+
+        # Decrease available seats
+        trip.available_seats -= seat_count
+        trip.save()
 
         return booking
-
 class BusSerializer(serializers.ModelSerializer):
     park = BusParkSerializer(read_only=True)
     park_id = serializers.PrimaryKeyRelatedField(
@@ -404,3 +462,6 @@ class BookingDetailSerializer(serializers.ModelSerializer):
 class PaymentInitializationSerializer(serializers.Serializer):
     booking_id = serializers.IntegerField()
     authorization_url = serializers.URLField(read_only=True)
+
+
+

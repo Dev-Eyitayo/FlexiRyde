@@ -1,3 +1,5 @@
+// components/SeatAvailability.jsx
+
 import { useState, useEffect } from "react";
 import SeatSelector from "../components/SeatSelector";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -12,20 +14,22 @@ export default function SeatAvailability() {
   const navigate = useNavigate();
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  // 1) Pull from location.state: an array of trips and the user's search data
+  // Pull from location.state: an array of trips and the user's search data
   const trips = location.state?.trips || [];
   const travelData = location.state?.searchInfo || {};
   const { from, to, date, passengers: bookedSeats } = travelData;
 
-  // 2) Keep track of the user’s currently selected trip
+  // Keep track of the user’s currently selected trip
   const [selectedTripId, setSelectedTripId] = useState(trips[0]?.id || "");
   const [trip, setTrip] = useState(trips[0] || null);
 
-  // 3) For seat calculations and price
+  // For seat calculations and price
   const [currentSeats, setCurrentSeats] = useState({
     totalSeats: 24,
     takenSeats: 0,
+    bookedSeats: [], // List of booked seat numbers
   });
+  const [selectedSeatNumbers, setSelectedSeatNumbers] = useState([]); // Selected seats
   const [price, setPrice] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -40,19 +44,34 @@ export default function SeatAvailability() {
     if (!trip) return;
 
     const totalSeats = trip.bus?.total_seats ?? 24;
-    const booked = totalSeats - (trip.available_seats ?? 0);
-
+    const takenSeats = trip.seats_taken ?? 0; // Use seats_taken from TripListSerializer
+    const bookedSeats = trip.booked_seats ?? []; // From TripListSerializer
     console.log("Trip object =>", JSON.stringify(trip, null, 2));
-    console.log(totalSeats);
-    setCurrentSeats({ totalSeats, takenSeats: booked });
-    setPrice(trip.seat_price ?? 1500); // or your dynamic logic
+    console.log(
+      "Total Seats:",
+      totalSeats,
+      "Taken Seats:",
+      takenSeats,
+      "Booked Seats:",
+      bookedSeats
+    );
+
+    setCurrentSeats({ totalSeats, takenSeats, bookedSeats });
+    setPrice(trip.seat_price ?? 1500);
+    setSelectedSeatNumbers([]); // Reset selected seats when trip changes
   }, [trip]);
 
-  // Check if enough seats remain for the user’s desired seat_count (bookedSeats)
+  // Check if enough seats remain and correct number of seats selected
   const isSeatAvailable =
-    currentSeats.totalSeats - currentSeats.takenSeats >= bookedSeats;
+    currentSeats.totalSeats - currentSeats.takenSeats >= bookedSeats &&
+    selectedSeatNumbers.length === bookedSeats;
 
-  // 4) Handle booking and payment
+  // Handle seat selection
+  const handleSeatsSelected = (seats) => {
+    setSelectedSeatNumbers(seats);
+  };
+
+  // Handle booking and payment
   const handleProceed = async () => {
     let token =
       localStorage.getItem("access") || sessionStorage.getItem("access");
@@ -64,6 +83,17 @@ export default function SeatAvailability() {
       setTimeout(() => {
         navigate("/auth");
       }, 1500);
+      return;
+    }
+
+    if (selectedSeatNumbers.length !== bookedSeats) {
+      toast.error(
+        `Please select exactly ${bookedSeats} seat(s). You have selected ${selectedSeatNumbers.length}.`,
+        {
+          position: "top-right",
+          autoClose: 3000,
+        }
+      );
       return;
     }
 
@@ -82,12 +112,12 @@ export default function SeatAvailability() {
     setLoading(true);
 
     try {
-      // Step 1: Create the booking
-      console.log("JWT Token:", token);
+      // Create the booking
       const bookingPayload = {
         trip: Number(selectedTripId),
         seat_count: bookedSeats,
         price: price * bookedSeats,
+        seat_numbers: selectedSeatNumbers, // Include selected seats
       };
       console.log("Calling /api/bookings/create/ with:", bookingPayload);
 
@@ -96,7 +126,6 @@ export default function SeatAvailability() {
         body: JSON.stringify(bookingPayload),
       });
 
-      // Check content type
       const bookingContentType = bookingResponse.headers.get("content-type");
       console.log("Booking response status:", bookingResponse.status);
       console.log("Booking response headers:", {
@@ -125,13 +154,8 @@ export default function SeatAvailability() {
         throw new Error(bookingData?.message || "Booking failed");
       }
 
-      // Step 2: Initialize payment using standard fetch
+      // Initialize payment
       const paymentPayload = { booking_id: bookingData.booking.id };
-      // console.log(
-      //   "Calling http://127.0.0.1:8000/api/payment/initialize/ with:",
-      //   paymentPayload
-      // );
-
       let paymentResponse = await authFetch("/payment/initialize/", {
         method: "POST",
         headers: {
@@ -141,7 +165,6 @@ export default function SeatAvailability() {
         body: JSON.stringify(paymentPayload),
       });
 
-      // Handle 401 by refreshing token
       if (paymentResponse.status === 401) {
         console.log("Payment call returned 401, attempting token refresh...");
         const refresh =
@@ -167,7 +190,6 @@ export default function SeatAvailability() {
           : sessionStorage;
         storage.setItem("access", token);
 
-        // Retry payment call
         paymentResponse = await authFetch("/payment/initialize/", {
           method: "POST",
           headers: {
@@ -178,7 +200,6 @@ export default function SeatAvailability() {
         });
       }
 
-      // Check content type
       const paymentContentType = paymentResponse.headers.get("content-type");
       console.log("Payment response status:", paymentResponse.status);
       console.log("Payment response headers:", {
@@ -254,7 +275,9 @@ export default function SeatAvailability() {
           from,
           to,
           date,
-          time: trip?.departure_time || "—",
+          time: trip?.departure_datetime
+            ? formatTime(trip.departure_datetime)
+            : "—",
           intermediateStops: [],
         }}
       />
@@ -353,11 +376,11 @@ export default function SeatAvailability() {
             <div className='flex items-start'>
               <FaExclamationTriangle className='text-yellow-500 mt-1 mr-2' />
               <div>
-                <p className='font-medium text-yellow-800'>Not Enough Seats</p>
+                <p className='font-medium text-yellow-800'>Action Required</p>
                 <p className='text-sm text-yellow-700'>
-                  Only {currentSeats.totalSeats - currentSeats.takenSeats}{" "}
-                  seat(s) available. Please reduce number of seats or change
-                  your departure time.
+                  {selectedSeatNumbers.length !== bookedSeats
+                    ? `Please select exactly ${bookedSeats} seat(s).`
+                    : `Only ${currentSeats.totalSeats - currentSeats.takenSeats} seat(s) available. Please reduce number of seats or change your departure time.`}
                 </p>
               </div>
             </div>
@@ -372,7 +395,14 @@ export default function SeatAvailability() {
         <SeatSelector
           totalSeats={currentSeats.totalSeats}
           maxSelectable={bookedSeats}
+          bookedSeats={currentSeats.bookedSeats}
+          onSeatsSelected={handleSeatsSelected}
         />
+        {selectedSeatNumbers.length > 0 && (
+          <p className='mt-4 text-gray-600'>
+            Selected Seats: {selectedSeatNumbers.join(", ")}
+          </p>
+        )}
       </div>
 
       {/* Payment */}
@@ -415,7 +445,9 @@ export default function SeatAvailability() {
             ? "Processing..."
             : isSeatAvailable
               ? `Proceed to Book ${bookedSeats} Seat(s)`
-              : "Not Enough Seats"}
+              : selectedSeatNumbers.length !== bookedSeats
+                ? `Select ${bookedSeats} Seat(s)`
+                : "Not Enough Seats"}
         </button>
       </div>
     </div>

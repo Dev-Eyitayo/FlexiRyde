@@ -54,6 +54,8 @@ class RouteViewSet(viewsets.ModelViewSet):
 
 
 
+# bus_booking/views.py
+
 class BookingViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -62,7 +64,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             return BookingDetailSerializer
         elif self.action in ["create"]:
             return BookingCreateSerializer
-        return BookingSerializer  # Use BookingSerializer for update and partial_update
+        return BookingSerializer
 
     @action(detail=False, methods=["get"], url_path=r"ref/(?P<ref>[A-Za-z0-9\-]+)")
     def get_by_reference(self, request, ref=None):
@@ -83,18 +85,28 @@ class BookingViewSet(viewsets.ModelViewSet):
         now = timezone.now()
         for booking in bookings:
             if (
-                booking.status in ["confirmed", "pending"] and
-                booking.trip and
-                booking.trip.departure_datetime < now
+                booking.status in ["confirmed", "pending"]
+                and booking.trip
+                and booking.trip.departure_datetime < now
             ):
                 booking.status = "completed"
                 booking.save(update_fields=["status"])
-
         return bookings
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        with transaction.atomic():
+            trip = Trip.objects.select_for_update().get(id=instance.trip.id)
+            if serializer.validated_data.get("status") == "cancelled" and instance.status != "cancelled":
+                # Release seats and update available_seats
+                if instance.payment_status in ["successful", "pending"]:
+                    trip.available_seats += instance.seat_count
+                    instance.seat_assignments.all().delete()  # Delete seat assignments
+                    trip.save()
+            serializer.save()
 
 class TripSearchAPIView(ListAPIView):
     serializer_class = TripListSerializer
@@ -364,6 +376,8 @@ class TripUpdateView(APIView):
 
 
 # New Payment-Related Views
+# bus_booking/views.py
+
 class InitializePaymentView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -375,6 +389,25 @@ class InitializePaymentView(APIView):
             if booking.payment_status != 'pending':
                 return Response({'error': 'Payment already processed or invalid.'}, status=status.HTTP_400_BAD_REQUEST)
             
+            # Verify seat assignments
+            with transaction.atomic():
+                trip = Trip.objects.select_for_update().get(id=booking.trip.id)
+                seat_assignments = booking.seat_assignments.values_list('seat_number', flat=True)
+                conflicting_seats = SeatAssignment.objects.filter(
+                    trip=trip,
+                    seat_number__in=seat_assignments
+                ).exclude(booking=booking).values_list('seat_number', flat=True)
+                if conflicting_seats:
+                    booking.payment_status = 'failed'
+                    booking.status = 'cancelled'
+                    booking.seat_assignments.delete()
+                    trip.available_seats += booking.seat_count
+                    trip.save()
+                    return Response(
+                        {'error': f'Seats {list(conflicting_seats)} are no longer available.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
             url = 'https://api.paystack.co/transaction/initialize'
             headers = {
                 'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
@@ -382,7 +415,7 @@ class InitializePaymentView(APIView):
             }
             data = {
                 'email': booking.user.email,
-                'amount': int(booking.price * 100),  # Paystack expects amount in kobo (NGN)
+                'amount': int(booking.price * 100),
                 'reference': booking.payment_reference,
                 'callback_url': request.build_absolute_uri('/api/payment/callback/'),
                 'metadata': {
@@ -401,17 +434,26 @@ class InitializePaymentView(APIView):
                         'reference': booking.payment_reference
                     }, status=status.HTTP_200_OK)
                 else:
-                    booking.payment_status = 'failed'
-                    booking.status = 'cancelled'
-                    booking.save()
+                    with transaction.atomic():
+                        booking.payment_status = 'failed'
+                        booking.status = 'cancelled'
+                        booking.seat_assignments.delete()
+                        trip = Trip.objects.select_for_update().get(id=booking.trip.id)
+                        trip.available_seats += booking.seat_count
+                        trip.save()
                     return Response({'error': 'Failed to initialize payment.'}, status=status.HTTP_400_BAD_REQUEST)
             except requests.RequestException as e:
-                booking.payment_status = 'failed'
-                booking.status = 'cancelled'
-                booking.save()
+                with transaction.atomic():
+                    booking.payment_status = 'failed'
+                    booking.status = 'cancelled'
+                    booking.seat_assignments.delete()
+                    trip = Trip.objects.select_for_update().get(id=booking.trip.id)
+                    trip.available_seats += booking.seat_count
+                    trip.save()
                 return Response({'error': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# bus_booking/views.py
 
 class PaymentCallbackView(APIView):
     def get(self, request):
@@ -431,27 +473,34 @@ class PaymentCallbackView(APIView):
             
             booking = get_object_or_404(Booking, payment_reference=reference)
             
-            if response_data['status'] and response_data['data']['status'] == 'success':
-                booking.payment_status = 'successful'
-                booking.status = 'confirmed'
-                booking.save()
-                frontend_url = f'https://flexiryde.vercel.app/travel-history'
-                return HttpResponseRedirect(frontend_url)
-                # return Response({
-                #     'message': 'Payment successful',
-                #     'booking': BookingDetailSerializer(booking).data
-                # }, status=status.HTTP_200_OK)
-            else:
+            with transaction.atomic():
+                trip = Trip.objects.select_for_update().get(id=booking.trip.id)
+                if response_data['status'] and response_data['data']['status'] == 'success':
+                    booking.payment_status = 'successful'
+                    booking.status = 'confirmed'
+                    booking.save()
+                    frontend_url = f'https://flexiryde.vercel.app/travel-history'
+                    return HttpResponseRedirect(frontend_url)
+                else:
+                    booking.payment_status = 'failed'
+                    booking.status = 'cancelled'
+                    booking.seat_assignments.delete()
+                    trip.available_seats += booking.seat_count
+                    trip.save()
+                    return Response({
+                        'error': 'Payment failed',
+                        'booking': BookingDetailSerializer(booking).data
+                    }, status=status.HTTP_400_BAD_REQUEST)
+        except requests.RequestException as e:
+            with transaction.atomic():
+                booking = get_object_or_404(Booking, payment_reference=reference)
                 booking.payment_status = 'failed'
                 booking.status = 'cancelled'
-                booking.save()
-                return Response({
-                    'error': 'Payment failed',
-                    'booking': BookingDetailSerializer(booking).data
-                }, status=status.HTTP_400_BAD_REQUEST)
-        except requests.RequestException as e:
+                booking.seat_assignments.delete()
+                trip = Trip.objects.select_for_update().get(id=booking.trip.id)
+                trip.available_seats += booking.seat_count
+                trip.save()
             return Response({'error': f'Verification error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 @method_decorator(csrf_exempt, name='dispatch')
 class PaystackWebhookView(APIView):
