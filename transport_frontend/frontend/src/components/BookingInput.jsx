@@ -11,6 +11,7 @@ import {
   FaPlus,
   FaMinus,
   FaClock,
+  FaSpinner,
 } from "react-icons/fa";
 
 export const BookingInput = ({ submitType }) => {
@@ -21,6 +22,7 @@ export const BookingInput = ({ submitType }) => {
   const [selectedFrom, setSelectedFrom] = useState(null);
   const [selectedTo, setSelectedTo] = useState(null);
   const [passengers, setPassengers] = useState(1);
+  const [isSearching, setIsSearching] = useState(false); // New state for loading
 
   const [showFromDropdown, setShowFromDropdown] = useState(false);
   const [showToDropdown, setShowToDropdown] = useState(false);
@@ -95,11 +97,13 @@ export const BookingInput = ({ submitType }) => {
 
   const handleCheckAvailability = async () => {
     if (!selectedFrom || !selectedTo || !dateRef.current?.value) {
-      toast.error("Please complete all fileds", {
-        autoClose: 1000, // Speed up toast by reducing display time to 1.5 seconds
+      toast.error("Please complete all fields", {
+        autoClose: 1000,
       });
       return;
     }
+
+    setIsSearching(true); // Start loading
 
     const origin_id = selectedFrom.id;
     const destination_id = selectedTo.id;
@@ -123,15 +127,14 @@ export const BookingInput = ({ submitType }) => {
       if (tripResults.length === 0) {
         toast.error("No trips found for that route and date", {
           autoClose: 1000,
-        }); // Speed up toast by reducing display time to 1.5 seconds
-        // alert("No trips found for that route and date.");
+        });
+        setIsSearching(false); // Stop loading
         return;
       }
 
       console.log("Trip search results:", JSON.stringify(tripResults, null, 2));
 
       const selectedTrip = tripResults[0];
-      // console.log("Selected trip:", tripResults);
 
       navigate("/check-availability", {
         state: {
@@ -145,8 +148,12 @@ export const BookingInput = ({ submitType }) => {
         },
       });
     } catch (error) {
-      // console.error("Trip search failed", error);
-      alert("Failed to search trips.");
+      console.error("Trip search failed", error);
+      toast.error("Failed to search trips.", {
+        autoClose: 1000,
+      });
+    } finally {
+      setIsSearching(false); // Stop loading
     }
   };
 
@@ -325,10 +332,20 @@ export const BookingInput = ({ submitType }) => {
 
         {/* Submit Button */}
         <button
-          className='bg-blue-600 text-white py-3 rounded-md w-full font-semibold hover:bg-blue-700 transition h-full md:col-span-2'
+          className={`bg-blue-600 text-white py-3 rounded-md w-full font-semibold hover:bg-blue-700 transition h-full md:col-span-2 flex items-center justify-center ${
+            isSearching ? "opacity-75 cursor-not-allowed" : ""
+          }`}
           onClick={handleCheckAvailability}
+          disabled={isSearching} // Disable button during loading
         >
-          {submitType}
+          {isSearching ? (
+            <>
+              <FaSpinner className='animate-spin mr-2' />
+              Searching...
+            </>
+          ) : (
+            submitType
+          )}
         </button>
       </div>
     </div>

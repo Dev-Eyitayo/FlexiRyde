@@ -442,16 +442,17 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     trip = TripTicketSerializer()
     user = serializers.SerializerMethodField()
     ref_number = serializers.CharField(source="payment_reference")
+    seat_numbers = serializers.SerializerMethodField()
     seats = serializers.IntegerField(source="seat_count")
     status = serializers.CharField()
     payment_status = serializers.CharField()
-    created_at = serializers.DateTimeField(read_only=True)  # Add created_at
+    created_at = serializers.DateTimeField(read_only=True)  
 
     class Meta:
         model = Booking
         fields = [
             "id", "ref_number", "price", "trip", "user",
-            "seats", "status", "payment_status", "created_at"  # Include created_at
+            "seats", "status", "payment_status", "created_at", "seat_numbers"  # Add seat_numbers
         ]
 
     def get_user(self, obj):
@@ -459,6 +460,12 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             "first_name": obj.user.first_name,
             "last_name": obj.user.last_name
         }
+
+    def get_seat_numbers(self, obj):
+        # Retrieve seat numbers from SeatAssignment for this booking
+        seat_assignments = SeatAssignment.objects.filter(booking=obj).values_list('seat_number', flat=True)
+        return list(seat_assignments)
+    
 class PaymentInitializationSerializer(serializers.Serializer):
     booking_id = serializers.IntegerField()
     authorization_url = serializers.URLField(read_only=True)
