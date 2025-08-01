@@ -452,7 +452,7 @@ class BookingDetailSerializer(serializers.ModelSerializer):
         model = Booking
         fields = [
             "id", "ref_number", "price", "trip", "user",
-            "seats", "status", "payment_status", "created_at", "seat_numbers"  # Add seat_numbers
+            "seats", "status", "payment_status", "created_at", "seat_numbers"
         ]
 
     def get_user(self, obj):
