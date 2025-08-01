@@ -395,7 +395,6 @@ export default function SeatAvailability() {
         <SeatSelector
           totalSeats={currentSeats.totalSeats}
           maxSelectable={bookedSeats}
-<<<<<<< HEAD
           bookedSeats={currentSeats.bookedSeats}
           onSeatsSelected={handleSeatsSelected}
         />
@@ -404,9 +403,6 @@ export default function SeatAvailability() {
             Selected Seats: {selectedSeatNumbers.join(", ")}
           </p>
         )}
-=======
-        />
->>>>>>> 24f64a97c5ea33dd7ace407626f2562d4b4e5fa4
       </div>
 
       {/* Payment */}

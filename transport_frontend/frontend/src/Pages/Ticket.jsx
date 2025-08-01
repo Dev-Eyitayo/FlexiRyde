@@ -20,6 +20,7 @@ const Ticket = () => {
     ref_number,
     seat_count,
     seats,
+    seat_numbers, // Add seat_numbers to destructuring
     trip = {},
     user = {},
     status,
@@ -39,6 +40,11 @@ const Ticket = () => {
   const ticketRef = ref_number || payment_reference || "—";
   const totalSeats = seats ?? seat_count ?? "—";
   const busCompany = bus.name || bus.number_plate || "—";
+  // Format seat numbers for display, fall back to totalSeats if seat_numbers is unavailable
+  const displayedSeats =
+    Array.isArray(seat_numbers) && seat_numbers.length > 0
+      ? seat_numbers.join(", ")
+      : totalSeats;
 
   const routePath = intermediate_stops.length
     ? [origin_park.name, ...intermediate_stops, destination_park.name]
@@ -227,7 +233,12 @@ const Ticket = () => {
                 <div>
                   <p className='text-xs text-gray-500 mb-1'>SEAT(S)</p>
                   <p className='text-sm md:text-base font-bold'>
-                    {totalSeats} seat{totalSeats > 1 ? "s" : ""}
+                    {displayedSeats}
+                    {Array.isArray(seat_numbers) && seat_numbers.length > 0
+                      ? ` (${seat_numbers.length} seat${seat_numbers.length > 1 ? "s" : ""})`
+                      : totalSeats !== "—" && !isNaN(totalSeats)
+                        ? ` (${totalSeats} seat${totalSeats > 1 ? "s" : ""})`
+                        : ""}
                   </p>
                 </div>
               </div>
